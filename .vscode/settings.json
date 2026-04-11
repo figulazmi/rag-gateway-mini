@@ -1,0 +1,9 @@
+{
+  "editor.tabSize": 4,
+  "razor.languageServer.forceRuntimeCodeGeneration": true,
+  "dotnet.server.useOmnisharp": false,
+  "files.exclude": {
+    "**/bin": true,
+    "**/obj": true
+  }
+}

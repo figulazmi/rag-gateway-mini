@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "qdrant-knowledge": {
+      "command": "powershell",
+      "args": [
+        "-ExecutionPolicy", "Bypass",
+        "-File", "C:\\Users\\Clandesitine\\.claude\\claude-mcp-connect.ps1"
+      ]
+    }
+  }
+}
