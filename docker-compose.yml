@@ -1,0 +1,14 @@
+services:
+  rag-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rag-gateway
+    ports:
+      - "5200:5200"
+    restart: unless-stopped
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:5200
+    volumes:
+      - /opt/rag-gateway/appsettings.Production.json:/app/appsettings.Production.json:ro
