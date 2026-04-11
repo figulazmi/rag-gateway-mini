@@ -41,6 +41,52 @@ docker compose up -d --build
 docker compose logs -f rag-gateway
 ```
 
+## VM B1 Deployment
+
+App is live at: `http://192.168.18.169:5200/scalar/`
+
+### Initial Deploy (one-time)
+
+```bash
+ssh user@192.168.18.169
+
+git clone https://github.com/figulazmi/rag-gateway-mini.git /opt/homelab/ai-stack/rag-gateway-mini
+
+mkdir -p /opt/rag-gateway
+cp /opt/homelab/ai-stack/rag-gateway-mini/src/appsettings.Production.json.template \
+   /opt/rag-gateway/appsettings.Production.json
+nano /opt/rag-gateway/appsettings.Production.json  # fill QdrantApiKey
+
+cd /opt/homelab/ai-stack/rag-gateway-mini/src
+docker compose up -d --build
+```
+
+### Update / Redeploy
+
+```bash
+# Laptop — commit + push
+git push origin main
+
+# VM B1 — pull + rebuild
+cd /opt/homelab/ai-stack/rag-gateway-mini
+git pull origin main
+cd src
+docker compose up -d --build
+```
+
+### Verify
+
+```bash
+docker ps | grep rag-gateway
+curl http://localhost:5200/health
+```
+
+### Notes
+
+- Secrets config lives outside the repo: `/opt/rag-gateway/appsettings.Production.json`
+- Use `docker compose` (space, not hyphen) — Docker Compose v2
+- Build context is repo root (`..`) so `Directory.Packages.props` is included
+
 ## External Brain (Qdrant RAG)
 
 You have access to MCP tool `search_knowledge`.
