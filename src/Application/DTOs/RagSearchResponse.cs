@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace PetroChina.Eproc.RagGateway.Application.DTOs;
+namespace RagGateway.Application.DTOs;
 
 public sealed class RagSearchResponse
 {

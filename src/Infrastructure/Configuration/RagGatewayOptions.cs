@@ -1,4 +1,4 @@
-namespace PetroChina.Eproc.RagGateway.Infrastructure.Configuration;
+namespace RagGateway.Infrastructure.Configuration;
 
 public sealed class RagGatewayOptions
 {

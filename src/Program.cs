@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Options;
-using PetroChina.Eproc.RagGateway.Application.Interfaces;
-using PetroChina.Eproc.RagGateway.Application.Services;
-using PetroChina.Eproc.RagGateway.Infrastructure.AI;
-using PetroChina.Eproc.RagGateway.Infrastructure.Configuration;
+using RagGateway.Application.Interfaces;
+using RagGateway.Application.Services;
+using RagGateway.Infrastructure.AI;
+using RagGateway.Infrastructure.Configuration;
 using Scalar.AspNetCore;
 using Serilog;
 

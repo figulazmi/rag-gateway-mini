@@ -1,6 +1,6 @@
-using PetroChina.Eproc.RagGateway.Application.DTOs;
+using RagGateway.Application.DTOs;
 
-namespace PetroChina.Eproc.RagGateway.Application.Interfaces;
+namespace RagGateway.Application.Interfaces;
 
 public interface IRagSearchService
 {

@@ -1,4 +1,4 @@
-namespace PetroChina.Eproc.RagGateway.Infrastructure.Helpers;
+namespace RagGateway.Infrastructure.Helpers;
 
 public static class QueryNormalizer
 {

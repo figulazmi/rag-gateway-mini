@@ -1,11 +1,11 @@
 using Microsoft.Extensions.Options;
-using PetroChina.Eproc.RagGateway.Application.DTOs;
-using PetroChina.Eproc.RagGateway.Application.Interfaces;
-using PetroChina.Eproc.RagGateway.Infrastructure.Configuration;
-using PetroChina.Eproc.RagGateway.Infrastructure.Helpers;
+using RagGateway.Application.DTOs;
+using RagGateway.Application.Interfaces;
+using RagGateway.Infrastructure.Configuration;
+using RagGateway.Infrastructure.Helpers;
 using Microsoft.Extensions.Logging;
 
-namespace PetroChina.Eproc.RagGateway.Application.Services;
+namespace RagGateway.Application.Services;
 
 public sealed class RagSearchService : IRagSearchService
 {

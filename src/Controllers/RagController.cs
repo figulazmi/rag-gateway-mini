@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
-using PetroChina.Eproc.RagGateway.Application.DTOs;
-using PetroChina.Eproc.RagGateway.Application.Interfaces;
+using RagGateway.Application.DTOs;
+using RagGateway.Application.Interfaces;
 using Microsoft.AspNetCore.Http;
 
-namespace PetroChina.Eproc.RagGateway.Controllers;
+namespace RagGateway.Controllers;
 
 [ApiController]
 [Route("rag")]

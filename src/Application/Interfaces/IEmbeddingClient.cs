@@ -1,4 +1,4 @@
-namespace PetroChina.Eproc.RagGateway.Application.Interfaces;
+namespace RagGateway.Application.Interfaces;
 
 public interface IEmbeddingClient
 {

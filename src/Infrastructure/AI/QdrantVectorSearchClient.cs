@@ -1,11 +1,11 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Options;
-using PetroChina.Eproc.RagGateway.Application.DTOs;
-using PetroChina.Eproc.RagGateway.Application.Interfaces;
-using PetroChina.Eproc.RagGateway.Infrastructure.Configuration;
+using RagGateway.Application.DTOs;
+using RagGateway.Application.Interfaces;
+using RagGateway.Infrastructure.Configuration;
 
-namespace PetroChina.Eproc.RagGateway.Infrastructure.AI;
+namespace RagGateway.Infrastructure.AI;
 
 public sealed class QdrantVectorSearchClient : IVectorSearchClient
 {
