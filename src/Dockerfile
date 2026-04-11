@@ -4,11 +4,11 @@ EXPOSE 5200
 
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
-COPY ["RagGateway.csproj", "."]
+COPY ["src/RagGateway.csproj", "src/"]
 COPY ["Directory.Packages.props", "."]
-RUN dotnet restore "RagGateway.csproj"
-COPY . .
-RUN dotnet publish "RagGateway.csproj" -c Release -o /app/publish --no-restore
+RUN dotnet restore "src/RagGateway.csproj"
+COPY src/ src/
+RUN dotnet publish "src/RagGateway.csproj" -c Release -o /app/publish --no-restore
 
 FROM base AS final
 WORKDIR /app

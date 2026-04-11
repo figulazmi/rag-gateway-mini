@@ -1,8 +1,8 @@
 services:
   rag-gateway:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: src/Dockerfile
     container_name: rag-gateway
     ports:
       - "5200:5200"
