@@ -11,4 +11,4 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:5200
     volumes:
-      - /opt/rag-gateway/appsettings.Production.json:/app/appsettings.Production.json:ro
+      - /opt/homelab/ai-stack/rag-gateway-mini/appsettings.Production.json:/app/appsettings.Production.json:ro
