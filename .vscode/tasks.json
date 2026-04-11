@@ -2,144 +2,22 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Publish API Release",
+      "label": "Build - RagGateway",
       "type": "shell",
       "command": "dotnet",
-      "args": [
-        "publish",
-        "src/PetroChina.Eproc.API/PetroChina.Eproc.API.csproj",
-        "-c",
-        "Release",
-        "-o",
-        "${workspaceFolder}/publish/api",
-        "/p:DeleteExistingFiles=false",
-        "/p:ExcludeApp_Data=false",
-        "/p:WebPublishMethod=FileSystem"
-      ],
+      "args": ["build", "src/RagGateway.csproj", "-c", "Debug"],
       "problemMatcher": ["$msCompile"],
-      "group": { "kind": "build", "isDefault": false }
+      "group": { "kind": "build", "isDefault": true }
     },
     {
-      "label": "Publish Internal App",
+      "label": "Kill Ports - RagGateway",
       "type": "shell",
-      "command": "dotnet",
-      "args": [
-        "publish",
-        "src/Internal/PetroChina.Eproc.Internal.App/PetroChina.Eproc.Internal.App.csproj",
-        "-c",
-        "Release",
-        "-o",
-        "${workspaceFolder}/publish/internal",
-        "/p:DeleteExistingFiles=false",
-        "/p:ExcludeApp_Data=false",
-        "/p:WebPublishMethod=FileSystem"
-      ],
-      "problemMatcher": ["$msCompile"],
-      "group": { "kind": "build", "isDefault": false }
-    },
-    {
-      "label": "Publish External App",
-      "type": "shell",
-      "command": "dotnet",
-      "args": [
-        "publish",
-        "src/External/PetroChina.Eproc.External.App/PetroChina.Eproc.External.App.csproj",
-        "-c",
-        "Release",
-        "-o",
-        "${workspaceFolder}/publish/external",
-        "/p:DeleteExistingFiles=false",
-        "/p:ExcludeApp_Data=false",
-        "/p:WebPublishMethod=FileSystem"
-      ],
-      "problemMatcher": ["$msCompile"],
-      "group": { "kind": "build", "isDefault": false }
-    },
-    {
-      "label": "Publish All",
-      "dependsOn": [
-        "Publish API Release",
-        "Publish Internal App",
-        "Publish External App"
-      ],
-      "dependsOrder": "sequence",
-      "group": { "kind": "build", "isDefault": false },
+      "command": "$ports=@(5200,7200); foreach($p in $ports){ $conns=Get-NetTCPConnection -LocalPort $p -State Listen -ErrorAction SilentlyContinue; foreach($c in $conns){ Stop-Process -Id $c.OwningProcess -Force -ErrorAction SilentlyContinue } }; Write-Host 'Kill Ports - RagGateway done'",
       "problemMatcher": []
     },
     {
-      "label": "Kill Ports - API",
-      "type": "shell",
-      "command": "$ports=@(6100,6200); foreach($p in $ports){ $conns=Get-NetTCPConnection -LocalPort $p -State Listen -ErrorAction SilentlyContinue; foreach($c in $conns){ Stop-Process -Id $c.OwningProcess -Force -ErrorAction SilentlyContinue } }; Write-Host 'Kill Ports - API done'",
-      "problemMatcher": []
-    },
-    {
-      "label": "Kill Ports - Internal",
-      "type": "shell",
-      "command": "$ports=@(6101,6201); foreach($p in $ports){ $conns=Get-NetTCPConnection -LocalPort $p -State Listen -ErrorAction SilentlyContinue; foreach($c in $conns){ Stop-Process -Id $c.OwningProcess -Force -ErrorAction SilentlyContinue } }; Write-Host 'Kill Ports - Internal done'",
-      "problemMatcher": []
-    },
-    {
-      "label": "Kill Ports - External",
-      "type": "shell",
-      "command": "$ports=@(6102,6202); foreach($p in $ports){ $conns=Get-NetTCPConnection -LocalPort $p -State Listen -ErrorAction SilentlyContinue; foreach($c in $conns){ Stop-Process -Id $c.OwningProcess -Force -ErrorAction SilentlyContinue } }; Write-Host 'Kill Ports - External done'",
-      "problemMatcher": []
-    },
-    {
-      "label": "Kill Dotnet Processes",
-      "type": "shell",
-      "command": "Get-Process -Name dotnet -ErrorAction SilentlyContinue | Stop-Process -Force; Write-Host 'Kill Dotnet Processes done'",
-      "problemMatcher": []
-    },
-    {
-      "label": "Build - API",
-      "type": "shell",
-      "command": "dotnet",
-      "args": ["build", "src/PetroChina.Eproc.API/PetroChina.Eproc.API.csproj", "-c", "Debug"],
-      "problemMatcher": ["$msCompile"],
-      "group": { "kind": "build", "isDefault": false }
-    },
-    {
-      "label": "Build - Internal",
-      "type": "shell",
-      "command": "dotnet",
-      "args": ["build", "src/Internal/PetroChina.Eproc.Internal.App/PetroChina.Eproc.Internal.App.csproj", "-c", "Debug"],
-      "problemMatcher": ["$msCompile"],
-      "group": { "kind": "build", "isDefault": false }
-    },
-    {
-      "label": "Build - External",
-      "type": "shell",
-      "command": "dotnet",
-      "args": ["build", "src/External/PetroChina.Eproc.External.App/PetroChina.Eproc.External.App.csproj", "-c", "Debug"],
-      "problemMatcher": ["$msCompile"],
-      "group": { "kind": "build", "isDefault": false }
-    },
-    {
-      "label": "Build All",
-      "dependsOn": [
-        "Build - API",
-        "Build - Internal",
-        "Build - External"
-      ],
-      "dependsOrder": "sequence",
-      "group": { "kind": "build", "isDefault": false },
-      "problemMatcher": []
-    },
-    {
-      "label": "Build & Kill Ports - API",
-      "dependsOn": ["Build - API", "Kill Ports - API"],
-      "dependsOrder": "sequence",
-      "problemMatcher": []
-    },
-    {
-      "label": "Build & Kill Ports - Internal",
-      "dependsOn": ["Build - Internal", "Kill Ports - Internal"],
-      "dependsOrder": "sequence",
-      "problemMatcher": []
-    },
-    {
-      "label": "Build & Kill Ports - External",
-      "dependsOn": ["Build - External", "Kill Ports - External"],
+      "label": "Build & Kill Ports - RagGateway",
+      "dependsOn": ["Build - RagGateway", "Kill Ports - RagGateway"],
       "dependsOrder": "sequence",
       "problemMatcher": []
     }
