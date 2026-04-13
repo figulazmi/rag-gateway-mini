@@ -2,7 +2,7 @@
 # =============================================================================
 # push-to-qdrant.sh
 # Author  : Figur Ulul Azmi
-# Target  : Qdrant collection "knowledge" via n8n webhook (VM B1 Proxmox)
+# Target  : Qdrant collection "knowledge_v2" (hybrid dense + sparse BM25) via n8n webhook (VM B1 Proxmox)
 # Usage   : bash ~/scripts/push-to-qdrant.sh <file.md>
 # Example : bash ~/scripts/push-to-qdrant.sh .claude/summaries/2026-04-07-sdl.md
 # =============================================================================
@@ -312,7 +312,7 @@ for i in "${!CHUNKS[@]}"; do
       filename:       $filename,
       chunk_num:      ($chunk_num | tonumber),
       content:        $content,
-      collection:     "knowledge",
+      collection:     "knowledge_v2",
       qdrant_api_key: $api_key
     }'
   )
@@ -348,7 +348,7 @@ echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 if [ "$FAIL_COUNT" -eq 0 ]; then
   echo "✅ Done — $SUCCESS_COUNT/$TOTAL_CHUNKS chunks pushed to Qdrant"
-  echo "   Collection : knowledge"
+  echo "   Collection : knowledge_v2"
   echo "   Doc ID     : $DOC_ID"
 else
   echo "⚠️  Partial — $SUCCESS_COUNT OK, $FAIL_COUNT FAILED"
