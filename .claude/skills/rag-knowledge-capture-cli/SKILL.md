@@ -127,15 +127,16 @@ DEFAULT: CHUNKED
 id: [YYYY-MM-DD]-[slug-topic]
 date: YYYY-MM-DD
 source: claude-code-cli
-project: [project name]               # petrochina-eproc | homelab | mit-internal
+project: [project name]               # petrochina-eproc | homelab | mit-internal | homeplate
+chunk_type: [type]                     # REQUIRED: debug | feature | runbook | pattern | decision | reference
 topic: [concise topic title]
 tags: [tag1, tag2, tag3]              # lowercase, hyphenated, max 8 tags
 related: [topic-1, topic-2]
-session_type: [debug|feature|setup|refactor|architecture|research]
+session_type: [type]                  # debug | feature | setup | refactor | architecture | research | feature-retrospective | ops-documentation
 environment: [dev|uat|prod|homelab]
 git_branch: [branch name if applicable]
-status: implemented                   # REQUIRED: implemented | planned
-chunk_source: code                    # REQUIRED: code | design
+status: implemented                   # REQUIRED: implemented | planned | deprecated
+chunk_source: code                    # REQUIRED: code | design | ops
 ---
 ```
 
@@ -146,16 +147,31 @@ chunk_source: code                    # REQUIRED: code | design
 - Outcome tags: fixed, implemented, planned, failed, pending, optimized
 - Max 8 tags. Avoid generic tags.
 
+### chunk_type field rules (REQUIRED — determines template body)
+
+- `debug` — Reactive problem-solution. Bug appeared → diagnose → fix.
+- `feature` — Feature Implementation Record. Planned work, retrospective capture of built features.
+- `runbook` — Step-by-step operational procedure. Not problem-solution, but procedure.
+- `pattern` — Reusable code/architecture pattern. Applicable across projects.
+- `decision` — Architecture Decision Record (ADR). Why A was chosen over B.
+- `reference` — Cheat sheet, config template, environment map. Factual, rarely changes.
+
 ### status field rules (REQUIRED — affects RAG retrieval)
 
 - `implemented` — code is deployed or merged; Claude retrieves this by default
 - `planned` — architecture design, roadmap, future feature; Claude skips this by default (requires `include_planned=true`)
+- `deprecated` — no longer relevant but kept for historical context; Claude skips by default
 - When in doubt: if no code was written this session → `planned`
 
 ### chunk_source field rules (REQUIRED)
 
 - `code` — describes actual code, configuration, or deployed infrastructure
 - `design` — architecture decision, design doc, flow diagram, roadmap
+- `ops` — operational procedure, deployment, infrastructure management
+
+### session_type field
+
+Supported values: `debug` | `feature` | `setup` | `refactor` | `architecture` | `research` | `feature-retrospective` | `ops-documentation`
 
 ### git_branch field
 
@@ -164,61 +180,227 @@ chunk_source: code                    # REQUIRED: code | design
 
 ---
 
-## CHUNK STRUCTURE (REQUIRED)
+## CHUNK TYPE SELECTION GUIDE
+
+Use this guide to pick the correct `chunk_type`:
+
+| Trigger | chunk_type | Example |
+|---------|------------|---------|
+| Error/bug → fix | `debug` | SSL binding error, null deserialization |
+| Build/implement feature | `feature` | SDL Phase 1, JDE Sync, Vendor Registration |
+| "How do I..." (procedure) | `runbook` | Deploy to IIS, Setup Gitea Actions, Configure n8n |
+| Reusable approach across projects | `pattern` | BulkSyncAsync, CQRS handler template, MudBlazor patterns |
+| "Why A instead of B?" | `decision` | Qdrant vs ChromaDB, Hangfire vs Quartz, Token Slot vs SignalR |
+| Factual reference / config | `reference` | Server topology, port mappings, Git aliases, env variables |
+
+### Quick Decision Tree
+
+1. Is this fixing something broken? → `debug`
+2. Is this building a new feature or capturing an existing one? → `feature`
+3. Is this a step-by-step procedure someone else can follow? → `runbook`
+4. Is this a pattern/approach reusable in other projects? → `pattern`
+5. Is this recording an architecture decision and its reasoning? → `decision`
+6. Is this factual information that rarely changes? → `reference`
+
+---
+
+## CHUNK STRUCTURE PER TYPE (REQUIRED)
 
 > **LANGUAGE LOCK — ENFORCED AT TEMPLATE LEVEL**
 > ALL content in every chunk field MUST be written in English.
-> This includes: Context, Problem, Solution, Key Facts, Caveats — every word.
-> Bahasa Indonesia is PROHIBITED. Writing in Indonesian = embedding quality degraded = retrieval broken.
+> This includes all section headers and content within each template.
+> Bahasa Indonesia is PROHIBITED. Writing in Indonesian inside a chunk: stop, translate, continue.
 > If you catch yourself writing Indonesian inside a chunk: stop, translate, continue.
+
+### Template 1: debug (Default)
 
 ````markdown
 ## CHUNK [N]: [Chunk Title]
 
 ### Context
-
-[English only. 1–3 sentences. What system, what goal, what constraint?
-Must be self-contained — readable without seeing other chunks.]
+[1-3 sentences. System, goal, constraint. Self-contained.]
 
 ### Problem
-
-[English only. Specific issue, question, or challenge. Include error messages or symptoms.]
+[Specific issue, error message, symptoms.]
 
 ### Solution
-
-[English only. Actual fix, decision, or answer. Include key reasoning. This is retrieval core.]
+[Actual fix, decision, reasoning. This is retrieval core.]
 
 ### Key Facts
-
-[English only. Atomic, independently searchable facts. Minimum 3.]
-
+[Minimum 3. Atomic, independently searchable.]
 - Fact 1
 - Fact 2
 - Fact 3
 
 ### Code / Commands
-
 [ONLY if essential. Keep concise.]
 \```language
 code here
 \```
 
 ### Caveats
+[ONLY if important gotchas exist.]
+````
 
-[English only. ONLY if there are important gotchas or conditions.]
+### Template 2: feature
+
+````markdown
+## CHUNK [N]: [Feature Name — Phase/Aspect]
+
+### Context
+[1-3 sentences. What system, what business need, what constraint.]
+
+### Requirements
+[2-5 bullets. What must this feature achieve?]
+
+### Architecture Decision
+[Why this approach was chosen. What alternatives were considered and rejected.]
+
+### Implementation
+[How it was built. Key technical details, patterns used, files touched.]
+
+### Key Facts
+[Minimum 3. Atomic, independently searchable.]
+- Fact 1
+- Fact 2
+- Fact 3
+
+### Code / Commands
+[ONLY if essential. Key code snippets showing the pattern.]
+
+### Lessons Learned
+[What would be done differently. What surprised you. Gotchas for next time.]
+````
+
+### Template 3: runbook
+
+````markdown
+## CHUNK [N]: [Procedure Name]
+
+### Context
+[1-3 sentences. When and why you need this procedure.]
+
+### Prerequisites
+[What must be ready before starting. Tools, access, configs.]
+
+### Steps
+[Numbered, sequential steps. Each step = one action.]
+1. Step 1
+2. Step 2
+3. Step 3
+
+### Verification
+[How to confirm the procedure succeeded. Expected output/state.]
+
+### Key Facts
+[Minimum 3. Atomic, independently searchable.]
+- Fact 1
+- Fact 2
+- Fact 3
+
+### Troubleshooting
+[Common failures during this procedure and their fixes.]
+````
+
+### Template 4: pattern
+
+````markdown
+## CHUNK [N]: [Pattern Name]
+
+### Context
+[1-3 sentences. What problem class this pattern solves.]
+
+### When to Use
+[Specific conditions where this pattern is appropriate.]
+
+### When NOT to Use
+[Conditions where this pattern is wrong. Anti-patterns.]
+
+### Implementation
+[How to implement. Step-by-step or structural description.]
+
+### Key Facts
+[Minimum 3. Atomic, independently searchable.]
+- Fact 1
+- Fact 2
+- Fact 3
+
+### Code / Commands
+[Reference implementation. Keep concise but complete enough to be useful.]
+
+### Variations
+[Known variations or adaptations of this pattern.]
+````
+
+### Template 5: decision
+
+````markdown
+## CHUNK [N]: [Decision Title]
+
+### Context
+[1-3 sentences. What situation required a decision.]
+
+### Decision Required
+[What specific question needed to be answered.]
+
+### Options Considered
+[List each option with brief pro/con.]
+- **Option A**: [description] — Pro: X, Con: Y
+- **Option B**: [description] — Pro: X, Con: Y
+
+### Decision
+[Which option was chosen.]
+
+### Rationale
+[Why this option was chosen over others. Key reasoning.]
+
+### Consequences
+[Trade-offs accepted. What this decision enables and constrains.]
+
+### Key Facts
+[Minimum 3. Atomic, independently searchable.]
+- Fact 1
+- Fact 2
+- Fact 3
+````
+
+### Template 6: reference
+
+````markdown
+## CHUNK [N]: [Reference Title]
+
+### Context
+[1-2 sentences. What this reference covers and when to use it.]
+
+### Content
+[The actual reference information. Can be structured as needed:
+ table, list, key-value pairs, config block, etc.]
+
+### Key Facts
+[Minimum 3. Atomic, independently searchable.]
+- Fact 1
+- Fact 2
+- Fact 3
+
+### Related Commands
+[ONLY if applicable. Quick-reference commands related to this content.]
 ````
 
 ---
 
 ## CHUNK SPLITTING RULES
 
-PRIMARY RULE: **one distinct problem = one chunk**
+PRIMARY RULE: **one distinct problem/topic = one chunk**
+
+All chunks within a single file MUST have the same `chunk_type`.
+If a session produces knowledge of different types (e.g., a debug fix AND an architecture decision),
+generate SEPARATE files with different `chunk_type` values.
 
 Split new chunk when:
 
-- A new, separate problem is introduced (even in the same session)
+- A new, separate problem/topic is introduced (even in the same session)
 - A different system or layer is the subject (e.g., IIS → Gitea → Hangfire = 3 chunks)
-- An architectural decision is made independently of a bug fix
+- An independent decision or pattern is identified
 
 Merge into one chunk when:
 
@@ -259,11 +441,15 @@ Merge into one chunk when:
 - NEVER use em dash (—) or special Unicode characters in frontmatter fields
   (topic, tags, related, etc.) — use plain hyphen (-) or remove entirely
   Reason: bash grep/sed cannot encode em dash correctly → corrupts Qdrant payload
+- NEVER mix chunk_types in a single file — one file = one chunk_type
+- NEVER skip chunk_type field in frontmatter — it is REQUIRED
 - ALWAYS print the push-to-qdrant.sh command after saving
 - ALWAYS write Key Facts as standalone searchable English sentences
 - ALWAYS split at problem-solution boundary — one problem = one chunk, no exceptions
 - ALWAYS suggest filename before saving — let user confirm if session is ambiguous
 - ALWAYS include `collection: knowledge` note in SESSION METADATA
+- ALWAYS use the correct template body for the selected chunk_type
+- ALWAYS check CHUNK TYPE SELECTION GUIDE when unsure which type to use
 
 ---
 
@@ -281,18 +467,23 @@ If user types `/clear` without running Session End Protocol first:
 
 ## EXAMPLE FULL OUTPUT
 
+### EXAMPLE: debug chunk_type
+
 ````markdown
 ---
 id: 2026-04-06-hangfire-jde-sync-failure
 date: 2026-04-06
 source: claude-code-cli
 project: petrochina-eproc
+chunk_type: debug
 topic: Hangfire JDE Sync Intermittent Failure Debug
 tags: [hangfire, jde-sync, ef-core, bulk-extensions, petrochina, eproc, debug, fixed]
 related: [jde-integration, employee-sync, department-sync]
 session_type: debug
 environment: dev
 git_branch: feature/jde-sync-fix
+status: implemented
+chunk_source: code
 ---
 
 ## CHUNK 1: Hangfire Job Completes Without Error But Data Not Updated
@@ -335,7 +526,6 @@ public string EmployeeCode { get; set; }
 [JsonPropertyName("employeeCode")]
 public string EmployeeCode { get; set; }
 ```
-````
 
 ### Caveats
 
@@ -376,6 +566,7 @@ If selective upsert needed in future: use BulkExtensions BulkMerge, not manual c
 ## SESSION METADATA
 
 - **Total chunks**: 2
+- **Qdrant collection**: knowledge
 - **Primary project**: petrochina-eproc
 - **Stack involved**: .NET 9, Hangfire, EF Core BulkExtensions, MediatR, System.Text.Json, JDE API
 - **Files modified**: SyncJdeDataHandler.cs, EmployeeJdeDto.cs, DepartmentJdeDto.cs
@@ -383,9 +574,84 @@ If selective upsert needed in future: use BulkExtensions BulkMerge, not manual c
 - **Unresolved items**: Monitor prod after deploy — check if intermittent issue fully resolved
 - **Author**: Figur Ulul Azmi
 - **Generated by**: Claude Code CLI — RAG Knowledge Capture Skill
+````
+
+---
+
+### EXAMPLE: runbook chunk_type
+
+````markdown
+---
+id: 2026-04-13-iis-blazor-deploy-procedure
+date: 2026-04-13
+source: claude-code-cli
+project: petrochina-eproc
+chunk_type: runbook
+topic: IIS Blazor Server Deployment to PetroChina Dev Server
+tags: [iis, blazor, deployment, petrochina, eproc, windows-server]
+related: [iis-ssl-binding, gitea-cicd-pipeline]
+session_type: ops-documentation
+environment: dev
+git_branch: main
+status: implemented
+chunk_source: ops
+---
+
+## CHUNK 1: Deploy Blazor Server App to IIS on PetroChina Dev
+
+### Context
+PetroChina Eproc Blazor Server apps (internal + external) are deployed to IIS
+on Windows Server behind GlobalProtect VPN. This procedure covers manual deployment
+when CI/CD pipeline is not available or for emergency hotfixes.
+
+### Prerequisites
+- GlobalProtect VPN connected to PetroChina network
+- RDP access to dev server (credentials in team vault)
+- Published build output from `dotnet publish -c Release`
+- IIS Manager access on target server
+
+### Steps
+1. Connect to PetroChina VPN via GlobalProtect
+2. RDP to dev server
+3. Open IIS Manager → navigate to target site (eproc-internal or eproc-external)
+4. Stop the application pool for the target site
+5. Robocopy published output to site directory: `robocopy publish/ D:\sites\eproc-internal /MIR /XF appsettings.json appsettings.Production.json`
+6. Start the application pool
+7. Browse to site URL to verify startup
+
+### Verification
+- Site loads without 500 error
+- Login page renders correctly
+- Check Windows Event Log for ASP.NET Core startup errors
+- Verify app pool is running (not stopped/crashed)
+
+### Key Facts
+- Always use /XF flag with robocopy to exclude appsettings files from overwrite
+- App pool must be stopped before copy to avoid file lock errors
+- appsettings.Production.json on server contains environment-specific config — never overwrite
+- IIS app pool recycle alone is not sufficient — full stop/start required for .NET 9 apps
+
+### Troubleshooting
+- 502.5 error after deploy: check that .NET 9 hosting bundle is installed on server
+- App pool crashes immediately: check Event Viewer → Windows Logs → Application for CLR errors
+- CSS/JS not loading: clear browser cache or check if _framework path is correct
+
+---
+
+## SESSION METADATA
+
+- **Total chunks**: 1
+- **Qdrant collection**: knowledge
+- **Primary project**: petrochina-eproc
+- **Stack involved**: IIS, Blazor Server, .NET 9, Windows Server, robocopy
+- **Files modified**: none (operational procedure)
+- **Git branch**: main
+- **Unresolved items**: Automate via Gitea Actions pipeline
+- **Author**: Figur Ulul Azmi
+- **Generated by**: Claude Code CLI — RAG Knowledge Capture Skill
+````
 
 ```
-
 ✅ Knowledge chunk saved: .claude/summaries/2026-04-06-hangfire-jde-sync-failure.md
 📦 Push to Qdrant:
    bash ~/scripts/push-to-qdrant.sh .claude/summaries/2026-04-06-hangfire-jde-sync-failure.md
