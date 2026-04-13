@@ -87,7 +87,9 @@
       "Bash(cp src/PetroChina.Eproc.RagGateway/appsettings.Production.json.template \"C:/Users/Clandesitine/source/repos/rag-gateway-mini/\")",
       "Bash(cp src/PetroChina.Eproc.RagGateway/Directory.Packages.props \"C:/Users/Clandesitine/source/repos/rag-gateway-mini/\")",
       "Read(//c/Users/Clandesitine/.claude/skills//**)",
-      "Read(//c/Users/Clandesitine/.claude/skills/**)"
+      "Read(//c/Users/Clandesitine/.claude/skills/**)",
+      "Bash(cat)",
+      "Read(//tmp/**)"
     ]
   },
   "enabledPlugins": {
