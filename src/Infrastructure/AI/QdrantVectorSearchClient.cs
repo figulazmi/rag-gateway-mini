@@ -57,16 +57,16 @@ public sealed class QdrantVectorSearchClient : IVectorSearchClient
 
         if (_options.EnableHybridSearch && !string.IsNullOrWhiteSpace(queryText))
         {
-            prefetch.Add(new
+            var sparse = BuildSparseVector(queryText);
+            if (sparse.Indices.Length > 0)
             {
-                query = new
+                prefetch.Add(new
                 {
-                    text = queryText,
-                    model = _options.SparseInferenceModel
-                },
-                @using = _options.SparseVectorName,
-                limit = _options.HybridPrefetchLimit
-            });
+                    query = new { indices = sparse.Indices, values = sparse.Values },
+                    @using = _options.SparseVectorName,
+                    limit = _options.HybridPrefetchLimit
+                });
+            }
         }
 
         var requestBody = new Dictionary<string, object>
@@ -135,6 +135,38 @@ public sealed class QdrantVectorSearchClient : IVectorSearchClient
         JsonValueKind.Array => element.EnumerateArray().Select(ConvertJsonElement).ToArray(),
         _ => element.ToString()
     };
+
+    /// <summary>
+    /// Tokenizes <paramref name="text"/> and builds a sparse BM25 vector using djb2 hash.
+    /// Must produce the same indices as the n8n ingestion pipeline's djb2 implementation.
+    /// Algorithm: lowercase → split alphanum tokens → count TF → index = djb2(token) & 0x7FFFFFFF.
+    /// </summary>
+    private static SparseVectorPayload BuildSparseVector(string text)
+    {
+        var tokens = System.Text.RegularExpressions.Regex
+            .Matches(text.ToLowerInvariant(), @"[a-z0-9]+")
+            .Select(m => m.Value);
+
+        var tf = new Dictionary<string, int>();
+        foreach (var t in tokens)
+            tf[t] = tf.TryGetValue(t, out var c) ? c + 1 : 1;
+
+        var indices = new int[tf.Count];
+        var values  = new float[tf.Count];
+        int i = 0;
+        foreach (var (term, freq) in tf)
+        {
+            int h = 5381;
+            foreach (var ch in term)
+                h = (((h << 5) + h) + ch) & 0x7FFFFFFF;
+            indices[i] = h;
+            values[i]  = freq;
+            i++;
+        }
+        return new SparseVectorPayload(indices, values);
+    }
+
+    private readonly record struct SparseVectorPayload(int[] Indices, float[] Values);
 
     private sealed class QdrantQueryResponse
     {

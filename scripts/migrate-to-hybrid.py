@@ -4,11 +4,14 @@ Migrate Qdrant collection from dense-only to hybrid (dense + sparse BM25).
 
 Creates a new collection 'knowledge_v2' with:
   - Named dense vector ('dense', 768-dim, COSINE) — same embeddings as 'knowledge'
-  - Named sparse vector ('sparse', BM25 IDF modifier) — server-side BM25 inference
+  - Named sparse vector ('sparse', IDF modifier) — client-side djb2 BM25
 
-Then copies all points from 'knowledge' to 'knowledge_v2', re-using the existing
-dense vector and sending raw text as a Document so Qdrant generates the sparse
-vector server-side.
+Sparse vectors are generated using djb2 hash tokenizer, which is identical to
+the implementation in:
+  - n8n Prepare Qdrant Point node (JavaScript)
+  - QdrantVectorSearchClient.cs BuildSparseVector() (C#)
+
+This ensures index-time and query-time sparse indices are consistent.
 
 Requirements:
     pip install 'qdrant-client>=1.13.0' --break-system-packages
@@ -17,8 +20,32 @@ Run on VM B1:
     python3 scripts/migrate-to-hybrid.py
 """
 
+import re
 from qdrant_client import QdrantClient, models
+from qdrant_client.models import SparseVector
 import time
+
+
+def djb2_sparse(text: str) -> SparseVector:
+    """
+    Build sparse BM25 vector using djb2 hash — must match n8n JS and C# implementations:
+      h = 5381
+      for ch in token: h = ((h << 5) + h + ord(ch)) & 0x7FFFFFFF
+    """
+    tokens = re.findall(r'[a-z0-9]+', text.lower())
+    tf: dict[int, int] = {}
+    for t in tokens:
+        h = 5381
+        for ch in t:
+            h = (((h << 5) + h) + ord(ch)) & 0x7FFFFFFF
+        tf[h] = tf.get(h, 0) + 1
+
+    if not tf:
+        return SparseVector(indices=[], values=[])
+
+    indices = list(tf.keys())
+    values  = [float(v) for v in tf.values()]
+    return SparseVector(indices=indices, values=values)
 
 QDRANT_URL = "http://localhost:6333"
 OLD_COLLECTION = "knowledge"
@@ -104,19 +131,16 @@ while True:
             print(f"   ⚠️  Skipping point {point.id}: unknown vector format")
             continue
 
-        # Build sparse text: prefer topic + content for richer BM25 signal
+        # Build sparse text: topic + content for richer BM25 signal
         content_text = point.payload.get("content", "") if point.payload else ""
-        topic_text = point.payload.get("topic", "") if point.payload else ""
-        sparse_text = f"{topic_text} {content_text}".strip()
+        topic_text   = point.payload.get("topic",   "") if point.payload else ""
+        sparse_text  = f"{topic_text} {content_text}".strip()
 
         new_point = models.PointStruct(
             id=point.id,
             vector={
-                "dense": dense_vector,
-                "sparse": models.Document(
-                    text=sparse_text,
-                    model="Qdrant/bm25",
-                ),
+                "dense":  dense_vector,
+                "sparse": djb2_sparse(sparse_text),
             },
             payload=point.payload,
         )
