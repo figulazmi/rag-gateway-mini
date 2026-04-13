@@ -23,61 +23,83 @@ public sealed class QdrantVectorSearchClient : IVectorSearchClient
 
     public Task<List<RagResultItem>> SearchAsync(
         float[] vector,
+        string queryText,
         string? project = null,
+        string? chunkType = null,
         CancellationToken cancellationToken = default)
-        => ExecuteSearchAsync(vector, project, applyFilter: true, cancellationToken);
+        => ExecuteQueryAsync(vector, queryText, project, chunkType, applyFilter: true, cancellationToken);
 
     public Task<List<RagResultItem>> SearchRawAsync(
         float[] vector,
+        string queryText,
         string? project = null,
+        string? chunkType = null,
         CancellationToken cancellationToken = default)
-        => ExecuteSearchAsync(vector, project, applyFilter: false, cancellationToken);
+        => ExecuteQueryAsync(vector, queryText, project, chunkType, applyFilter: false, cancellationToken);
 
-    private async Task<List<RagResultItem>> ExecuteSearchAsync(
+    private async Task<List<RagResultItem>> ExecuteQueryAsync(
         float[] vector,
+        string queryText,
         string? project,
+        string? chunkType,
         bool applyFilter,
         CancellationToken cancellationToken)
     {
-        object requestBody;
+        var prefetch = new List<object>
+        {
+            new
+            {
+                query = vector,
+                @using = _options.DenseVectorName,
+                limit = _options.HybridPrefetchLimit
+            }
+        };
 
-        if (applyFilter && !string.IsNullOrWhiteSpace(project))
+        if (_options.EnableHybridSearch && !string.IsNullOrWhiteSpace(queryText))
         {
-            requestBody = new
+            prefetch.Add(new
             {
-                vector,
-                limit = _options.ResultLimit,
-                with_payload = true,
-                filter = new
+                query = new
                 {
-                    must = new[]
-                    {
-                        new { key = "project", match = new { value = project } }
-                    }
-                }
-            };
+                    text = queryText,
+                    model = _options.SparseInferenceModel
+                },
+                @using = _options.SparseVectorName,
+                limit = _options.HybridPrefetchLimit
+            });
         }
-        else
+
+        var requestBody = new Dictionary<string, object>
         {
-            requestBody = new
-            {
-                vector,
-                limit = _options.ResultLimit,
-                with_payload = true
-            };
+            ["prefetch"] = prefetch,
+            ["query"] = new { fusion = _options.FusionMethod },
+            ["limit"] = _options.ResultLimit,
+            ["with_payload"] = true
+        };
+
+        if (applyFilter)
+        {
+            var must = new List<object>();
+            if (!string.IsNullOrWhiteSpace(project))
+                must.Add(new { key = "project", match = new { value = project } });
+            if (!string.IsNullOrWhiteSpace(chunkType))
+                must.Add(new { key = "chunk_type", match = new { value = chunkType } });
+
+            if (must.Count > 0)
+                requestBody["filter"] = new { must };
         }
 
         var response = await _http.PostAsJsonAsync(
-            $"/collections/{_options.QdrantCollection}/points/search",
+            $"/collections/{_options.QdrantCollection}/points/query",
             requestBody,
             cancellationToken);
 
         response.EnsureSuccessStatusCode();
 
-        var qdrantResponse = await response.Content.ReadFromJsonAsync<QdrantSearchResponse>(cancellationToken)
-            ?? throw new InvalidOperationException("Qdrant returned an empty search response.");
+        var qdrantResponse = await response.Content.ReadFromJsonAsync<QdrantQueryResponse>(cancellationToken)
+            ?? throw new InvalidOperationException("Qdrant returned an empty query response.");
 
-        return qdrantResponse.Result
+        return qdrantResponse.Result.Points
             .Select(MapToRagResultItem)
             .ToList();
     }
@@ -114,10 +136,16 @@ public sealed class QdrantVectorSearchClient : IVectorSearchClient
         _ => element.ToString()
     };
 
-    private sealed class QdrantSearchResponse
+    private sealed class QdrantQueryResponse
     {
         [JsonPropertyName("result")]
-        public List<QdrantPoint> Result { get; set; } = [];
+        public QdrantQueryResult Result { get; set; } = new();
+    }
+
+    private sealed class QdrantQueryResult
+    {
+        [JsonPropertyName("points")]
+        public List<QdrantPoint> Points { get; set; } = [];
     }
 
     private sealed class QdrantPoint

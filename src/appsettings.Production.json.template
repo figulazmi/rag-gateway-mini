@@ -3,10 +3,16 @@
     "OllamaBaseUrl": "http://192.168.18.169:11434",
     "QdrantBaseUrl": "http://192.168.18.169:6333",
     "OllamaModel": "nomic-embed-text",
-    "QdrantCollection": "knowledge",
+    "QdrantCollection": "knowledge_v2",
     "QdrantApiKey": "FILL_WITH_REAL_KEY",
-    "ScoreThreshold": 0.55,
-    "ResultLimit": 5
+    "ScoreThreshold": 0.35,
+    "ResultLimit": 5,
+    "DenseVectorName": "dense",
+    "SparseVectorName": "sparse",
+    "EnableHybridSearch": true,
+    "HybridPrefetchLimit": 20,
+    "FusionMethod": "rrf",
+    "SparseInferenceModel": "Qdrant/bm25"
   },
   "Serilog": {
     "Using": [ "Serilog.Sinks.Console", "Serilog.Sinks.Seq" ],

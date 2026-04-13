@@ -12,7 +12,7 @@ public sealed class RagSearchService : IRagSearchService
     private readonly IEmbeddingClient _embedding;
     private readonly IVectorSearchClient _vector;
     private readonly ILogger<RagSearchService> _logger;
-    private readonly float _threshold;
+    private readonly RagGatewayOptions _options;
 
     public RagSearchService(
         IEmbeddingClient embedding,
@@ -23,7 +23,7 @@ public sealed class RagSearchService : IRagSearchService
         _embedding = embedding;
         _vector = vector;
         _logger = logger;
-        _threshold = options.Value.ScoreThreshold;
+        _options = options.Value;
     }
 
     public async Task<RagSearchResponse> SearchAsync(RagSearchRequest request, CancellationToken cancellationToken = default)
@@ -31,20 +31,21 @@ public sealed class RagSearchService : IRagSearchService
         var normalized = QueryNormalizer.Normalize(request.Query);
 
         _logger.LogInformation(
-            "RAG SEARCH | original={Query} | normalized={Normalized} | project={Project}",
-            request.Query, normalized, request.Project ?? "all");
+            "RAG SEARCH | original={Query} | normalized={Normalized} | project={Project} | chunk_type={ChunkType}",
+            request.Query, normalized, request.Project ?? "all", request.ChunkType ?? "all");
 
         var embedding = await _embedding.GenerateEmbeddingAsync(normalized, cancellationToken);
-        var results = await _vector.SearchAsync(embedding, request.Project, cancellationToken);
+        var results = await _vector.SearchAsync(embedding, normalized, request.Project, request.ChunkType, cancellationToken);
 
+        var threshold = _options.ScoreThreshold;
         var filtered = results
-            .Where(r => r.Score >= _threshold)
+            .Where(r => r.Score >= threshold)
             .OrderByDescending(r => r.Score)
             .ToList();
 
         _logger.LogInformation(
             "RAG RESULT | total={Total} | above_threshold={AboveThreshold} | threshold={Threshold}",
-            results.Count, filtered.Count, _threshold);
+            results.Count, filtered.Count, threshold);
 
         if (filtered.Count == 0)
         {
@@ -69,23 +70,29 @@ public sealed class RagSearchService : IRagSearchService
         var normalized = QueryNormalizer.Normalize(request.Query);
 
         _logger.LogInformation(
-            "RAG DEBUG | original={Query} | normalized={Normalized} | project={Project}",
-            request.Query, normalized, request.Project ?? "all");
+            "RAG DEBUG | original={Query} | normalized={Normalized} | project={Project} | chunk_type={ChunkType}",
+            request.Query, normalized, request.Project ?? "all", request.ChunkType ?? "all");
 
         var embedding = await _embedding.GenerateEmbeddingAsync(normalized, cancellationToken);
-        var results = await _vector.SearchRawAsync(embedding, request.Project, cancellationToken);
+        var results = await _vector.SearchRawAsync(embedding, normalized, request.Project, request.ChunkType, cancellationToken);
 
-        var aboveThreshold = results.Count(r => r.Score >= _threshold);
+        var threshold = _options.ScoreThreshold;
+        var aboveThreshold = results.Count(r => r.Score >= threshold);
 
         _logger.LogInformation(
             "RAG DEBUG RESULT | total={Total} | above_threshold={Above} | threshold={Threshold}",
-            results.Count, aboveThreshold, _threshold);
+            results.Count, aboveThreshold, threshold);
 
+        var hybrid = _options.EnableHybridSearch;
         return new RagDebugResponse
         {
             NormalizedQuery = normalized,
             ProjectFilter = request.Project,
-            Threshold = _threshold,
+            ChunkTypeFilter = request.ChunkType,
+            SearchMode = hybrid ? "hybrid" : "dense",
+            FusionMethod = hybrid ? _options.FusionMethod : null,
+            PrefetchLimit = _options.HybridPrefetchLimit,
+            Threshold = threshold,
             TotalRawResults = results.Count,
             ResultsAboveThreshold = aboveThreshold,
             Results = results.OrderByDescending(r => r.Score).ToList()

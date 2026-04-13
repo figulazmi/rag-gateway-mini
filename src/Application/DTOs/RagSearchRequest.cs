@@ -9,4 +9,7 @@ public sealed class RagSearchRequest
 
     [JsonPropertyName("project")]
     public string? Project { get; set; }
+
+    [JsonPropertyName("chunk_type")]
+    public string? ChunkType { get; set; }
 }

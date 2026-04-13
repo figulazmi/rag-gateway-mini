@@ -11,6 +11,20 @@ public sealed class RagDebugResponse
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? ProjectFilter { get; set; }
 
+    [JsonPropertyName("chunk_type_filter")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? ChunkTypeFilter { get; set; }
+
+    [JsonPropertyName("search_mode")]
+    public string SearchMode { get; set; } = "hybrid";
+
+    [JsonPropertyName("fusion_method")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? FusionMethod { get; set; }
+
+    [JsonPropertyName("prefetch_limit")]
+    public int PrefetchLimit { get; set; }
+
     [JsonPropertyName("threshold")]
     public float Threshold { get; set; }
 
