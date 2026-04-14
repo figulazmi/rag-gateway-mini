@@ -89,7 +89,9 @@
       "Read(//c/Users/Clandesitine/.claude/skills//**)",
       "Read(//c/Users/Clandesitine/.claude/skills/**)",
       "Bash(cat)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(where rtk:*)",
+      "Bash(rtk:*)"
     ]
   },
   "enabledPlugins": {
