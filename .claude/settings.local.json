@@ -106,7 +106,10 @@
       "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\)['result']; print\\(f'points_count      : {d[\\\\\"points_count\\\\\"]}'\\); print\\(f'indexed_vectors   : {d[\\\\\"indexed_vectors_count\\\\\"]}'\\); print\\(f'status            : {d[\\\\\"status\\\\\"]}'\\); print\\(f'vectors_count     : {d.get\\(\\\\\"vectors_count\\\\\"\\)}'\\); print\\(f'segments_count    : {d[\\\\\"segments_count\\\\\"]}'\\)\")",
       "Bash(unset QDRANT_API_KEY)",
       "Bash(python scripts/eval-retrieval-quality.py --help)",
-      "Bash(rag remind:*)"
+      "Bash(rag remind:*)",
+      "Bash(rm ~/.local/bin/rag)",
+      "Bash(ln -s /c/Users/Clandesitine/source/repos/rag-gateway-mini/scripts/rag-capture-v2/rag_capture.py ~/.local/bin/rag)",
+      "Bash(chmod +x ~/.local/bin/rag)"
     ]
   },
   "enabledPlugins": {
