@@ -91,7 +91,9 @@
       "Bash(cat)",
       "Read(//tmp/**)",
       "Bash(where rtk:*)",
-      "Bash(rtk:*)"
+      "Bash(rtk:*)",
+      "Bash(rag status:*)",
+      "Bash(PYTHONIOENCODING=utf-8 python3:*)"
     ]
   },
   "enabledPlugins": {
