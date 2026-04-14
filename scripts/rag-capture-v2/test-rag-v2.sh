@@ -177,7 +177,7 @@ echo "$PIPE_OUTPUT" | grep -q "RAG signal detected" \
   || check "Signal <<<RAG_META:...>>> terdeteksi" "fail"
 
 # FIX: count draft dengan cara yang aman
-DRAFT_COUNT=$(find ~/.rag_drafts/ -name "chunk_*.md" 2>/dev/null | wc -l | tr -d '[:space:]')
+DRAFT_COUNT=$(find /root/scripts/.rag_drafts/ -name "chunk_*.md" 2>/dev/null | wc -l | tr -d '[:space:]')
 [[ "$DRAFT_COUNT" -ge 1 ]] \
   && check "Draft chunk tersimpan ($DRAFT_COUNT file)" "pass" \
   || check "Draft chunk tersimpan" "fail"
@@ -219,7 +219,7 @@ echo "$ADD_OUTPUT"
 echo ""
 
 # FIX: count draft dengan find + wc
-DRAFT_COUNT_2=$(find ~/.rag_drafts/ -name "chunk_*.md" 2>/dev/null | wc -l | tr -d '[:space:]')
+DRAFT_COUNT_2=$(find /root/scripts/.rag_drafts/ -name "chunk_*.md" 2>/dev/null | wc -l | tr -d '[:space:]')
 [[ "$DRAFT_COUNT_2" -ge 2 ]] \
   && check "Manual add berhasil (total $DRAFT_COUNT_2 drafts)" "pass" \
   || check "Manual add berhasil" "fail"
@@ -231,7 +231,7 @@ echo "━━━ [3] FRONTMATTER VALIDATION ━━━━━━━━━━━━�
 rag list
 echo ""
 
-CHUNK1=$(find ~/.rag_drafts/ -name "chunk_*.md" 2>/dev/null | sort | head -1)
+CHUNK1=$(find /root/scripts/.rag_drafts/ -name "chunk_*.md" 2>/dev/null | sort | head -1)
 if [[ -f "$CHUNK1" ]]; then
   # FIX: semua count pakai count_file helper (sudah tr -d whitespace)
   HAS_ID=$(count_file "$CHUNK1" "^id:")
