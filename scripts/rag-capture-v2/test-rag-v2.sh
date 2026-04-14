@@ -1,62 +1,108 @@
 #!/bin/bash
 # test-rag-v2.sh — RAG Capture V2 End-to-End Test
 # Usage:
-#   bash test-rag-v2.sh --dry-run   ← SAFE: skip push, collection tidak tersentuh
-#   bash test-rag-v2.sh             ← LIVE: push ke Qdrant (tambah points)
+#   bash scripts/rag-capture-v2/test-rag-v2.sh --dry-run   ← SAFE: skip push
+#   bash scripts/rag-capture-v2/test-rag-v2.sh             ← LIVE: push ke Qdrant
+#
+# API Key dibaca dari:
+#   1. Environment variable: export QDRANT_API_KEY="..."
+#   2. appsettings.Production.json (auto-detect)
+#   3. Flag: --api-key "..."
 
 set -e
 
 # ─── FLAGS ─────────────────────────────────────────────────────
 DRY_RUN=false
+CLI_API_KEY=""
+
 for arg in "$@"; do
   [[ "$arg" == "--dry-run" ]] && DRY_RUN=true
 done
 
+for i in "$@"; do
+  if [[ "$i" == "--api-key" ]]; then
+    shift; CLI_API_KEY="$1"
+  fi
+done
+
 # ─── COLORS ────────────────────────────────────────────────────
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-YELLOW='\033[1;33m'
-CYAN='\033[0;36m'
-NC='\033[0m'
+GREEN='\033[0;32m'; RED='\033[0;31m'
+YELLOW='\033[1;33m'; CYAN='\033[0;36m'; NC='\033[0m'
 
-pass() { echo -e "  ${GREEN}✅ $1${NC}"; }
-fail() { echo -e "  ${RED}❌ $1${NC}"; }
-warn() { echo -e "  ${YELLOW}⚠️  $1${NC}"; }
-info() { echo -e "  ${CYAN}ℹ️  $1${NC}"; }
+pass()  { echo -e "  ${GREEN}✅ $1${NC}"; }
+fail()  { echo -e "  ${RED}❌ $1${NC}"; }
+warn()  { echo -e "  ${YELLOW}⚠️  $1${NC}"; }
+info()  { echo -e "  ${CYAN}ℹ️  $1${NC}"; }
 
-PASS_COUNT=0
-FAIL_COUNT=0
+PASS_COUNT=0; FAIL_COUNT=0
 
 check() {
-  local desc="$1"
-  local result="$2"
-  if [[ "$result" == "pass" ]]; then
-    pass "$desc"
-    ((PASS_COUNT++)) || true
+  if [[ "$2" == "pass" ]]; then pass "$1"; ((PASS_COUNT++)) || true
+  else fail "$1"; ((FAIL_COUNT++)) || true; fi
+}
+
+# ─── RESOLVE API KEY ───────────────────────────────────────────
+# Priority: CLI arg > env var > appsettings.Production.json
+resolve_api_key() {
+  if [[ -n "$CLI_API_KEY" ]]; then
+    echo "$CLI_API_KEY"; return
+  fi
+  if [[ -n "$QDRANT_API_KEY" ]]; then
+    echo "$QDRANT_API_KEY"; return
+  fi
+  # Auto-detect dari appsettings.Production.json
+  local settings_file="/opt/homelab/ai-stack/rag-gateway-mini/appsettings.Production.json"
+  if [[ -f "$settings_file" ]]; then
+    local key
+    key=$(python3 -c "
+import json, sys
+with open('$settings_file') as f:
+    d = json.load(f)
+# Support nested: RagGateway.QdrantApiKey atau top-level
+for section in d.values():
+    if isinstance(section, dict) and 'QdrantApiKey' in section:
+        print(section['QdrantApiKey']); sys.exit()
+print(d.get('QdrantApiKey', ''))
+" 2>/dev/null || echo "")
+    if [[ -n "$key" ]]; then echo "$key"; return; fi
+  fi
+  echo ""
+}
+
+QDRANT_API_KEY_RESOLVED=$(resolve_api_key)
+
+# Helper: curl dengan API key
+qdrant_curl() {
+  if [[ -n "$QDRANT_API_KEY_RESOLVED" ]]; then
+    curl -s -H "api-key: $QDRANT_API_KEY_RESOLVED" "$@"
   else
-    fail "$desc"
-    ((FAIL_COUNT++)) || true
+    curl -s "$@"
   fi
 }
+
+QDRANT_URL="http://192.168.18.169:6333"
 
 # ─── HEADER ────────────────────────────────────────────────────
 echo ""
 echo "════════════════════════════════════════════════════════"
 echo "  RAG Capture V2 — End-to-End Test"
 if $DRY_RUN; then
-  echo -e "  Mode: ${YELLOW}DRY RUN${NC} — push di-skip, collection knowledge_v2 aman"
+  echo -e "  Mode  : ${YELLOW}DRY RUN${NC} — push di-skip, collection aman"
 else
-  echo -e "  Mode: ${RED}LIVE${NC} — akan push ke Qdrant collection knowledge_v2"
+  echo -e "  Mode  : ${RED}LIVE${NC} — akan push ke Qdrant collection knowledge_v2"
+fi
+if [[ -n "$QDRANT_API_KEY_RESOLVED" ]]; then
+  echo -e "  APIKey: ${GREEN}detected${NC} (${QDRANT_API_KEY_RESOLVED:0:8}...)"
+else
+  echo -e "  APIKey: ${YELLOW}none${NC} (open Qdrant)"
 fi
 echo "════════════════════════════════════════════════════════"
 echo ""
 
-QDRANT_URL="http://localhost:6333"
-
 # ─── TEST 0: PRE-FLIGHT ────────────────────────────────────────
 echo "━━━ [0] PRE-FLIGHT CHECK ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-# 0A. rag command tersedia
+# 0A. rag command
 if command -v rag &>/dev/null; then
   check "rag command tersedia" "pass"
 else
@@ -69,53 +115,63 @@ fi
 if python3 --version &>/dev/null; then
   check "Python 3 tersedia ($(python3 --version))" "pass"
 else
-  check "Python 3 tersedia" "fail"
-  exit 1
+  check "Python 3 tersedia" "fail"; exit 1
 fi
 
-# 0C. Qdrant
-QDRANT_VERSION=$(curl -s "$QDRANT_URL" 2>/dev/null \
+# 0C. Qdrant accessible + API key
+QDRANT_RESP=$(qdrant_curl "$QDRANT_URL" 2>/dev/null || echo "")
+QDRANT_VERSION=$(echo "$QDRANT_RESP" \
   | python3 -c "import sys,json; print(json.load(sys.stdin).get('version','?'))" 2>/dev/null || echo "")
 
 if [[ -n "$QDRANT_VERSION" ]]; then
   check "Qdrant accessible (v$QDRANT_VERSION)" "pass"
 else
   check "Qdrant accessible di $QDRANT_URL" "fail"
+  warn "Cek: curl -s -H 'api-key: KEY' $QDRANT_URL"
   exit 1
 fi
 
-# 0D. Collection knowledge_v2 terisi
-POINTS_TOTAL=$(curl -s "$QDRANT_URL/collections/knowledge_v2" 2>/dev/null \
+# 0D. Collection knowledge_v2
+COL_RESP=$(qdrant_curl "$QDRANT_URL/collections/knowledge_v2" 2>/dev/null || echo "")
+POINTS_TOTAL=$(echo "$COL_RESP" \
   | python3 -c "import sys,json; print(json.load(sys.stdin)['result']['points_count'])" 2>/dev/null || echo "0")
+COL_STATUS=$(echo "$COL_RESP" \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['result']['status'])" 2>/dev/null || echo "")
+VECTORS_OK=$(echo "$COL_RESP" \
+  | python3 -c "
+import sys,json
+d=json.load(sys.stdin)['result']['config']['params']
+has_dense  = 'dense'  in d.get('vectors', {})
+has_sparse = 'sparse' in d.get('sparse_vectors', {})
+print('ok' if has_dense and has_sparse else 'fail')
+" 2>/dev/null || echo "fail")
 
 if [[ "$POINTS_TOTAL" -gt 0 ]]; then
-  check "Collection knowledge_v2 ada ($POINTS_TOTAL points)" "pass"
+  check "Collection knowledge_v2 ada ($POINTS_TOTAL points, status=$COL_STATUS)" "pass"
 else
   check "Collection knowledge_v2 terisi" "fail"
-  warn "Jalankan: python3 scripts/migrate-to-hybrid.py"
-  exit 1
+  warn "Jalankan: python3 scripts/migrate-to-hybrid.py"; exit 1
 fi
+
+[[ "$VECTORS_OK" == "ok" ]] \
+  && check "Hybrid config: dense + sparse ada" "pass" \
+  || check "Hybrid config: dense + sparse" "fail"
 
 # 0E. Ollama
 OLLAMA_UP=$(curl -s http://localhost:11434 2>/dev/null | grep -c "Ollama" || true)
-if [[ "$OLLAMA_UP" -gt 0 ]]; then
-  check "Ollama accessible" "pass"
-else
-  check "Ollama accessible di localhost:11434" "fail"
-  exit 1
-fi
+[[ "$OLLAMA_UP" -gt 0 ]] \
+  && check "Ollama accessible" "pass" \
+  || { check "Ollama accessible" "fail"; exit 1; }
 
 # 0F. Project root
 PROJECT_ROOT=$(rag status 2>/dev/null | grep "Project root" | awk '{print $NF}')
 SUMMARIES_DIR="$PROJECT_ROOT/.claude/summaries"
 check "Project root: $PROJECT_ROOT" "pass"
-
 echo ""
 
 # ─── TEST 1: SIGNAL AUTO-DETECTION ─────────────────────────────
 echo "━━━ [1] SIGNAL AUTO-DETECTION (pipe) ━━━━━━━━━━━━━━━━━━"
 
-# Bersihkan drafts dulu agar test bersih
 echo "y" | rag clear 2>/dev/null || true
 
 MOCK_OUTPUT='<<<RAG_META:project=homelab,type=debug,topic=Qdrant Collection Migration Dense to Hybrid,tags=qdrant|hybrid-search|migration|bm25|homelab|fixed>>>
@@ -147,19 +203,14 @@ PIPE_OUTPUT=$(echo "$MOCK_OUTPUT" | rag pipe 2>&1 || true)
 echo "$PIPE_OUTPUT"
 echo ""
 
-if echo "$PIPE_OUTPUT" | grep -q "RAG signal detected"; then
-  check "Signal <<<RAG_META:...>>> terdeteksi otomatis" "pass"
-else
-  check "Signal <<<RAG_META:...>>> terdeteksi otomatis" "fail"
-fi
+echo "$PIPE_OUTPUT" | grep -q "RAG signal detected" \
+  && check "Signal <<<RAG_META:...>>> terdeteksi" "pass" \
+  || check "Signal <<<RAG_META:...>>> terdeteksi" "fail"
 
 DRAFT_COUNT=$(ls ~/.rag_drafts/ 2>/dev/null | grep -c "chunk_" || echo "0")
-if [[ "$DRAFT_COUNT" -ge 1 ]]; then
-  check "Draft chunk tersimpan ($DRAFT_COUNT file)" "pass"
-else
-  check "Draft chunk tersimpan" "fail"
-fi
-
+[[ "$DRAFT_COUNT" -ge 1 ]] \
+  && check "Draft chunk tersimpan ($DRAFT_COUNT file)" "pass" \
+  || check "Draft chunk tersimpan" "fail"
 echo ""
 
 # ─── TEST 2: MANUAL ADD ────────────────────────────────────────
@@ -170,9 +221,9 @@ RAG Gateway Mini serves hybrid search via POST /rag/search after migration to kn
 The gateway embeds queries via Ollama nomic-embed-text then queries Qdrant using RRF fusion.
 
 ### Problem
-After collection migration, search returned zero results. QdrantVectorSearchClient
-still used old collection name and unnamed vector format. ScoreThreshold 0.55
-was too high for RRF fusion scores which are normalized differently than cosine.
+After collection migration search returned zero results. QdrantVectorSearchClient still
+used old collection name and unnamed vector format. ScoreThreshold 0.55 was too high
+for RRF fusion scores which are normalized differently than raw cosine similarity.
 
 ### Solution
 Updated appsettings.json QdrantCollection to knowledge_v2 and DenseVectorName to dense.
@@ -183,7 +234,7 @@ Lowered ScoreThreshold from 0.55 to 0.35 to match RRF normalized score range.
 - After migration appsettings.json must set QdrantCollection to knowledge_v2
 - Named vector search requires using:dense field in Qdrant query request body
 - RRF fusion scores are lower than raw cosine scores — lower ScoreThreshold 0.35 vs 0.55
-- DenseVectorName config must match vector name used during collection creation"
+- DenseVectorName config must match the vector name used during collection creation"
 
 ADD_OUTPUT=$(rag add \
   --project homelab \
@@ -197,45 +248,41 @@ echo "$ADD_OUTPUT"
 echo ""
 
 DRAFT_COUNT_2=$(ls ~/.rag_drafts/ 2>/dev/null | grep -c "chunk_" || echo "0")
-if [[ "$DRAFT_COUNT_2" -ge 2 ]]; then
-  check "Manual add berhasil (total $DRAFT_COUNT_2 drafts)" "pass"
-else
-  check "Manual add berhasil" "fail"
-fi
-
+[[ "$DRAFT_COUNT_2" -ge 2 ]] \
+  && check "Manual add berhasil (total $DRAFT_COUNT_2 drafts)" "pass" \
+  || check "Manual add berhasil" "fail"
 echo ""
 
-# ─── TEST 3: LIST & FRONTMATTER VALIDATION ─────────────────────
-echo "━━━ [3] LIST & FRONTMATTER VALIDATION ━━━━━━━━━━━━━━━━━"
+# ─── TEST 3: FRONTMATTER VALIDATION ────────────────────────────
+echo "━━━ [3] FRONTMATTER VALIDATION ━━━━━━━━━━━━━━━━━━━━━━━━"
 
 rag list
 echo ""
 
 CHUNK1=$(ls ~/.rag_drafts/chunk_*.md 2>/dev/null | sort | head -1)
 if [[ -f "$CHUNK1" ]]; then
-  HAS_ID=$(grep -c "^id:"              "$CHUNK1" || echo "0")
+  HAS_ID=$(grep -c "^id:"               "$CHUNK1" || echo "0")
   HAS_PROJECT=$(grep -c "^project: homelab" "$CHUNK1" || echo "0")
-  HAS_TYPE=$(grep -c "^chunk_type:"    "$CHUNK1" || echo "0")
-  HAS_TOPIC=$(grep -c "^topic:"        "$CHUNK1" || echo "0")
-  HAS_TAGS=$(grep -c "^tags:"          "$CHUNK1" || echo "0")
-  HAS_STATUS=$(grep -c "^status:"      "$CHUNK1" || echo "0")
-  HAS_EM_DASH=$(grep -c "—"            "$CHUNK1" || echo "0")
+  HAS_TYPE=$(grep -c "^chunk_type:"     "$CHUNK1" || echo "0")
+  HAS_TOPIC=$(grep -c "^topic:"         "$CHUNK1" || echo "0")
+  HAS_TAGS=$(grep -c "^tags:"           "$CHUNK1" || echo "0")
+  HAS_STATUS=$(grep -c "^status:"       "$CHUNK1" || echo "0")
+  HAS_EM_DASH=$(grep -c "—"             "$CHUNK1" || echo "0")
   HAS_INDONESIAN=$(grep -cE '\b(ini|yang|dan|atau|dengan|untuk|tidak|bisa|sudah)\b' "$CHUNK1" || echo "0")
 
-  [[ "$HAS_ID"          -gt 0 ]] && check "Frontmatter: id"            "pass" || check "Frontmatter: id"        "fail"
-  [[ "$HAS_PROJECT"     -gt 0 ]] && check "Frontmatter: project=homelab" "pass" || check "Frontmatter: project" "fail"
-  [[ "$HAS_TYPE"        -gt 0 ]] && check "Frontmatter: chunk_type"    "pass" || check "Frontmatter: chunk_type" "fail"
-  [[ "$HAS_TOPIC"       -gt 0 ]] && check "Frontmatter: topic"         "pass" || check "Frontmatter: topic"     "fail"
-  [[ "$HAS_TAGS"        -gt 0 ]] && check "Frontmatter: tags"          "pass" || check "Frontmatter: tags"      "fail"
-  [[ "$HAS_STATUS"      -gt 0 ]] && check "Frontmatter: status"        "pass" || check "Frontmatter: status"    "fail"
-  [[ "$HAS_EM_DASH"     -eq 0 ]] && check "No em dash (—) di frontmatter" "pass" || check "Em dash ditemukan!" "fail"
-  [[ "$HAS_INDONESIAN"  -eq 0 ]] && check "Content: English only"      "pass" || warn "Kemungkinan ada Bahasa Indonesia"
+  [[ "$HAS_ID"         -gt 0 ]] && check "Frontmatter: id"             "pass" || check "Frontmatter: id"         "fail"
+  [[ "$HAS_PROJECT"    -gt 0 ]] && check "Frontmatter: project=homelab" "pass" || check "Frontmatter: project"   "fail"
+  [[ "$HAS_TYPE"       -gt 0 ]] && check "Frontmatter: chunk_type"     "pass" || check "Frontmatter: chunk_type" "fail"
+  [[ "$HAS_TOPIC"      -gt 0 ]] && check "Frontmatter: topic"          "pass" || check "Frontmatter: topic"      "fail"
+  [[ "$HAS_TAGS"       -gt 0 ]] && check "Frontmatter: tags"           "pass" || check "Frontmatter: tags"       "fail"
+  [[ "$HAS_STATUS"     -gt 0 ]] && check "Frontmatter: status"         "pass" || check "Frontmatter: status"     "fail"
+  [[ "$HAS_EM_DASH"    -eq 0 ]] && check "No em dash (—) di frontmatter" "pass" || check "Em dash ditemukan!"   "fail"
+  [[ "$HAS_INDONESIAN" -eq 0 ]] && check "Content: English only"       "pass" || warn "Kemungkinan ada Bahasa Indonesia"
 
   echo ""
   info "Preview chunk 1 frontmatter:"
   head -16 "$CHUNK1"
 fi
-
 echo ""
 
 # ─── TEST 4: MERGE ─────────────────────────────────────────────
@@ -261,53 +308,52 @@ if [[ -f "$MERGED_FILE" ]]; then
   info "Word count: $WORD_COUNT words"
   info "File size : $(du -h "$MERGED_FILE" | cut -f1)"
   echo ""
-  info "Preview (30 baris pertama):"
-  head -30 "$MERGED_FILE"
+  info "Preview (25 baris pertama):"
+  head -25 "$MERGED_FILE"
 else
   check "Merge berhasil" "fail"
 fi
-
 echo ""
 
 # ─── TEST 5: PUSH ──────────────────────────────────────────────
 echo "━━━ [5] PUSH TO QDRANT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-POINTS_BEFORE=$(curl -s "$QDRANT_URL/collections/knowledge_v2" \
+POINTS_BEFORE=$(qdrant_curl "$QDRANT_URL/collections/knowledge_v2" \
   | python3 -c "import sys,json; print(json.load(sys.stdin)['result']['points_count'])" 2>/dev/null || echo "0")
 
 if $DRY_RUN; then
   echo ""
   warn "DRY RUN — push di-skip. Collection knowledge_v2 tidak disentuh."
-  info "Points saat ini  : $POINTS_BEFORE (tidak berubah)"
+  info "Points saat ini    : $POINTS_BEFORE (tidak berubah)"
   info "File yang disiapkan: $MERGED_FILE"
   echo ""
-  info "Command push jika ingin live:"
+  info "Command push untuk live test:"
   echo ""
   echo "      bash scripts/push-to-qdrant.sh $MERGED_FILE"
   echo ""
   check "Dry-run push simulation OK" "pass"
 
-  # Cleanup test file agar tidak mengganggu
-  [[ -f "$MERGED_FILE" ]] && rm "$MERGED_FILE" && info "Test file dihapus (dry-run cleanup)"
+  # Cleanup test file agar tidak ter-push tidak sengaja
+  [[ -f "$MERGED_FILE" ]] && rm "$MERGED_FILE"
+  info "Test file dihapus dari summaries/ (dry-run cleanup)"
 else
-  info "Points sebelum: $POINTS_BEFORE"
+  info "Points sebelum push: $POINTS_BEFORE"
   bash scripts/push-to-qdrant.sh "$MERGED_FILE"
   sleep 3
 
-  POINTS_AFTER=$(curl -s "$QDRANT_URL/collections/knowledge_v2" \
+  POINTS_AFTER=$(qdrant_curl "$QDRANT_URL/collections/knowledge_v2" \
     | python3 -c "import sys,json; print(json.load(sys.stdin)['result']['points_count'])" 2>/dev/null || echo "0")
   ADDED=$((POINTS_AFTER - POINTS_BEFORE))
 
-  info "Points sesudah : $POINTS_AFTER (+$ADDED)"
+  info "Points sesudah push: $POINTS_AFTER (+$ADDED)"
   [[ "$ADDED" -gt 0 ]] \
     && check "Push berhasil ($ADDED points added)" "pass" \
-    || check "Push berhasil — points bertambah" "fail"
+    || check "Push berhasil" "fail"
 fi
-
 echo ""
 
-# ─── TEST 6: RETRIEVAL QUALITY (read-only) ─────────────────────
-echo "━━━ [6] RETRIEVAL QUALITY (read-only, selalu jalan) ━━━"
+# ─── TEST 6: RETRIEVAL QUALITY ─────────────────────────────────
+echo "━━━ [6] RETRIEVAL QUALITY (read-only) ━━━━━━━━━━━━━━━━━"
 echo ""
 
 run_query() {
@@ -323,12 +369,10 @@ run_query() {
     | python3 -c "import sys,json; print(json.load(sys.stdin)['embedding'])" 2>/dev/null || echo "")
 
   if [[ -z "$VECTOR" ]]; then
-    fail "$label — Ollama embedding gagal"
-    echo ""
-    return
+    fail "$label — Ollama embedding gagal"; echo ""; return
   fi
 
-  RESULT=$(curl -s -X POST "$QDRANT_URL/collections/knowledge_v2/points/query" \
+  RESULT=$(qdrant_curl -X POST "$QDRANT_URL/collections/knowledge_v2/points/query" \
     -H "Content-Type: application/json" \
     -d "{
       \"prefetch\": [{\"query\": $VECTOR, \"using\": \"dense\", \"limit\": 5}],
@@ -339,18 +383,13 @@ run_query() {
     }" \
     | python3 -c "
 import sys, json
-data = json.load(sys.stdin)
-pts = data.get('result', {}).get('points', [])
+pts = json.load(sys.stdin).get('result', {}).get('points', [])
 print(f'  Results: {len(pts)}')
 for i, p in enumerate(pts):
-    score = p.get('score', 0)
-    topic = p.get('payload', {}).get('topic', 'N/A')
-    ctype = p.get('payload', {}).get('chunk_type', '?')
-    print(f'  [{i+1}] score={score:.4f} | type={ctype} | {topic}')
+    print(f'  [{i+1}] score={p[\"score\"]:.4f} | type={p[\"payload\"].get(\"chunk_type\",\"?\")} | {p[\"payload\"].get(\"topic\",\"N/A\")}')
 " 2>/dev/null || echo "  parse error")
 
   echo "$RESULT"
-
   RESULT_COUNT=$(echo "$RESULT" | grep -c "score=" || echo "0")
   [[ "$RESULT_COUNT" -gt 0 ]] \
     && check "$label — $RESULT_COUNT result(s)" "pass" \
@@ -367,7 +406,7 @@ run_query "6B. Semantic query (dense)" \
   "homelab"
 
 run_query "6C. Technical term" \
-  "nomic-embed-text ollama embedding docker vm" \
+  "nomic-embed-text ollama docker vm homelab embedding" \
   "homelab"
 
 # ─── TEST 7: REMINDER SYSTEM ───────────────────────────────────
@@ -375,11 +414,9 @@ echo "━━━ [7] REMINDER SYSTEM ━━━━━━━━━━━━━━�
 
 REMIND_OUTPUT=$(rag remind 2>&1)
 echo "$REMIND_OUTPUT"
-
 echo "$REMIND_OUTPUT" | grep -q "SESSION END REMINDER" \
   && check "rag remind berjalan" "pass" \
   || check "rag remind berjalan" "fail"
-
 echo ""
 
 # ─── FINAL SUMMARY ─────────────────────────────────────────────
@@ -391,14 +428,16 @@ echo -e "  ${RED}FAIL : $FAIL_COUNT${NC}"
 echo ""
 
 if $DRY_RUN; then
-  echo -e "  Mode   : ${YELLOW}DRY RUN${NC} — collection knowledge_v2 tidak disentuh"
+  echo -e "  Mode   : ${YELLOW}DRY RUN${NC} — collection tidak disentuh"
   echo -e "  Points : $POINTS_BEFORE (tidak berubah)"
   echo ""
-  echo "  Untuk live test dengan push sungguhan:"
-  echo "  bash scripts/test-rag-v2.sh"
+  echo "  Untuk live test:"
+  echo "  bash scripts/rag-capture-v2/test-rag-v2.sh"
 else
+  POINTS_AFTER_FINAL=$(qdrant_curl "$QDRANT_URL/collections/knowledge_v2" \
+    | python3 -c "import sys,json; print(json.load(sys.stdin)['result']['points_count'])" 2>/dev/null || echo "$POINTS_BEFORE")
   echo -e "  Mode   : ${RED}LIVE${NC}"
-  echo -e "  Points : $POINTS_BEFORE → ${POINTS_AFTER:-$POINTS_BEFORE} (+${ADDED:-0})"
+  echo -e "  Points : $POINTS_BEFORE → $POINTS_AFTER_FINAL"
 fi
 
 echo ""
