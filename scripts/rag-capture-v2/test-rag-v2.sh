@@ -361,7 +361,14 @@ if $DRY_RUN; then
   [[ -f "$MERGED_FILE" ]] && rm "$MERGED_FILE" && info "Test file dihapus (dry-run cleanup)"
 else
   info "Points sebelum push: $POINTS_BEFORE"
-  bash scripts/push-to-qdrant.sh "$MERGED_FILE"
+
+  # Jalankan push dan capture output untuk cek HTTP 200
+  PUSH_OUTPUT=$(bash scripts/push-to-qdrant.sh "$MERGED_FILE" 2>&1)
+  echo "$PUSH_OUTPUT"
+
+  # Cek sukses dari output push script (OK 200)
+  PUSH_OK=$(echo "$PUSH_OUTPUT" | grep -c "OK (200)" | tr -d '[:space:]' || echo "0")
+
   sleep 3
 
   POINTS_AFTER=$(qdrant_curl "$QDRANT_URL/collections/knowledge_v2" \
@@ -369,10 +376,36 @@ else
     | tr -d '[:space:]' || echo "0")
   ADDED=$((POINTS_AFTER - POINTS_BEFORE))
 
-  info "Points sesudah push: $POINTS_AFTER (+$ADDED)"
-  [[ "$ADDED" -gt 0 ]] \
-    && check "Push berhasil ($ADDED points added)" "pass" \
-    || check "Push berhasil" "fail"
+  info "Points sesudah push: $POINTS_AFTER"
+
+  # Verifikasi data ada di Qdrant via scroll (bukan hanya points count)
+  # Ambil topic dari merged file untuk verifikasi
+  VERIFY_TOPIC=$(grep "^topic:" "$SUMMARIES_PATH/$TEST_FILENAME" 2>/dev/null \
+    | head -1 | sed 's/^topic: //' | tr -d '\r' || echo "")
+
+  VERIFY_COUNT="0"
+  if [[ -n "$VERIFY_TOPIC" ]]; then
+    VERIFY_COUNT=$(qdrant_curl -X POST "$QDRANT_URL/collections/knowledge_v2/points/scroll" \
+      -H "Content-Type: application/json" \
+      -d "{\"filter\":{\"must\":[{\"key\":\"topic\",\"match\":{\"value\":\"$VERIFY_TOPIC\"}}]},\"limit\":5}" \
+      | python3 -c "import sys,json; print(len(json.load(sys.stdin)['result']['points']))" 2>/dev/null \
+      | tr -d '[:space:]' || echo "0")
+    info "Verified in Qdrant: $VERIFY_COUNT point(s) with topic='$VERIFY_TOPIC'"
+  fi
+
+  # Pass jika: HTTP 200 DAN data ada di Qdrant
+  # Note: points count tidak bertambah jika ID sama (upsert/update) — itu normal
+  if [[ "$PUSH_OK" -gt 0 ]] && [[ "$VERIFY_COUNT" -gt 0 ]]; then
+    if [[ "$ADDED" -gt 0 ]]; then
+      check "Push berhasil — $ADDED points baru ditambahkan" "pass"
+    else
+      check "Push berhasil — upsert/update (ID sudah ada, data ter-update)" "pass"
+      info "Points tidak bertambah karena ID duplikat dari test sebelumnya — ini normal"
+    fi
+  else
+    check "Push berhasil" "fail"
+    warn "PUSH_OK=$PUSH_OK | VERIFY_COUNT=$VERIFY_COUNT"
+  fi
 fi
 echo ""
 
