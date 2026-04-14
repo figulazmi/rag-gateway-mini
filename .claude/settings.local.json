@@ -105,7 +105,8 @@
       "Bash(grep -iv \"example\\\\|template\\\\|\\\\${\")",
       "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\)['result']; print\\(f'points_count      : {d[\\\\\"points_count\\\\\"]}'\\); print\\(f'indexed_vectors   : {d[\\\\\"indexed_vectors_count\\\\\"]}'\\); print\\(f'status            : {d[\\\\\"status\\\\\"]}'\\); print\\(f'vectors_count     : {d.get\\(\\\\\"vectors_count\\\\\"\\)}'\\); print\\(f'segments_count    : {d[\\\\\"segments_count\\\\\"]}'\\)\")",
       "Bash(unset QDRANT_API_KEY)",
-      "Bash(python scripts/eval-retrieval-quality.py --help)"
+      "Bash(python scripts/eval-retrieval-quality.py --help)",
+      "Bash(rag remind:*)"
     ]
   },
   "enabledPlugins": {

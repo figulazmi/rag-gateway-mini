@@ -123,6 +123,10 @@ def get_summaries_dir(config: dict) -> Path:
 def count_words(text: str) -> int:
     return len(text.split())
 
+def posix(p) -> str:
+    """Return path as POSIX string (forward slashes) for bash-compatible output."""
+    return Path(p).as_posix()
+
 def get_draft_count() -> int:
     if not GLOBAL_DRAFTS_DIR.exists():
         return 0
@@ -135,10 +139,10 @@ def print_push_reminder(config: dict, output_path: Path = None):
     print("📦  PUSH REMINDER — jangan lupa push ke Qdrant!")
     print("─" * 62)
     if output_path:
-        print(f"    bash {push_script} {output_path}")
+        print(f"    bash {push_script} {posix(output_path)}")
     else:
         summaries_dir = get_summaries_dir(config)
-        print(f"    bash {push_script} {summaries_dir}/YYYY-MM-DD-[topic].md")
+        print(f"    bash {push_script} {posix(summaries_dir)}/YYYY-MM-DD-[topic].md")
     print(f"    Collection : {collection}")
     print("─" * 62 + "\n")
 
@@ -401,7 +405,7 @@ def cmd_merge(args, config: dict):
     ]
 
     output_path.write_text("\n".join(sections), encoding="utf-8")
-    print(f"\n✅ Merged {len(drafts)} chunks → {output_path}")
+    print(f"\n✅ Merged {len(drafts)} chunks → {posix(output_path)}")
 
     # Always remind to push
     print_push_reminder(config, output_path)
@@ -463,14 +467,14 @@ def cmd_remind(config: dict):
         print(f"  Step 1 — Merge drafts:")
         print(f"     rag merge --output YYYY-MM-DD-[topic].md\n")
         print(f"  Step 2 — Push merged file:")
-        print(f"     bash {push_script} {summaries_dir}/YYYY-MM-DD-[topic].md")
+        print(f"     bash {push_script} {posix(summaries_dir)}/YYYY-MM-DD-[topic].md")
     else:
         recent = sorted(summaries_dir.glob("*.md"), key=lambda f: f.stat().st_mtime, reverse=True)
         if recent:
             latest = recent[0]
             print(f"\n  Latest summary : {latest.name}")
             print(f"\n  Push to Qdrant:")
-            print(f"     bash {push_script} {latest}")
+            print(f"     bash {push_script} {posix(latest)}")
         else:
             print("\n  No summaries found. Run 'rag add' to start capturing.")
 
