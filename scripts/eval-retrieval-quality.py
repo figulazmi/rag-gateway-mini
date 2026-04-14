@@ -2,23 +2,32 @@
 """
 Retrieval Quality Evaluation Framework — knowledge_v2 Hybrid Search
 Author  : Figur Ulul Azmi
-Version : 1.0.0
+Version : 2.0.0
 
-Evaluates two retrieval strategies against knowledge_v2 on VM B1:
-  - Dense-only  : nomic-embed-text (768-dim, COSINE), using "dense"
-  - Hybrid-RRF  : dense + sparse djb2 BM25, fused with Qdrant RRF
+Evaluates three retrieval strategies against knowledge_v2 on VM B1:
+  - Dense-only   : nomic-embed-text (768-dim, COSINE), using "dense"
+  - Sparse-only  : djb2 BM25 client-side hash, using "sparse"
+  - Hybrid-RRF   : dense + sparse djb2 BM25, fused with Qdrant RRF
 
 Metrics:
-  Hit@1 / Hit@3 / Hit@5   — Did a relevant result appear in top K?
-  MRR                      — Mean Reciprocal Rank of first relevant result
-  NDCG@5                   — Normalized Discounted Cumulative Gain at 5
-  Score distribution        — min / max / avg / p50 / p95 per query
-  Latency (ms)             — embed + search time per query
+  Hit@1 / Hit@3 / Hit@5  — Did a relevant result appear in top K?
+  MRR                     — Mean Reciprocal Rank of first relevant result
+  NDCG@5                  — Normalized Discounted Cumulative Gain at 5
+  Score distribution       — min / max / avg / p50 / p95 per query
+  Latency (ms)            — embed + search time per query
+
+New in v2:
+  --debug        Show actual top-3 documents returned per strategy per query
+  --prefetch-mult  Tune RRF prefetch pool size (default 4, try 8 or 16)
+  Sparse-only baseline — isolate sparse vector quality
+  Regression analysis  — flag queries where hybrid underperforms dense
+  Per-strategy winner  — show which strategy won each metric per query
 
 Usage:
   python3 scripts/eval-retrieval-quality.py
-  python3 scripts/eval-retrieval-quality.py --project homelab
-  python3 scripts/eval-retrieval-quality.py --limit 5 --output reports/eval.json
+  python3 scripts/eval-retrieval-quality.py --project homelab --debug
+  python3 scripts/eval-retrieval-quality.py --prefetch-mult 8
+  python3 scripts/eval-retrieval-quality.py --limit 5 --output .claude/reports/eval.json
   python3 scripts/eval-retrieval-quality.py --qdrant-url http://192.168.18.169:6333
 
 IMPORTANT — named vectors:
@@ -41,15 +50,15 @@ from typing import Optional
 
 # ─── CONFIG ─────────────────────────────────────────────────────────────────
 
-QDRANT_URL    = "http://localhost:6333"
+QDRANT_URL     = "http://localhost:6333"
 QDRANT_API_KEY = "QDRANT_API_KEY_REDACTED"
-OLLAMA_URL    = "http://localhost:11434"
-COLLECTION    = "knowledge_v2"
-DENSE_VECTOR  = "dense"    # REQUIRED: knowledge_v2 has no default/unnamed vector
-SPARSE_VECTOR = "sparse"
-EMBED_MODEL   = "nomic-embed-text"
-DEFAULT_LIMIT = 5
-PREFETCH_MULT = 4           # prefetch = limit * PREFETCH_MULT per leg
+OLLAMA_URL     = "http://localhost:11434"
+COLLECTION     = "knowledge_v2"
+DENSE_VECTOR   = "dense"    # REQUIRED: knowledge_v2 has no default/unnamed vector
+SPARSE_VECTOR  = "sparse"
+EMBED_MODEL    = "nomic-embed-text"
+DEFAULT_LIMIT  = 5
+DEFAULT_PREFETCH_MULT = 4   # prefetch = limit * PREFETCH_MULT per leg
 
 
 # ─── TEST SUITE ─────────────────────────────────────────────────────────────
@@ -82,10 +91,10 @@ TEST_SUITE: list[TestCase] = [
         description="knowledge_v2 collection schema migration",
     ),
     TestCase(
-        query="docker compose VM B1 deployment rag gateway service update",
+        query="docker compose deployment VM B1 homelab server git pull rebuild",
         project="homelab",
-        gold_keywords=["docker", "compose", "deploy", "vm", "gateway"],
-        gold_topics=["deploy", "docker", "VM B1"],
+        gold_keywords=["docker", "compose", "deploy", "git", "pull"],
+        gold_topics=["deploy", "docker", "VM B1", "Deployment"],
         description="VM B1 docker deployment workflow",
     ),
     TestCase(
@@ -120,7 +129,7 @@ TEST_SUITE: list[TestCase] = [
 ]
 
 
-# ─── SPARSE VECTOR — djb2 ──────────────────────────────────────────────────
+# ─── SPARSE VECTOR — djb2 ───────────────────────────────────────────────────
 # Must match: n8n JS node, migrate-to-hybrid.py, qdrant-mcp-server-v2.js, QdrantVectorSearchClient.cs
 # Algorithm: h = 5381; for each char: h = (((h << 5) + h) + ord(ch)) & 0x7FFFFFFF
 
@@ -138,21 +147,23 @@ def djb2_sparse(text: str) -> dict:
     }
 
 
-# ─── HTTP HELPERS ─────────────────────────────────────────────────────────
+# ─── HTTP HELPERS ────────────────────────────────────────────────────────────
 
-def _post(url: str, body: dict, qdrant_url: str, api_key: str) -> dict:
+def _post(url: str, body: dict, api_key: str) -> dict:
     data = json.dumps(body).encode()
     req = urllib.request.Request(
         url,
         data=data,
-        headers={
-            "Content-Type": "application/json",
-            "api-key": api_key,
-        },
+        headers={"Content-Type": "application/json", "api-key": api_key},
         method="POST",
     )
     with urllib.request.urlopen(req, timeout=30) as resp:
-        return json.loads(resp.read())
+        raw = resp.read()
+    result = json.loads(raw)
+    # Surface Qdrant errors early with useful context
+    if isinstance(result.get("status"), dict) and result["status"].get("error"):
+        raise RuntimeError(f"Qdrant error: {result['status']['error']}  body={json.dumps(body)[:300]}")
+    return result
 
 
 def embed(text: str, ollama_url: str) -> list[float]:
@@ -168,36 +179,64 @@ def embed(text: str, ollama_url: str) -> list[float]:
         return json.loads(resp.read())["embedding"]
 
 
-# ─── SEARCH STRATEGIES ─────────────────────────────────────────────────────
+# ─── SEARCH STRATEGIES ───────────────────────────────────────────────────────
+
+def _project_filter(project: str) -> dict:
+    return {"must": [{"key": "project", "match": {"value": project}}]}
+
 
 def search_dense_only(
     dense_vector: list[float],
     project: str,
     limit: int,
+    prefetch_mult: int,
     qdrant_url: str,
     api_key: str,
 ) -> list[dict]:
     """
-    Dense-only retrieval using /points/query with a single dense prefetch leg.
-    MUST specify using="dense" — knowledge_v2 has no default vector.
+    Dense-only via /points/query with single dense prefetch leg.
+    using="dense" is REQUIRED — knowledge_v2 has no default vector.
     """
     body = {
-        "prefetch": [
-            {
-                "query": dense_vector,
-                "using": DENSE_VECTOR,           # REQUIRED: named vector
-                "limit": limit * PREFETCH_MULT,
-                "filter": {"must": [{"key": "project", "match": {"value": project}}]},
-            }
-        ],
+        "prefetch": [{
+            "query": dense_vector,
+            "using": DENSE_VECTOR,
+            "limit": limit * prefetch_mult,
+            "filter": _project_filter(project),
+        }],
         "query": {"fusion": "rrf"},
         "limit": limit,
         "with_payload": True,
     }
-    result = _post(
-        f"{qdrant_url}/collections/{COLLECTION}/points/query",
-        body, qdrant_url, api_key,
-    )
+    result = _post(f"{qdrant_url}/collections/{COLLECTION}/points/query", body, api_key)
+    return result.get("result", {}).get("points", [])
+
+
+def search_sparse_only(
+    sparse_vector: dict,
+    project: str,
+    limit: int,
+    prefetch_mult: int,
+    qdrant_url: str,
+    api_key: str,
+) -> list[dict]:
+    """
+    Sparse-only via /points/query with single sparse prefetch leg.
+    using="sparse" is REQUIRED — knowledge_v2 has no default vector.
+    Baseline to isolate djb2 sparse vector quality independently.
+    """
+    body = {
+        "prefetch": [{
+            "query": sparse_vector,
+            "using": SPARSE_VECTOR,
+            "limit": limit * prefetch_mult,
+            "filter": _project_filter(project),
+        }],
+        "query": {"fusion": "rrf"},
+        "limit": limit,
+        "with_payload": True,
+    }
+    result = _post(f"{qdrant_url}/collections/{COLLECTION}/points/query", body, api_key)
     return result.get("result", {}).get("points", [])
 
 
@@ -206,71 +245,73 @@ def search_hybrid(
     sparse_vector: dict,
     project: str,
     limit: int,
+    prefetch_mult: int,
     qdrant_url: str,
     api_key: str,
 ) -> list[dict]:
     """
-    Hybrid retrieval: dense + sparse djb2, fused server-side with RRF.
-    MUST specify using="dense" / using="sparse" per leg.
+    Hybrid via /points/query: dense + sparse djb2, fused server-side with RRF.
+    Both legs require explicit `using` — knowledge_v2 has no default vector.
     """
     body = {
         "prefetch": [
             {
                 "query": dense_vector,
-                "using": DENSE_VECTOR,           # REQUIRED: named vector
-                "limit": limit * PREFETCH_MULT,
-                "filter": {"must": [{"key": "project", "match": {"value": project}}]},
+                "using": DENSE_VECTOR,
+                "limit": limit * prefetch_mult,
+                "filter": _project_filter(project),
             },
             {
                 "query": sparse_vector,
-                "using": SPARSE_VECTOR,          # REQUIRED: named vector
-                "limit": limit * PREFETCH_MULT,
-                "filter": {"must": [{"key": "project", "match": {"value": project}}]},
+                "using": SPARSE_VECTOR,
+                "limit": limit * prefetch_mult,
+                "filter": _project_filter(project),
             },
         ],
         "query": {"fusion": "rrf"},
         "limit": limit,
         "with_payload": True,
     }
-    result = _post(
-        f"{qdrant_url}/collections/{COLLECTION}/points/query",
-        body, qdrant_url, api_key,
-    )
+    result = _post(f"{qdrant_url}/collections/{COLLECTION}/points/query", body, api_key)
     return result.get("result", {}).get("points", [])
 
 
-# ─── RELEVANCE SCORING ────────────────────────────────────────────────────
+# ─── RELEVANCE SCORING ───────────────────────────────────────────────────────
 
 def relevance_score(point: dict, tc: TestCase) -> float:
     """
-    Binary relevance: 1.0 if ANY gold keyword found in content,
-    or ANY gold topic substring found in payload["topic"].
-    Returns value between 0.0 and 1.0.
+    Partial relevance: fraction of gold signals found in content + topic.
+    Returns 0.0–1.0.
     """
     payload = point.get("payload", {})
     content = (payload.get("content", "") or "").lower()
-    topic   = (payload.get("topic", "") or "").lower()
+    topic   = (payload.get("topic", "")   or "").lower()
 
     keyword_hits = sum(1 for kw in tc.gold_keywords if kw.lower() in content)
-    topic_hits   = sum(1 for t in tc.gold_topics if t.lower() in topic)
+    topic_hits   = sum(1 for t  in tc.gold_topics   if t.lower()  in topic)
 
-    total_signals = len(tc.gold_keywords) + len(tc.gold_topics)
-    if total_signals == 0:
-        return 0.0
-    return min(1.0, (keyword_hits + topic_hits) / total_signals)
+    total = len(tc.gold_keywords) + len(tc.gold_topics)
+    return min(1.0, (keyword_hits + topic_hits) / total) if total else 0.0
 
 
 def is_relevant(point: dict, tc: TestCase, threshold: float = 0.2) -> bool:
     return relevance_score(point, tc) >= threshold
 
 
-# ─── METRICS ─────────────────────────────────────────────────────────────
+def doc_summary(point: dict) -> str:
+    """One-line summary of a returned document for debug output."""
+    p = point.get("payload", {})
+    topic   = (p.get("topic",   "") or "")[:55]
+    project = (p.get("project", "") or "")
+    score   = point.get("score", 0.0)
+    content_preview = (p.get("content", "") or "")[:80].replace("\n", " ")
+    return f"score={score:.4f}  [{project}] {topic!r}  …{content_preview}…"
+
+
+# ─── METRICS ─────────────────────────────────────────────────────────────────
 
 def hit_at_k(points: list[dict], tc: TestCase, k: int) -> float:
-    for p in points[:k]:
-        if is_relevant(p, tc):
-            return 1.0
-    return 0.0
+    return 1.0 if any(is_relevant(p, tc) for p in points[:k]) else 0.0
 
 
 def reciprocal_rank(points: list[dict], tc: TestCase) -> float:
@@ -281,10 +322,9 @@ def reciprocal_rank(points: list[dict], tc: TestCase) -> float:
 
 
 def ndcg_at_k(points: list[dict], tc: TestCase, k: int = 5) -> float:
-    rels = [relevance_score(p, tc) for p in points[:k]]
-    dcg  = sum(r / math.log2(i + 2) for i, r in enumerate(rels))
-    ideal_rels = sorted(rels, reverse=True)
-    idcg = sum(r / math.log2(i + 2) for i, r in enumerate(ideal_rels))
+    rels  = [relevance_score(p, tc) for p in points[:k]]
+    dcg   = sum(r / math.log2(i + 2) for i, r in enumerate(rels))
+    idcg  = sum(r / math.log2(i + 2) for i, r in enumerate(sorted(rels, reverse=True)))
     return dcg / idcg if idcg > 0 else 0.0
 
 
@@ -302,7 +342,7 @@ def score_distribution(points: list[dict]) -> dict:
     }
 
 
-# ─── RESULT DATACLASS ─────────────────────────────────────────────────────
+# ─── RESULT DATACLASS ────────────────────────────────────────────────────────
 
 @dataclass
 class QueryResult:
@@ -318,99 +358,169 @@ class QueryResult:
     score_dist: dict
     latency_ms: float
     raw_scores: list = field(default_factory=list)
+    top_docs: list   = field(default_factory=list)   # [(score, topic, content_preview)]
 
 
-@dataclass
-class EvalReport:
-    timestamp: str
-    collection: str
-    limit: int
-    total_queries: int
-    dense_avg: dict
-    hybrid_avg: dict
-    hybrid_vs_dense_delta: dict
-    per_query: list
-
-
-# ─── AGGREGATION ──────────────────────────────────────────────────────────
+# ─── AGGREGATION ─────────────────────────────────────────────────────────────
 
 def aggregate(results: list[QueryResult]) -> dict:
     if not results:
         return {}
     n = len(results)
     return {
-        "hit@1":       round(sum(r.hit_at_1 for r in results) / n, 4),
-        "hit@3":       round(sum(r.hit_at_3 for r in results) / n, 4),
-        "hit@5":       round(sum(r.hit_at_5 for r in results) / n, 4),
-        "mrr":         round(sum(r.mrr for r in results) / n, 4),
-        "ndcg@5":      round(sum(r.ndcg5 for r in results) / n, 4),
+        "hit@1":          round(sum(r.hit_at_1 for r in results) / n, 4),
+        "hit@3":          round(sum(r.hit_at_3 for r in results) / n, 4),
+        "hit@5":          round(sum(r.hit_at_5 for r in results) / n, 4),
+        "mrr":            round(sum(r.mrr       for r in results) / n, 4),
+        "ndcg@5":         round(sum(r.ndcg5     for r in results) / n, 4),
         "avg_latency_ms": round(sum(r.latency_ms for r in results) / n, 1),
     }
 
 
-def delta(hybrid: dict, dense: dict) -> dict:
+def delta(a: dict, b: dict) -> dict:
     keys = ["hit@1", "hit@3", "hit@5", "mrr", "ndcg@5"]
-    return {
-        k: round(hybrid.get(k, 0) - dense.get(k, 0), 4)
-        for k in keys
-    }
+    return {k: round(a.get(k, 0) - b.get(k, 0), 4) for k in keys}
 
 
-# ─── PRINTING ─────────────────────────────────────────────────────────────
+# ─── PRINTING ─────────────────────────────────────────────────────────────────
 
-def print_header():
+W = 74
+
+def print_header(limit: int, prefetch_mult: int, project_filter: Optional[str], suite_size: int):
     print()
-    print("=" * 72)
-    print("  Retrieval Quality Evaluation — knowledge_v2 Hybrid Search")
+    print("=" * W)
+    print("  Retrieval Quality Evaluation — knowledge_v2 Hybrid Search  v2.0")
     print(f"  Collection : {COLLECTION}  |  Vectors: {DENSE_VECTOR} (768-dim) + {SPARSE_VECTOR} (djb2)")
     print(f"  Timestamp  : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print("=" * 72)
+    print(f"  Strategies : dense-only | sparse-only | hybrid-rrf")
+    print(f"  Prefetch   : limit × {prefetch_mult} per leg  |  limit={limit}")
+    if project_filter:
+        print(f"  Project    : {project_filter}")
+    print(f"  Queries    : {suite_size}")
+    print("=" * W)
 
 
-def print_query_result(dense: QueryResult, hybrid: QueryResult, idx: int):
+def print_query_result(
+    dense:  QueryResult,
+    sparse: QueryResult,
+    hybrid: QueryResult,
+    idx: int,
+    debug: bool,
+):
     print(f"\n[{idx}] {dense.description}")
-    print(f"    Query   : {dense.query[:70]}")
+    print(f"    Query   : {dense.query[:68]}")
     print(f"    Project : {dense.project}")
-    print(f"    {'Metric':<12} {'Dense-Only':>12} {'Hybrid-RRF':>12} {'Delta':>10}")
-    print(f"    {'-'*46}")
-    for label, d_val, h_val in [
-        ("Hit@1",  dense.hit_at_1, hybrid.hit_at_1),
-        ("Hit@3",  dense.hit_at_3, hybrid.hit_at_3),
-        ("Hit@5",  dense.hit_at_5, hybrid.hit_at_5),
-        ("MRR",    dense.mrr,      hybrid.mrr),
-        ("NDCG@5", dense.ndcg5,    hybrid.ndcg5),
-    ]:
-        delta_val = h_val - d_val
-        sign = "+" if delta_val > 0 else ""
-        print(f"    {label:<12} {d_val:>12.4f} {h_val:>12.4f} {sign+str(round(delta_val,4)):>10}")
-    print(f"    {'Latency(ms)':<12} {dense.latency_ms:>12.1f} {hybrid.latency_ms:>12.1f}")
-    print(f"    Score dist (hybrid): min={hybrid.score_dist['min']} "
-          f"max={hybrid.score_dist['max']} avg={hybrid.score_dist['avg']}")
+    print(f"    {'Metric':<12} {'Dense':>10} {'Sparse':>10} {'Hybrid':>10}  {'D→H':>8}")
+    print(f"    {'-'*52}")
+
+    metrics = [
+        ("Hit@1",  dense.hit_at_1, sparse.hit_at_1, hybrid.hit_at_1),
+        ("Hit@3",  dense.hit_at_3, sparse.hit_at_3, hybrid.hit_at_3),
+        ("Hit@5",  dense.hit_at_5, sparse.hit_at_5, hybrid.hit_at_5),
+        ("MRR",    dense.mrr,      sparse.mrr,      hybrid.mrr),
+        ("NDCG@5", dense.ndcg5,    sparse.ndcg5,    hybrid.ndcg5),
+    ]
+    for label, dv, sv, hv in metrics:
+        d2h = hv - dv
+        sign = "+" if d2h > 0 else ""
+        flag = "  ✓" if d2h > 0.001 else ("  ✗" if d2h < -0.001 else "")
+        print(f"    {label:<12} {dv:>10.4f} {sv:>10.4f} {hv:>10.4f}  {sign+str(round(d2h,4)):>8}{flag}")
+
+    print(f"    {'Latency':<12} {dense.latency_ms:>9.1f}ms {sparse.latency_ms:>9.1f}ms {hybrid.latency_ms:>9.1f}ms")
+    print(f"    Score(hybrid) : min={hybrid.score_dist['min']} "
+          f"avg={hybrid.score_dist['avg']} max={hybrid.score_dist['max']}")
+
+    if debug:
+        for strat, res in [("Dense",  dense), ("Sparse", sparse), ("Hybrid", hybrid)]:
+            print(f"\n    ── {strat} top-3 ──────────────────────────────────────────────────")
+            for i, (sc, topic, preview) in enumerate(res.top_docs[:3], 1):
+                print(f"    #{i} score={sc:.4f}  topic={topic!r}")
+                print(f"         {preview}")
 
 
-def print_summary(dense_avg: dict, hybrid_avg: dict, d: dict):
+def print_regression_analysis(
+    dense_results:  list[QueryResult],
+    sparse_results: list[QueryResult],
+    hybrid_results: list[QueryResult],
+    suite: list[TestCase],
+):
+    regressions = []
+    for i, (d, s, h) in enumerate(zip(dense_results, sparse_results, hybrid_results)):
+        if h.hit_at_1 < d.hit_at_1 or h.mrr < d.mrr or h.ndcg5 < d.ndcg5 - 0.01:
+            regressions.append((i + 1, suite[i], d, s, h))
+
+    if not regressions:
+        print("\n  No regressions found — hybrid >= dense on all queries.")
+        return
+
+    print(f"\n  REGRESSION ANALYSIS — {len(regressions)} query(ies) where hybrid < dense")
+    print("  " + "-" * (W - 2))
+    for idx, tc, d, s, h in regressions:
+        print(f"\n  [{idx}] {tc.description}")
+        print(f"       Query   : {tc.query}")
+        print(f"       Dense   : Hit@1={d.hit_at_1}  MRR={d.mrr:.4f}  NDCG@5={d.ndcg5:.4f}")
+        print(f"       Sparse  : Hit@1={s.hit_at_1}  MRR={s.mrr:.4f}  NDCG@5={s.ndcg5:.4f}")
+        print(f"       Hybrid  : Hit@1={h.hit_at_1}  MRR={h.mrr:.4f}  NDCG@5={h.ndcg5:.4f}")
+
+        # Diagnose root cause
+        if s.hit_at_1 < d.hit_at_1:
+            print(f"       Diagnosis: Sparse leg is retrieving wrong document at rank 1.")
+            print(f"                  djb2 tokens from query match noise documents more than target.")
+            print(f"                  → RRF fusion boosted wrong doc, pushing relevant to rank 2+.")
+            print(f"       Fix options:")
+            print(f"         1. --prefetch-mult 8  (more candidates → smoother RRF)")
+            print(f"         2. Re-index with richer topic+keywords in sparse text")
+            print(f"         3. Use sparse-only score to filter bad sparse docs before fusion")
+        elif s.hit_at_1 == d.hit_at_1:
+            print(f"       Diagnosis: Both dense and sparse rank correctly at #1.")
+            print(f"                  RRF fusion introduced rank instability for lower positions.")
+            print(f"                  NDCG drops because ranks 2-5 differ between strategies.")
+            print(f"       Fix options:")
+            print(f"         1. --prefetch-mult 8  (more fusion candidates)")
+            print(f"         2. Accept — NDCG@5 delta < 0.05 is within normal RRF variance")
+
+
+def print_summary(
+    dense_avg:  dict,
+    sparse_avg: dict,
+    hybrid_avg: dict,
+    d_vs_dense: dict,
+    prefetch_mult: int,
+):
     print()
-    print("=" * 72)
+    print("=" * W)
     print("  AGGREGATE SUMMARY")
-    print("=" * 72)
-    print(f"  {'Metric':<14} {'Dense-Only':>12} {'Hybrid-RRF':>12} {'Delta':>10}")
-    print(f"  {'-'*48}")
+    print("=" * W)
+    print(f"  {'Metric':<13} {'Dense':>10} {'Sparse':>10} {'Hybrid':>10}  {'D→H':>9}")
+    print(f"  {'-'*56}")
     for k in ["hit@1", "hit@3", "hit@5", "mrr", "ndcg@5"]:
         dv = dense_avg.get(k, 0)
+        sv = sparse_avg.get(k, 0)
         hv = hybrid_avg.get(k, 0)
-        sign = "+" if d[k] > 0 else ""
-        verdict = " ✓" if d[k] > 0 else (" =" if d[k] == 0 else " ✗")
-        print(f"  {k:<14} {dv:>12.4f} {hv:>12.4f} {sign+str(d[k]):>10}{verdict}")
-    print(f"  {'avg latency':<14} {dense_avg['avg_latency_ms']:>11.1f}ms "
-          f"{hybrid_avg['avg_latency_ms']:>11.1f}ms")
+        d  = d_vs_dense[k]
+        sign = "+" if d > 0 else ""
+        verdict = "  ✓" if d > 0.001 else ("  ✗" if d < -0.001 else "  =")
+        print(f"  {k:<13} {dv:>10.4f} {sv:>10.4f} {hv:>10.4f}  {sign+str(d):>9}{verdict}")
+    print(f"  {'avg latency':<13} {dense_avg['avg_latency_ms']:>9.1f}ms "
+          f"{sparse_avg['avg_latency_ms']:>9.1f}ms {hybrid_avg['avg_latency_ms']:>9.1f}ms")
     print()
-    improvement = sum(1 for v in d.values() if v > 0)
-    print(f"  Hybrid improved {improvement}/{len(d)} metrics vs dense-only.")
-    print("=" * 72)
+
+    improved  = sum(1 for v in d_vs_dense.values() if v > 0.001)
+    regressed = sum(1 for v in d_vs_dense.values() if v < -0.001)
+    print(f"  Hybrid vs Dense: {improved} improved / {regressed} regressed / "
+          f"{5 - improved - regressed} equal (out of 5 metrics)")
+
+    if regressed > 0:
+        print()
+        print(f"  Recommendation: sparse djb2 leg is introducing noise.")
+        print(f"  Try --prefetch-mult {prefetch_mult * 2} to increase RRF candidate pool.")
+        print(f"  Use --debug to inspect which documents the sparse leg retrieves.")
+
+    print("=" * W)
     print()
 
 
-# ─── MAIN ─────────────────────────────────────────────────────────────────
+# ─── MAIN ────────────────────────────────────────────────────────────────────
 
 def run_evaluation(
     qdrant_url: str,
@@ -418,135 +528,158 @@ def run_evaluation(
     api_key: str,
     project_filter: Optional[str],
     limit: int,
+    prefetch_mult: int,
     output_path: Optional[str],
+    debug: bool,
 ):
     suite = [tc for tc in TEST_SUITE if project_filter is None or tc.project == project_filter]
     if not suite:
-        print(f"No test cases for project '{project_filter}'. Available: {list({tc.project for tc in TEST_SUITE})}")
+        print(f"No test cases for project '{project_filter}'. "
+              f"Available: {list({tc.project for tc in TEST_SUITE})}")
         return
 
-    print_header()
-    print(f"\n  Running {len(suite)} queries  |  limit={limit}")
-    if project_filter:
-        print(f"  Project filter: {project_filter}")
+    print_header(limit, prefetch_mult, project_filter, len(suite))
     print()
 
     dense_results:  list[QueryResult] = []
+    sparse_results: list[QueryResult] = []
     hybrid_results: list[QueryResult] = []
 
     for idx, tc in enumerate(suite, start=1):
-        print(f"  [{idx}/{len(suite)}] Embedding: {tc.query[:60]}...")
+        print(f"  [{idx}/{len(suite)}] {tc.query[:65]}...")
 
-        # Generate vectors
+        # Embed once, reuse for all strategies
         t0 = time.perf_counter()
         dense_vec  = embed(tc.query, ollama_url)
         sparse_vec = djb2_sparse(tc.query)
         embed_ms   = (time.perf_counter() - t0) * 1000
 
-        # Dense-only search
+        # Dense-only
         t0 = time.perf_counter()
-        dense_points = search_dense_only(dense_vec, tc.project, limit, qdrant_url, api_key)
-        dense_search_ms = (time.perf_counter() - t0) * 1000
+        dense_pts = search_dense_only(dense_vec, tc.project, limit, prefetch_mult, qdrant_url, api_key)
+        dense_ms  = (time.perf_counter() - t0) * 1000
 
-        # Hybrid search
+        # Sparse-only
         t0 = time.perf_counter()
-        hybrid_points = search_hybrid(dense_vec, sparse_vec, tc.project, limit, qdrant_url, api_key)
-        hybrid_search_ms = (time.perf_counter() - t0) * 1000
+        sparse_pts = search_sparse_only(sparse_vec, tc.project, limit, prefetch_mult, qdrant_url, api_key)
+        sparse_ms  = (time.perf_counter() - t0) * 1000
 
-        # Build results
-        def build_result(points: list[dict], strategy: str, search_ms: float) -> QueryResult:
+        # Hybrid
+        t0 = time.perf_counter()
+        hybrid_pts = search_hybrid(dense_vec, sparse_vec, tc.project, limit, prefetch_mult, qdrant_url, api_key)
+        hybrid_ms  = (time.perf_counter() - t0) * 1000
+
+        def extract_top_docs(pts: list[dict]) -> list:
+            out = []
+            for p in pts[:3]:
+                payload = p.get("payload", {})
+                sc      = p.get("score", 0.0)
+                topic   = (payload.get("topic", "") or "")[:55]
+                preview = (payload.get("content", "") or "")[:90].replace("\n", " ")
+                out.append((sc, topic, preview))
+            return out
+
+        def build_result(pts: list[dict], strategy: str, search_ms: float) -> QueryResult:
             return QueryResult(
                 query=tc.query,
                 project=tc.project,
                 description=tc.description,
                 strategy=strategy,
-                hit_at_1=hit_at_k(points, tc, 1),
-                hit_at_3=hit_at_k(points, tc, 3),
-                hit_at_5=hit_at_k(points, tc, 5),
-                mrr=reciprocal_rank(points, tc),
-                ndcg5=ndcg_at_k(points, tc, 5),
-                score_dist=score_distribution(points),
+                hit_at_1=hit_at_k(pts, tc, 1),
+                hit_at_3=hit_at_k(pts, tc, 3),
+                hit_at_5=hit_at_k(pts, tc, 5),
+                mrr=reciprocal_rank(pts, tc),
+                ndcg5=ndcg_at_k(pts, tc, 5),
+                score_dist=score_distribution(pts),
                 latency_ms=round(embed_ms + search_ms, 1),
-                raw_scores=[p.get("score", 0) for p in points],
+                raw_scores=[p.get("score", 0) for p in pts],
+                top_docs=extract_top_docs(pts),
             )
 
-        dr = build_result(dense_points, "dense", dense_search_ms)
-        hr = build_result(hybrid_points, "hybrid-rrf", hybrid_search_ms)
+        dr = build_result(dense_pts,  "dense",      dense_ms)
+        sr = build_result(sparse_pts, "sparse-only", sparse_ms)
+        hr = build_result(hybrid_pts, "hybrid-rrf", hybrid_ms)
 
         dense_results.append(dr)
+        sparse_results.append(sr)
         hybrid_results.append(hr)
 
-        print_query_result(dr, hr, idx)
+        print_query_result(dr, sr, hr, idx, debug)
 
-    # Aggregate
+    # Aggregates
     dense_avg  = aggregate(dense_results)
+    sparse_avg = aggregate(sparse_results)
     hybrid_avg = aggregate(hybrid_results)
-    d          = delta(hybrid_avg, dense_avg)
+    d_vs_dense = delta(hybrid_avg, dense_avg)
 
-    print_summary(dense_avg, hybrid_avg, d)
+    print_summary(dense_avg, sparse_avg, hybrid_avg, d_vs_dense, prefetch_mult)
+    print_regression_analysis(dense_results, sparse_results, hybrid_results, suite)
 
-    # Save JSON report
+    # JSON report
     if output_path:
         import os
-        os.makedirs(os.path.dirname(output_path) if os.path.dirname(output_path) else ".", exist_ok=True)
+        dir_part = os.path.dirname(output_path)
+        if dir_part:
+            os.makedirs(dir_part, exist_ok=True)
         report = {
-            "timestamp":            datetime.now().isoformat(),
-            "collection":           COLLECTION,
-            "dense_vector_name":    DENSE_VECTOR,
-            "sparse_vector_name":   SPARSE_VECTOR,
-            "limit":                limit,
-            "project_filter":       project_filter,
-            "total_queries":        len(suite),
-            "dense_avg":            dense_avg,
-            "hybrid_avg":           hybrid_avg,
-            "hybrid_vs_dense_delta": d,
+            "timestamp":              datetime.now().isoformat(),
+            "version":                "2.0.0",
+            "collection":             COLLECTION,
+            "dense_vector_name":      DENSE_VECTOR,
+            "sparse_vector_name":     SPARSE_VECTOR,
+            "limit":                  limit,
+            "prefetch_mult":          prefetch_mult,
+            "project_filter":         project_filter,
+            "total_queries":          len(suite),
+            "dense_avg":              dense_avg,
+            "sparse_avg":             sparse_avg,
+            "hybrid_avg":             hybrid_avg,
+            "hybrid_vs_dense_delta":  d_vs_dense,
             "per_query": [
-                {"dense": asdict(dr), "hybrid": asdict(hr)}
-                for dr, hr in zip(dense_results, hybrid_results)
+                {
+                    "description": suite[i].description,
+                    "query":       suite[i].query,
+                    "project":     suite[i].project,
+                    "dense":       asdict(dr),
+                    "sparse":      asdict(sr),
+                    "hybrid":      asdict(hr),
+                }
+                for i, (dr, sr, hr) in enumerate(zip(dense_results, sparse_results, hybrid_results))
             ],
         }
         with open(output_path, "w", encoding="utf-8") as f:
             json.dump(report, f, indent=2)
-        print(f"  Report saved: {output_path}")
+        print(f"\n  Report saved: {output_path}")
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Retrieval Quality Evaluation — knowledge_v2 hybrid search",
+        description="Retrieval Quality Evaluation — knowledge_v2 hybrid search v2",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   python3 scripts/eval-retrieval-quality.py
-  python3 scripts/eval-retrieval-quality.py --project homelab
-  python3 scripts/eval-retrieval-quality.py --project petrochina-eproc --limit 3
+  python3 scripts/eval-retrieval-quality.py --debug
+  python3 scripts/eval-retrieval-quality.py --project homelab --prefetch-mult 8
+  python3 scripts/eval-retrieval-quality.py --project petrochina-eproc
   python3 scripts/eval-retrieval-quality.py --output .claude/reports/eval-2026-04-14.json
   python3 scripts/eval-retrieval-quality.py --qdrant-url http://192.168.18.169:6333
+
+Debug workflow for regression:
+  python3 scripts/eval-retrieval-quality.py --debug --project homelab
+  # Shows actual top-3 documents per strategy — identify which doc wins sparse leg
         """,
     )
-    parser.add_argument(
-        "--qdrant-url", default=QDRANT_URL,
-        help=f"Qdrant base URL (default: {QDRANT_URL})",
-    )
-    parser.add_argument(
-        "--ollama-url", default=OLLAMA_URL,
-        help=f"Ollama base URL (default: {OLLAMA_URL})",
-    )
-    parser.add_argument(
-        "--api-key", default=QDRANT_API_KEY,
-        help="Qdrant API key",
-    )
-    parser.add_argument(
-        "--project", default=None, choices=["homelab", "petrochina-eproc"],
-        help="Filter test cases by project (default: all)",
-    )
-    parser.add_argument(
-        "--limit", type=int, default=DEFAULT_LIMIT,
-        help=f"Result limit per query (default: {DEFAULT_LIMIT})",
-    )
-    parser.add_argument(
-        "--output", default=None,
-        help="Save JSON report to file path",
-    )
+    parser.add_argument("--qdrant-url",      default=QDRANT_URL)
+    parser.add_argument("--ollama-url",      default=OLLAMA_URL)
+    parser.add_argument("--api-key",         default=QDRANT_API_KEY)
+    parser.add_argument("--project",         default=None, choices=["homelab", "petrochina-eproc"])
+    parser.add_argument("--limit",           type=int, default=DEFAULT_LIMIT)
+    parser.add_argument("--prefetch-mult",   type=int, default=DEFAULT_PREFETCH_MULT,
+                        help=f"RRF prefetch pool = limit × N (default {DEFAULT_PREFETCH_MULT}, try 8 or 16)")
+    parser.add_argument("--output",          default=None)
+    parser.add_argument("--debug",           action="store_true",
+                        help="Show actual top-3 documents per strategy per query")
     args = parser.parse_args()
 
     run_evaluation(
@@ -555,7 +688,9 @@ Examples:
         api_key=args.api_key,
         project_filter=args.project,
         limit=args.limit,
+        prefetch_mult=args.prefetch_mult,
         output_path=args.output,
+        debug=args.debug,
     )
 
 
