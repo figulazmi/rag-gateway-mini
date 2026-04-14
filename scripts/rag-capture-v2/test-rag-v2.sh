@@ -478,7 +478,7 @@ if $DRY_RUN; then
   echo -e "  Points : $POINTS_BEFORE (tidak berubah)"
   echo ""
   echo "  Untuk live test:"
-  echo "  export QDRANT_API_KEY=QDRANT_API_KEY_REDACTED"
+  echo "  export QDRANT_API_KEY=<YOUR_KEY>"
   echo "  bash scripts/rag-capture-v2/test-rag-v2.sh"
 else
   POINTS_AFTER_FINAL=$(qdrant_curl "$QDRANT_URL/collections/knowledge_v2" \

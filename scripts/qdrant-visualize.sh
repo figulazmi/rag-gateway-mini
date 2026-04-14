@@ -20,7 +20,7 @@ set -euo pipefail
 
 # ─── DEFAULTS ────────────────────────────────────────────────────────────────
 QDRANT_URL="http://localhost:6333"
-QDRANT_API_KEY="QDRANT_API_KEY_REDACTED"
+QDRANT_API_KEY="${QDRANT_API_KEY:?QDRANT_API_KEY not set (source ~/.config/qdrant-knowledge.env)}"
 COLLECTION="knowledge_v2"
 VECTOR_NAME="dense"          # FIX: always specify using="dense" for named-vector collections
 LIMIT=100

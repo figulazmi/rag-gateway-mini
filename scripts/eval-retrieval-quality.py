@@ -39,6 +39,7 @@ IMPORTANT — named vectors:
 import argparse
 import json
 import math
+import os
 import re
 import time
 import urllib.error
@@ -51,7 +52,9 @@ from typing import Optional
 # ─── CONFIG ─────────────────────────────────────────────────────────────────
 
 QDRANT_URL     = "http://localhost:6333"
-QDRANT_API_KEY = "QDRANT_API_KEY_REDACTED"
+QDRANT_API_KEY = os.environ.get("QDRANT_API_KEY")
+if not QDRANT_API_KEY:
+    raise SystemExit("QDRANT_API_KEY env var not set. Source ~/.config/qdrant-knowledge.env first.")
 OLLAMA_URL     = "http://localhost:11434"
 COLLECTION     = "knowledge_v2"
 DENSE_VECTOR   = "dense"    # REQUIRED: knowledge_v2 has no default/unnamed vector

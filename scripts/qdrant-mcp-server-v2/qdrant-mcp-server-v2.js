@@ -6,7 +6,11 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 
 const QDRANT_URL = "http://localhost:6333";
-const QDRANT_API_KEY = "QDRANT_API_KEY_REDACTED";
+const QDRANT_API_KEY = process.env.QDRANT_API_KEY;
+if (!QDRANT_API_KEY) {
+  console.error("QDRANT_API_KEY env var not set");
+  process.exit(1);
+}
 const OLLAMA_URL = "http://localhost:11434";
 const COLLECTION = "knowledge_v2";
 const SCORE_THRESHOLD = 0.5;
