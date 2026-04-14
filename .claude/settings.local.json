@@ -93,7 +93,18 @@
       "Bash(where rtk:*)",
       "Bash(rtk:*)",
       "Bash(rag status:*)",
-      "Bash(PYTHONIOENCODING=utf-8 python3:*)"
+      "Bash(PYTHONIOENCODING=utf-8 python3:*)",
+      "Read(//c/Users/Clandesitine/.claude/**)",
+      "Bash(rag list:*)",
+      "Bash(rag merge:*)",
+      "Bash(rm -f \".claude/summaries/2026-04-14-rag-skill-smoke-test.md\")",
+      "Bash(yes)",
+      "Bash(rag clear:*)",
+      "Bash(ls src/appsettings*.json)",
+      "Bash(env)",
+      "Bash(grep -iv \"example\\\\|template\\\\|\\\\${\")",
+      "Bash(export QDRANT_API_KEY='QDRANT_API_KEY_REDACTED')",
+      "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\)['result']; print\\(f'points_count      : {d[\\\\\"points_count\\\\\"]}'\\); print\\(f'indexed_vectors   : {d[\\\\\"indexed_vectors_count\\\\\"]}'\\); print\\(f'status            : {d[\\\\\"status\\\\\"]}'\\); print\\(f'vectors_count     : {d.get\\(\\\\\"vectors_count\\\\\"\\)}'\\); print\\(f'segments_count    : {d[\\\\\"segments_count\\\\\"]}'\\)\")"
     ]
   },
   "enabledPlugins": {

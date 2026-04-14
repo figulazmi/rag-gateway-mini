@@ -22,6 +22,19 @@ import re
 from datetime import datetime
 from pathlib import Path
 
+# Force UTF-8 on stdin/stdout/stderr so (a) emoji (✅ 📦 📋 …) do not crash the
+# script on Windows consoles that default to cp1252, and (b) piped-in content
+# (heredocs, `rag add` body, `rag pipe`) is read as UTF-8 instead of being
+# mangled through cp1252 — which turns em dashes into mojibake "â€".
+# `errors='replace'` on stdout keeps the script running on the rare terminals
+# that still cannot encode a given glyph. stdin uses `errors='strict'` because
+# silent replacement on input would hide real encoding problems.
+for _stream, _err in ((sys.stdin, "strict"), (sys.stdout, "replace"), (sys.stderr, "replace")):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors=_err)
+    except (AttributeError, ValueError):
+        pass
+
 # ─── CONSTANTS ─────────────────────────────────────────────────────────────────
 
 GLOBAL_DRAFTS_DIR   = Path.home() / "scripts" / ".rag_drafts"
