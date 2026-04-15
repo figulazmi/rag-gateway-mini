@@ -111,7 +111,12 @@
       "Bash(ln -s /c/Users/Clandesitine/source/repos/rag-gateway-mini/scripts/rag-capture-v2/rag_capture.py ~/.local/bin/rag)",
       "Bash(chmod +x ~/.local/bin/rag)",
       "Bash(rag --help)",
-      "Bash(python -c ' *)"
+      "Bash(python -c ' *)",
+      "Bash(where rag *)",
+      "Bash(py --version)",
+      "Read(//c/Users/Clandesitine/.cargo/**)",
+      "Read(//c/Users/Clandesitine/AppData/Local/Microsoft/WinGet/Links/**)",
+      "Read(//c/Program Files/**)"
     ]
   },
   "enabledPlugins": {
