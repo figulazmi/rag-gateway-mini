@@ -99,16 +99,31 @@ Then print ONE status line:
 ## Field rules
 
 - **project**: `petrochina-eproc` | `homelab` | `mit-internal` | `homeplate`
-- **type**: `debug` (bug fix) | `feature` | `runbook` | `pattern` | `decision` | `reference` (config/topology)
+- **type**: `debug` (bug fix) | `feature` | `runbook` | `pattern` | `decision` | `reference` (config/topology) | `implementation-spec` (code-ready spec for implementer models)
 - **topic**: plain ASCII, no em dash, max 60 chars
 - **tags**: comma-separated for `rag add` CLI, max 8, lowercase-hyphenated
 
 ## Content rules
 
-- English only, 150–250 words, self-contained
+- English only, 150–250 words (up to 400 for `implementation-spec`), self-contained
 - Min 3 atomic Key Facts (each individually searchable)
 - No em dash anywhere
-- Code section optional
+- Code section optional for narrative types; required for `implementation-spec`
+
+## Implementation-spec chunk rules
+
+For chunks targeting consumption by implementer models (qwen2.5-coder etc.) to write code without hallucination. See `docs/RAG_V2_ROADMAP.md` and `~/.claude/commands/rag-knowledge-capture-cli.md` for full template.
+
+Required sections (rag_capture.py warns if missing; hard-reject in P2.1):
+- `### Target Files` — repo-relative paths, optional line ranges
+- `### Interfaces` — function signatures, class names, DTO shapes
+- `### Dependencies` — imports, package versions, config keys, external services
+- `### Contract` — input types, output types, error cases, invariants
+- `### Anti-Patterns` — "DO NOT X because Y" with brief rationale
+- `### Verification` — runnable test or manual check step
+- `### Key Facts` — minimum 3, independently searchable
+
+For `feature` / `pattern` types: `### Target Files` is required; Interfaces/Contract/Verification are recommended.
 
 ## Session end (before /clear)
 

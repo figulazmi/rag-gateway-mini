@@ -77,7 +77,7 @@ DEFAULT_CONFIG = {
     }
 }
 
-VALID_TYPES         = ["debug", "feature", "runbook", "pattern", "decision", "reference"]
+VALID_TYPES         = ["debug", "feature", "runbook", "pattern", "decision", "reference", "implementation-spec"]
 VALID_PROJECTS      = ["petrochina-eproc", "homelab", "mit-internal", "homeplate"]
 VALID_SESSION_TYPES = ["debug", "feature", "setup", "refactor",
                        "architecture", "research", "ops-documentation", "feature-retrospective"]
@@ -178,7 +178,20 @@ def extract_body(text: str) -> str:
 
 # ─── VALIDATION ────────────────────────────────────────────────────────────────
 
-def validate_content(content: str) -> list:
+# Sections required for implementation-grade chunk types. Implementer models
+# (e.g., qwen2.5-coder) consume these chunks to write code; missing sections
+# correlate with downstream hallucination. Enforced as warnings here; P2.1
+# upgrades critical misses to hard rejects.
+IMPLEMENTATION_SPEC_SECTIONS = [
+    "### Target Files",
+    "### Interfaces",
+    "### Dependencies",
+    "### Contract",
+    "### Anti-Patterns",
+    "### Verification",
+]
+
+def validate_content(content: str, chunk_type: str = "") -> list:
     warns = []
     w = count_words(content)
     if w < 50:
@@ -191,6 +204,28 @@ def validate_content(content: str) -> list:
         warns.append("⚠️  Kemungkinan ada Bahasa Indonesia. Content harus English only.")
     if "### Key Facts" not in content:
         warns.append("⚠️  Section '### Key Facts' tidak ditemukan. Min 3 Key Facts required.")
+
+    if chunk_type == "implementation-spec":
+        missing = [s for s in IMPLEMENTATION_SPEC_SECTIONS if s not in content]
+        if missing:
+            warns.append(
+                "⚠️  implementation-spec chunk missing required sections: "
+                + ", ".join(missing)
+            )
+    elif chunk_type in ("feature", "pattern"):
+        if "### Target Files" not in content:
+            warns.append(
+                "⚠️  " + chunk_type + " chunk should include '### Target Files' "
+                "with repo-relative paths so implementer models can locate code."
+            )
+        recommended = ["### Interfaces", "### Contract", "### Verification"]
+        missing_recommended = [s for s in recommended if s not in content]
+        if missing_recommended:
+            warns.append(
+                "⚠️  " + chunk_type + " chunk missing recommended sections: "
+                + ", ".join(missing_recommended)
+            )
+
     return warns
 
 # ─── FRONTMATTER ───────────────────────────────────────────────────────────────
@@ -280,7 +315,7 @@ def cmd_add(args, config: dict):
         "status":       getattr(args, "status", "implemented") or "implemented",
     }
 
-    for w in validate_content(content):
+    for w in validate_content(content, meta.get("type", "")):
         print(w)
 
     path, n = save_draft(content, meta, config)
@@ -333,7 +368,7 @@ def cmd_pipe(args, config: dict):
         print("❌ Empty content after extraction.")
         sys.exit(1)
 
-    for w in validate_content(content):
+    for w in validate_content(content, meta.get("type", "")):
         print(w)
 
     path, n = save_draft(content, meta, config)
