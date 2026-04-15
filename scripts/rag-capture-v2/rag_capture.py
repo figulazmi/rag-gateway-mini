@@ -191,32 +191,38 @@ IMPLEMENTATION_SPEC_SECTIONS = [
     "### Verification",
 ]
 
-def validate_content(content: str, chunk_type: str = "") -> list:
-    warns = []
+def validate_content(content: str, chunk_type: str = "") -> tuple[list, list]:
+    """Return (errors, warns). Errors must block ingestion; warns are advisory."""
+    errors: list = []
+    warns:  list = []
+
     w = count_words(content)
-    if w < 50:
-        warns.append(f"⚠️  Content terlalu pendek ({w} words). Minimum 150 direkomendasikan.")
-    if w > 500:
-        warns.append(f"⚠️  Content panjang ({w} words). Pertimbangkan split 2 chunks.")
+    if w < 100:
+        errors.append(f"❌  Content too short ({w} words). Minimum 100 required (150 recommended).")
+    elif w > 400:
+        errors.append(f"❌  Content too long ({w} words). Maximum 400; split into two chunks.")
+
     if "—" in content:
-        warns.append("⚠️  Em dash (—) ditemukan. Hapus dari frontmatter jika ada.")
-    if re.search(r'\b(ini|yang|dan|atau|dengan|untuk|pada|tidak|bisa|sudah|karena|jika|maka|saya|kamu)\b', content):
-        warns.append("⚠️  Kemungkinan ada Bahasa Indonesia. Content harus English only.")
+        errors.append("❌  Em dash (—) found. Replace with '-' before retry.")
+
     if "### Key Facts" not in content:
-        warns.append("⚠️  Section '### Key Facts' tidak ditemukan. Min 3 Key Facts required.")
+        errors.append("❌  Section '### Key Facts' missing. Minimum 3 atomic facts required.")
+
+    if re.search(r'\b(ini|yang|dan|atau|dengan|untuk|pada|tidak|bisa|sudah|karena|jika|maka|saya|kamu)\b', content):
+        warns.append("⚠️  Possible Bahasa Indonesia detected. Content must be English only.")
 
     if chunk_type == "implementation-spec":
         missing = [s for s in IMPLEMENTATION_SPEC_SECTIONS if s not in content]
         if missing:
-            warns.append(
-                "⚠️  implementation-spec chunk missing required sections: "
+            errors.append(
+                "❌  implementation-spec chunk missing required sections: "
                 + ", ".join(missing)
             )
     elif chunk_type in ("feature", "pattern"):
         if "### Target Files" not in content:
-            warns.append(
-                "⚠️  " + chunk_type + " chunk should include '### Target Files' "
-                "with repo-relative paths so implementer models can locate code."
+            errors.append(
+                "❌  " + chunk_type + " chunk missing required '### Target Files' "
+                "section (repo-relative paths for implementer models)."
             )
         recommended = ["### Interfaces", "### Contract", "### Verification"]
         missing_recommended = [s for s in recommended if s not in content]
@@ -226,7 +232,7 @@ def validate_content(content: str, chunk_type: str = "") -> list:
                 + ", ".join(missing_recommended)
             )
 
-    return warns
+    return errors, warns
 
 # ─── FRONTMATTER ───────────────────────────────────────────────────────────────
 
@@ -315,8 +321,14 @@ def cmd_add(args, config: dict):
         "status":       getattr(args, "status", "implemented") or "implemented",
     }
 
-    for w in validate_content(content, meta.get("type", "")):
+    errors, warns = validate_content(content, meta.get("type", ""))
+    for w in warns:
         print(w)
+    if errors:
+        print("\n❌ Chunk rejected. Fix these and retry:")
+        for e in errors:
+            print("   " + e)
+        sys.exit(1)
 
     path, n = save_draft(content, meta, config)
     print(f"\n✅ Draft chunk {n} saved: {path.name}")
@@ -368,8 +380,14 @@ def cmd_pipe(args, config: dict):
         print("❌ Empty content after extraction.")
         sys.exit(1)
 
-    for w in validate_content(content, meta.get("type", "")):
+    errors, warns = validate_content(content, meta.get("type", ""))
+    for w in warns:
         print(w)
+    if errors:
+        print("\n❌ Chunk rejected. Fix these and retry:")
+        for e in errors:
+            print("   " + e)
+        sys.exit(1)
 
     path, n = save_draft(content, meta, config)
     print(f"\n✅ [PIPE] Draft chunk {n} saved: {path.name}")
