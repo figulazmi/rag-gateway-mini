@@ -67,7 +67,16 @@ function djb2Sparse(text) {
 async function searchQdrant(denseVector, sparseVector, limit = 5, project = null, includePlanned = false) {
   const mustFilters = [];
   if (project) mustFilters.push({ key: "project", match: { value: project } });
-  if (!includePlanned) mustFilters.push({ key: "status", match: { value: "implemented" } });
+  if (!includePlanned) {
+    // Tolerate chunks missing the "status" field: match status=="implemented" OR status is_empty.
+    // Ref: https://qdrant.tech/documentation/concepts/filtering/#is-empty
+    mustFilters.push({
+      should: [
+        { key: "status", match: { value: "implemented" } },
+        { is_empty: { key: "status" } },
+      ],
+    });
+  }
 
   const filterClause = mustFilters.length > 0 ? { must: mustFilters } : undefined;
 

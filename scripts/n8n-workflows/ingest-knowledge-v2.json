@@ -1,0 +1,225 @@
+{
+  "name": "knowledge_v2",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "knowledge-ingest",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "7023360f-255c-419c-a032-659e41c15c27",
+      "name": "webhook-knowledge-ingest",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        416,
+        -272
+      ],
+      "webhookId": "fcbc09ba-a9a4-442a-82da-40900bcab2e0"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body ?? $input.first().json;\n\nconst required = ['id', 'content', 'collection', 'project', 'topic'];\nfor (const field of required) {\n  if (!body[field]) {\n    throw new Error(`Missing required field: ${field}`);\n  }\n}\n\nconst cleanContent = body.content\n  .replace(/\\n{3,}/g, '\\n\\n')\n  .trim();\n\nreturn [{\n  json: {\n    ...body,\n    content: cleanContent,\n    ingested_at: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "14ee29c3-847d-41ea-9ac7-e5fc14773bd1",
+      "name": "Validate & Clean",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        -272
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://ollama:11434/api/embeddings",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "nomic-embed-text"
+            },
+            {
+              "name": "prompt",
+              "value": "={{ $json.content }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "cc1c303a-6991-4c63-804e-993f50a60da4",
+      "name": "Ollama: nomic-embed-text",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        864,
+        -272
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const embedding = $input.first().json.embedding;\nconst payload = $('Validate & Clean').first().json;\n\nif (!embedding || !Array.isArray(embedding)) {\n  throw new Error('Ollama returned no embedding vector');\n}\n\n// Hash string ID → numeric ID for Qdrant\nconst strId = payload.id;\nlet numId = 0;\nfor (let i = 0; i < strId.length; i++) {\n  numId = ((numId << 5) - numId) + strId.charCodeAt(i);\n  numId = numId & numId;\n}\nnumId = Math.abs(numId);\n\n// ── Sparse BM25 using djb2 hash (consistent across n8n + RAG Gateway) ──────\n// Qdrant REST PUT /points does NOT support server-side document inference.\n// We generate sparse {indices, values} client-side using djb2 hash,\n// matching the same tokenizer used in QdrantVectorSearchClient.cs.\nfunction djb2(str) {\n  let h = 5381;\n  for (let i = 0; i < str.length; i++) {\n    h = ((h << 5) + h) + str.charCodeAt(i);\n    h = h & 0x7FFFFFFF; // keep positive 31-bit\n  }\n  return h;\n}\n\nconst sparseText = `${payload.topic || ''} ${payload.content}`.trim();\nconst tokens = sparseText.toLowerCase().match(/[a-z0-9]+/g) || [];\nconst tf = {};\nfor (const t of tokens) { tf[t] = (tf[t] || 0) + 1; }\n\nconst sparseIndices = [];\nconst sparseValues  = [];\nfor (const [term, freq] of Object.entries(tf)) {\n  sparseIndices.push(djb2(term));\n  sparseValues.push(freq);\n}\n\n// ── Status field: default 'implemented' unless explicit override (e.g. 'planned') ─\nconst ALLOWED_STATUS = ['implemented', 'planned', 'deprecated'];\nconst rawStatus = (payload.status || '').toString().trim().toLowerCase();\nconst status = ALLOWED_STATUS.includes(rawStatus) ? rawStatus : 'implemented';\n\n// ── Pre-build upsert body here (avoids n8n expression serialization quirks) ─\nconst upsertBody = JSON.stringify({\n  points: [{\n    id: numId,\n    vector: {\n      dense:  embedding,\n      sparse: { indices: sparseIndices, values: sparseValues }\n    },\n    payload: {\n      string_id:    payload.id,\n      doc_id:       payload.doc_id      || payload.id,\n      date:         payload.date        || '',\n      source:       payload.source      || 'claude-code',\n      project:      payload.project     || 'unknown',\n      topic:        payload.topic       || '',\n      filename:     payload.filename    || '',\n      chunk_num:    payload.chunk_num   || 1,\n      content:      payload.content,\n      ingested_at:  payload.ingested_at,\n      tags:         payload.tags         || '',\n      session_type: payload.session_type || '',\n      environment:  payload.environment  || '',\n      git_branch:   payload.git_branch   || '',\n      related:      payload.related      || '',\n      chunk_type:   payload.session_type || '',\n      status:       status\n    }\n  }]\n});\n\nreturn [{\n  json: {\n    qdrant_id:    numId,\n    upsert_body:  upsertBody,\n    // fields below used by Build Response node\n    string_id:    payload.id,\n    doc_id:       payload.doc_id      || payload.id,\n    project:      payload.project     || 'unknown',\n    topic:        payload.topic       || '',\n    chunk_num:    payload.chunk_num   || 1,\n    session_type: payload.session_type || '',\n    environment:  payload.environment  || '',\n    git_branch:   payload.git_branch   || '',\n    tags:         payload.tags         || '',\n    ingested_at:  payload.ingested_at,\n    sparse_terms: sparseIndices.length,\n    status:       status\n  }\n}];"
+      },
+      "id": "1bfc7ee8-5fb9-4065-93c7-33f134da89bc",
+      "name": "Prepare Qdrant Point",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1088,
+        -272
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "http://qdrant:6333/collections/knowledge_v2/points",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "<QDRANT_API_KEY>"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.upsert_body }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "1db6d76a-8d3e-4074-9430-c26aa9b2ef9b",
+      "name": "Qdrant: Upsert Point",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1296,
+        -272
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const qdrantResult = $input.first().json;\nconst point = $('Prepare Qdrant Point').first().json;\n\nreturn [{\n  json: {\n    status:       'ok',\n    payload_status: point.status,\n    qdrant_id:    point.qdrant_id,\n    string_id:    point.string_id,\n    project:      point.project,\n    topic:        point.topic,\n    chunk_num:    point.chunk_num,\n    session_type: point.session_type,\n    environment:  point.environment,\n    git_branch:   point.git_branch,\n    tags:         point.tags,\n    collection:   'knowledge_v2',\n    ingested_at:  point.ingested_at\n  }\n}];"
+      },
+      "id": "e8a4b4e6-3d7e-474f-a663-005d326f7db5",
+      "name": "Build Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1520,
+        -272
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "a333cc20-7adb-4f90-b30f-c72dd0ecc9bf",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1744,
+        -272
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "webhook-knowledge-ingest": {
+      "main": [
+        [
+          {
+            "node": "Validate & Clean",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate & Clean": {
+      "main": [
+        [
+          {
+            "node": "Ollama: nomic-embed-text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama: nomic-embed-text": {
+      "main": [
+        [
+          {
+            "node": "Prepare Qdrant Point",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Qdrant Point": {
+      "main": [
+        [
+          {
+            "node": "Qdrant: Upsert Point",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant: Upsert Point": {
+      "main": [
+        [
+          {
+            "node": "Build Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "b2e15b5e-a50d-4e9c-9060-ec644800366e",
+  "meta": {
+    "instanceId": "9d627e102e0d85b38509774ff8a091823a3cef33dc329f8fcc4f36620c94ff86"
+  },
+  "id": "MFqzRjRuiXRgbGgl",
+  "tags": []
+}

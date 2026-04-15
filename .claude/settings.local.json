@@ -110,7 +110,8 @@
       "Bash(rm ~/.local/bin/rag)",
       "Bash(ln -s /c/Users/Clandesitine/source/repos/rag-gateway-mini/scripts/rag-capture-v2/rag_capture.py ~/.local/bin/rag)",
       "Bash(chmod +x ~/.local/bin/rag)",
-      "Bash(rag --help)"
+      "Bash(rag --help)",
+      "Bash(python -c ' *)"
     ]
   },
   "enabledPlugins": {
