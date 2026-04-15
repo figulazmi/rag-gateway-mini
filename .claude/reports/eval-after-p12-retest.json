@@ -1,0 +1,789 @@
+{
+  "timestamp": "2026-04-15T10:59:36.541072",
+  "version": "2.0.0",
+  "collection": "knowledge_v2",
+  "dense_vector_name": "dense",
+  "sparse_vector_name": "sparse",
+  "limit": 5,
+  "prefetch_mult": 4,
+  "project_filter": "homelab",
+  "total_queries": 5,
+  "dense_avg": {
+    "hit@1": 0.6,
+    "hit@3": 1.0,
+    "hit@5": 1.0,
+    "mrr": 0.8,
+    "ndcg@5": 0.9033,
+    "avg_latency_ms": 256.0
+  },
+  "sparse_avg": {
+    "hit@1": 0.8,
+    "hit@3": 1.0,
+    "hit@5": 1.0,
+    "mrr": 0.9,
+    "ndcg@5": 0.9562,
+    "avg_latency_ms": 255.3
+  },
+  "hybrid_avg": {
+    "hit@1": 1.0,
+    "hit@3": 1.0,
+    "hit@5": 1.0,
+    "mrr": 1.0,
+    "ndcg@5": 0.9361,
+    "avg_latency_ms": 256.1
+  },
+  "hybrid_vs_dense_delta": {
+    "hit@1": 0.4,
+    "hit@3": 0.0,
+    "hit@5": 0.0,
+    "mrr": 0.2,
+    "ndcg@5": 0.0328
+  },
+  "per_query": [
+    {
+      "description": "MCP server v2.0 migration to hybrid search",
+      "query": "MCP server upgrade knowledge_v2 hybrid search djb2 RRF fusion",
+      "project": "homelab",
+      "dense": {
+        "query": "MCP server upgrade knowledge_v2 hybrid search djb2 RRF fusion",
+        "project": "homelab",
+        "description": "MCP server v2.0 migration to hybrid search",
+        "strategy": "dense",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 1.0,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 265.0,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "MCP Server Upgrade to Hybrid Search with knowledge_v2 C",
+            "## CHUNK 1: MCP Server Collection Switch From knowledge to knowledge_v2  ### Context  The "
+          ],
+          [
+            0.33333334,
+            "MCP Server Upgrade to knowledge_v2 Hybrid Search RRF",
+            "## CHUNK 1: MCP Server Upgrade From knowledge to knowledge_v2 With Hybrid Search  ### Cont"
+          ],
+          [
+            0.25,
+            "Qdrant Collection Migration Dense to Hybrid",
+            "## CHUNK 2: RAG Gateway Zero Results After Collection Migration  ### Context RAG Gateway M"
+          ]
+        ],
+        "top_ids": [
+          "423314733",
+          "908163150",
+          "597286827"
+        ]
+      },
+      "sparse": {
+        "query": "MCP server upgrade knowledge_v2 hybrid search djb2 RRF fusion",
+        "project": "homelab",
+        "description": "MCP server v2.0 migration to hybrid search",
+        "strategy": "sparse-only",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 1.0,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 263.8,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "MCP Server Upgrade to Hybrid Search with knowledge_v2 C",
+            "## CHUNK 1: MCP Server Collection Switch From knowledge to knowledge_v2  ### Context  The "
+          ],
+          [
+            0.33333334,
+            "MCP Server Upgrade to knowledge_v2 Hybrid Search RRF",
+            "## CHUNK 1: MCP Server Upgrade From knowledge to knowledge_v2 With Hybrid Search  ### Cont"
+          ],
+          [
+            0.25,
+            "Update MCP Server JS File on VM B1 via SCP",
+            "## CHUNK 1: Update qdrant-mcp-server.js on VM B1  ### Context  The `qdrant-knowledge` MCP "
+          ]
+        ],
+        "top_ids": [
+          "423314733",
+          "908163150",
+          "1466428189"
+        ]
+      },
+      "hybrid": {
+        "query": "MCP server upgrade knowledge_v2 hybrid search djb2 RRF fusion",
+        "project": "homelab",
+        "description": "MCP server v2.0 migration to hybrid search",
+        "strategy": "hybrid-rrf",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 1.0,
+        "score_dist": {
+          "min": 0.25,
+          "max": 1.0,
+          "avg": 0.5087,
+          "p50": 0.35,
+          "p95": 1.0
+        },
+        "latency_ms": 264.9,
+        "raw_scores": [
+          1.0,
+          0.6666667,
+          0.35,
+          0.2769231,
+          0.25
+        ],
+        "top_docs": [
+          [
+            1.0,
+            "MCP Server Upgrade to Hybrid Search with knowledge_v2 C",
+            "## CHUNK 1: MCP Server Collection Switch From knowledge to knowledge_v2  ### Context  The "
+          ],
+          [
+            0.6666667,
+            "MCP Server Upgrade to knowledge_v2 Hybrid Search RRF",
+            "## CHUNK 1: MCP Server Upgrade From knowledge to knowledge_v2 With Hybrid Search  ### Cont"
+          ],
+          [
+            0.35,
+            "Qdrant Collection Migration Dense to Hybrid",
+            "## CHUNK 2: RAG Gateway Zero Results After Collection Migration  ### Context RAG Gateway M"
+          ]
+        ],
+        "top_ids": [
+          "423314733",
+          "908163150",
+          "597286827"
+        ]
+      }
+    },
+    {
+      "description": "knowledge_v2 collection schema migration",
+      "query": "qdrant collection named vector dense sparse migration script",
+      "project": "homelab",
+      "dense": {
+        "query": "qdrant collection named vector dense sparse migration script",
+        "project": "homelab",
+        "description": "knowledge_v2 collection schema migration",
+        "strategy": "dense",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.9598502843413024,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 183.3,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "RAG Gateway Hybrid Search Dense Plus Sparse BM25 Implem",
+            "## CHUNK 2: Qdrant Hybrid Collection Migration Pattern Knowledge To Knowledge V2  ### Cont"
+          ],
+          [
+            0.33333334,
+            "Qdrant Collection Migration Dense to Hybrid",
+            "## CHUNK 1: Qdrant Collection Migration Dense to Hybrid  ### Context RAG Gateway Mini on V"
+          ],
+          [
+            0.25,
+            "Qdrant Named Vector API - Missing using Parameter Fix",
+            "## CHUNK 2: Qdrant Graph HTTP 400 - Not Existing Vector Name Error  ### Context  Same know"
+          ]
+        ],
+        "top_ids": [
+          "204856147",
+          "597286826",
+          "1992017779"
+        ]
+      },
+      "sparse": {
+        "query": "qdrant collection named vector dense sparse migration script",
+        "project": "homelab",
+        "description": "knowledge_v2 collection schema migration",
+        "strategy": "sparse-only",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.9803723397819991,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 182.9,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "RAG Gateway Hybrid Search Dense Plus Sparse BM25 Implem",
+            "## CHUNK 2: Qdrant Hybrid Collection Migration Pattern Knowledge To Knowledge V2  ### Cont"
+          ],
+          [
+            0.33333334,
+            "RAG Gateway Hybrid Search Dense Plus Sparse BM25 Implem",
+            "## CHUNK 1: Hybrid Search Gateway Refactor From Points Search To Query API  ### Context  r"
+          ],
+          [
+            0.25,
+            "MCP Server Upgrade to Hybrid Search with knowledge_v2 C",
+            "## CHUNK 1: MCP Server Collection Switch From knowledge to knowledge_v2  ### Context  The "
+          ]
+        ],
+        "top_ids": [
+          "204856147",
+          "204856146",
+          "423314733"
+        ]
+      },
+      "hybrid": {
+        "query": "qdrant collection named vector dense sparse migration script",
+        "project": "homelab",
+        "description": "knowledge_v2 collection schema migration",
+        "strategy": "hybrid-rrf",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.9932053170992176,
+        "score_dist": {
+          "min": 0.3667,
+          "max": 1.0,
+          "avg": 0.5377,
+          "p50": 0.3958,
+          "p95": 1.0
+        },
+        "latency_ms": 183.5,
+        "raw_scores": [
+          1.0,
+          0.53333336,
+          0.39583334,
+          0.39285713,
+          0.36666667
+        ],
+        "top_docs": [
+          [
+            1.0,
+            "RAG Gateway Hybrid Search Dense Plus Sparse BM25 Implem",
+            "## CHUNK 2: Qdrant Hybrid Collection Migration Pattern Knowledge To Knowledge V2  ### Cont"
+          ],
+          [
+            0.53333336,
+            "Qdrant Collection Migration Dense to Hybrid",
+            "## CHUNK 1: Qdrant Collection Migration Dense to Hybrid  ### Context RAG Gateway Mini on V"
+          ],
+          [
+            0.39583334,
+            "RAG Gateway Hybrid Search Dense Plus Sparse BM25 Implem",
+            "## CHUNK 1: Hybrid Search Gateway Refactor From Points Search To Query API  ### Context  r"
+          ]
+        ],
+        "top_ids": [
+          "204856147",
+          "597286826",
+          "204856146"
+        ]
+      }
+    },
+    {
+      "description": "VM B1 docker compose v2 binary not found fix",
+      "query": "docker compose v2 linux binary not found rag gateway build fix",
+      "project": "homelab",
+      "dense": {
+        "query": "docker compose v2 linux binary not found rag gateway build fix",
+        "project": "homelab",
+        "description": "VM B1 docker compose v2 binary not found fix",
+        "strategy": "dense",
+        "hit_at_1": 0.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 0.5,
+        "ndcg5": 0.7714111397867205,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 258.4,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "RagGateway Extraction - PetroChina Cleanup and VM B1 De",
+            "## CHUNK 2: rag-gateway-mini Standalone Repo Structure  ### Context  `github.com/figulazmi"
+          ],
+          [
+            0.33333334,
+            "RAG Gateway Mini Docker Deployment to VM B1 - Build Fix",
+            "## CHUNK 3: Docker Compose v2 on Linux VM - No docker-compose Binary  ### Context  VM B1 r"
+          ],
+          [
+            0.25,
+            "Qdrant 401 Unauthorized Fix and Docker Volume Mount Pat",
+            "## CHUNK 2: Docker Volume Mount Path Mismatch Causing 500 on VM B1  ### Context  rag-gatew"
+          ]
+        ],
+        "top_ids": [
+          "2098923699",
+          "1928279803",
+          "2073315142"
+        ]
+      },
+      "sparse": {
+        "query": "docker compose v2 linux binary not found rag gateway build fix",
+        "project": "homelab",
+        "description": "VM B1 docker compose v2 binary not found fix",
+        "strategy": "sparse-only",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.9546089485445354,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 257.7,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "RAG Gateway Mini Docker Deployment to VM B1 - Build Fix",
+            "## CHUNK 3: Docker Compose v2 on Linux VM - No docker-compose Binary  ### Context  VM B1 r"
+          ],
+          [
+            0.33333334,
+            "Qdrant 401 Unauthorized Fix and Docker Volume Mount Pat",
+            "## CHUNK 2: Docker Volume Mount Path Mismatch Causing 500 on VM B1  ### Context  rag-gatew"
+          ],
+          [
+            0.25,
+            "RAG Gateway Mini Docker Deployment to VM B1 - Build Fix",
+            "## CHUNK 4: VM B1 Deployment Workflow for rag-gateway-mini  ### Context  rag-gateway-mini "
+          ]
+        ],
+        "top_ids": [
+          "1928279803",
+          "2073315142",
+          "1928279802"
+        ]
+      },
+      "hybrid": {
+        "query": "docker compose v2 linux binary not found rag gateway build fix",
+        "project": "homelab",
+        "description": "VM B1 docker compose v2 binary not found fix",
+        "strategy": "hybrid-rrf",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.9319458096969503,
+        "score_dist": {
+          "min": 0.3429,
+          "max": 0.8333,
+          "avg": 0.5419,
+          "p50": 0.5,
+          "p95": 0.8333
+        },
+        "latency_ms": 258.6,
+        "raw_scores": [
+          0.8333334,
+          0.5833334,
+          0.5,
+          0.45,
+          0.34285715
+        ],
+        "top_docs": [
+          [
+            0.8333334,
+            "RAG Gateway Mini Docker Deployment to VM B1 - Build Fix",
+            "## CHUNK 3: Docker Compose v2 on Linux VM - No docker-compose Binary  ### Context  VM B1 r"
+          ],
+          [
+            0.5833334,
+            "Qdrant 401 Unauthorized Fix and Docker Volume Mount Pat",
+            "## CHUNK 2: Docker Volume Mount Path Mismatch Causing 500 on VM B1  ### Context  rag-gatew"
+          ],
+          [
+            0.5,
+            "RagGateway Extraction - PetroChina Cleanup and VM B1 De",
+            "## CHUNK 2: rag-gateway-mini Standalone Repo Structure  ### Context  `github.com/figulazmi"
+          ]
+        ],
+        "top_ids": [
+          "1928279803",
+          "2073315142",
+          "2098923699"
+        ]
+      }
+    },
+    {
+      "description": "RAG Gateway hybrid search refactor",
+      "query": "RAG gateway ASP.NET Core hybrid BM25 prefetch RRF score threshold",
+      "project": "homelab",
+      "dense": {
+        "query": "RAG gateway ASP.NET Core hybrid BM25 prefetch RRF score threshold",
+        "project": "homelab",
+        "description": "RAG Gateway hybrid search refactor",
+        "strategy": "dense",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 1.0,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 262.1,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "RAG Gateway Hybrid Search Dense Plus Sparse BM25 Implem",
+            "## CHUNK 1: Hybrid Search Gateway Refactor From Points Search To Query API  ### Context  r"
+          ],
+          [
+            0.33333334,
+            "MCP Server Upgrade to Hybrid Search with knowledge_v2 C",
+            "## CHUNK 1: MCP Server Collection Switch From knowledge to knowledge_v2  ### Context  The "
+          ],
+          [
+            0.25,
+            "RAG Knowledge Capture Pipeline - Full Setup from SKILL ",
+            "## CHUNK 2: Extended Thinking and Ultrathink in Claude Code  ### Context Claude Code CLI s"
+          ]
+        ],
+        "top_ids": [
+          "204856146",
+          "423314733",
+          "685981526"
+        ]
+      },
+      "sparse": {
+        "query": "RAG gateway ASP.NET Core hybrid BM25 prefetch RRF score threshold",
+        "project": "homelab",
+        "description": "RAG Gateway hybrid search refactor",
+        "strategy": "sparse-only",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 1.0,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 261.4,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "RAG Gateway Hybrid Search Dense Plus Sparse BM25 Implem",
+            "## CHUNK 1: Hybrid Search Gateway Refactor From Points Search To Query API  ### Context  r"
+          ],
+          [
+            0.33333334,
+            "MCP Server Upgrade to Hybrid Search with knowledge_v2 C",
+            "## CHUNK 1: MCP Server Collection Switch From knowledge to knowledge_v2  ### Context  The "
+          ],
+          [
+            0.25,
+            "MCP Server Upgrade to knowledge_v2 Hybrid Search RRF",
+            "## CHUNK 1: MCP Server Upgrade From knowledge to knowledge_v2 With Hybrid Search  ### Cont"
+          ]
+        ],
+        "top_ids": [
+          "204856146",
+          "423314733",
+          "908163150"
+        ]
+      },
+      "hybrid": {
+        "query": "RAG gateway ASP.NET Core hybrid BM25 prefetch RRF score threshold",
+        "project": "homelab",
+        "description": "RAG Gateway hybrid search refactor",
+        "strategy": "hybrid-rrf",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 1.0,
+        "score_dist": {
+          "min": 0.25,
+          "max": 1.0,
+          "avg": 0.5287,
+          "p50": 0.45,
+          "p95": 1.0
+        },
+        "latency_ms": 262.4,
+        "raw_scores": [
+          1.0,
+          0.6666667,
+          0.45,
+          0.2769231,
+          0.25
+        ],
+        "top_docs": [
+          [
+            1.0,
+            "RAG Gateway Hybrid Search Dense Plus Sparse BM25 Implem",
+            "## CHUNK 1: Hybrid Search Gateway Refactor From Points Search To Query API  ### Context  r"
+          ],
+          [
+            0.6666667,
+            "MCP Server Upgrade to Hybrid Search with knowledge_v2 C",
+            "## CHUNK 1: MCP Server Collection Switch From knowledge to knowledge_v2  ### Context  The "
+          ],
+          [
+            0.45,
+            "MCP Server Upgrade to knowledge_v2 Hybrid Search RRF",
+            "## CHUNK 1: MCP Server Upgrade From knowledge to knowledge_v2 With Hybrid Search  ### Cont"
+          ]
+        ],
+        "top_ids": [
+          "204856146",
+          "423314733",
+          "908163150"
+        ]
+      }
+    },
+    {
+      "description": "push-to-qdrant.sh network-aware ingestion script",
+      "query": "push-to-qdrant.sh network-aware bash script ingest frontmatter",
+      "project": "homelab",
+      "dense": {
+        "query": "push-to-qdrant.sh network-aware bash script ingest frontmatter",
+        "project": "homelab",
+        "description": "push-to-qdrant.sh network-aware ingestion script",
+        "strategy": "dense",
+        "hit_at_1": 0.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 0.5,
+        "ndcg5": 0.7851144250702093,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 311.4,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "External Brain - MCP Server Setup and RAG Pipeline Audi",
+            "## CHUNK 4: push-to-qdrant.sh Windows Git Bash Compatibility Fix  ### Context `push-to-qdr"
+          ],
+          [
+            0.33333334,
+            "RAG Knowledge Capture Pipeline - Full Setup from SKILL ",
+            "## CHUNK 4: push-to-qdrant.sh \ufffd Network-Aware Script  ### Context Script on VM B1 (or run "
+          ],
+          [
+            0.25,
+            "RAG Pipeline Upgrade - 6 Typed Templates and Global RAG",
+            "## CHUNK 2: push-to-qdrant.sh - Expanded Qdrant Payload Fields  ### Context `~/scripts/pus"
+          ]
+        ],
+        "top_ids": [
+          "43596196",
+          "685981524",
+          "1998825549"
+        ]
+      },
+      "sparse": {
+        "query": "push-to-qdrant.sh network-aware bash script ingest frontmatter",
+        "project": "homelab",
+        "description": "push-to-qdrant.sh network-aware ingestion script",
+        "strategy": "sparse-only",
+        "hit_at_1": 0.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 0.5,
+        "ndcg5": 0.84598267059683,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 310.6,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "Qdrant API Key Leak Scrub from Public Repo Scripts",
+            "## CHUNK 1: Qdrant API Key Leak Scrub from Public Repo Scripts  ### Context The rag-gatewa"
+          ],
+          [
+            0.33333334,
+            "RAG Pipeline Upgrade - 6 Typed Templates and Global RAG",
+            "## CHUNK 2: push-to-qdrant.sh - Expanded Qdrant Payload Fields  ### Context `~/scripts/pus"
+          ],
+          [
+            0.25,
+            "Update MCP Server JS File on VM B1 via SCP",
+            "## CHUNK 1: Update qdrant-mcp-server.js on VM B1  ### Context  The `qdrant-knowledge` MCP "
+          ]
+        ],
+        "top_ids": [
+          "810850998",
+          "1998825549",
+          "1466428189"
+        ]
+      },
+      "hybrid": {
+        "query": "push-to-qdrant.sh network-aware bash script ingest frontmatter",
+        "project": "homelab",
+        "description": "push-to-qdrant.sh network-aware ingestion script",
+        "strategy": "hybrid-rrf",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.7554806194489572,
+        "score_dist": {
+          "min": 0.3333,
+          "max": 0.5833,
+          "avg": 0.4833,
+          "p50": 0.5,
+          "p95": 0.5833
+        },
+        "latency_ms": 311.3,
+        "raw_scores": [
+          0.5833334,
+          0.55,
+          0.5,
+          0.45,
+          0.33333334
+        ],
+        "top_docs": [
+          [
+            0.5833334,
+            "RAG Pipeline Upgrade - 6 Typed Templates and Global RAG",
+            "## CHUNK 2: push-to-qdrant.sh - Expanded Qdrant Payload Fields  ### Context `~/scripts/pus"
+          ],
+          [
+            0.55,
+            "Qdrant API Key Leak Scrub from Public Repo Scripts",
+            "## CHUNK 1: Qdrant API Key Leak Scrub from Public Repo Scripts  ### Context The rag-gatewa"
+          ],
+          [
+            0.5,
+            "External Brain - MCP Server Setup and RAG Pipeline Audi",
+            "## CHUNK 4: push-to-qdrant.sh Windows Git Bash Compatibility Fix  ### Context `push-to-qdr"
+          ]
+        ],
+        "top_ids": [
+          "1998825549",
+          "810850998",
+          "43596196"
+        ]
+      }
+    }
+  ]
+}
