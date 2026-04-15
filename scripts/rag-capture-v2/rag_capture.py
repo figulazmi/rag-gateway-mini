@@ -180,8 +180,8 @@ def extract_body(text: str) -> str:
 
 # Sections required for implementation-grade chunk types. Implementer models
 # (e.g., qwen2.5-coder) consume these chunks to write code; missing sections
-# correlate with downstream hallucination. Enforced as warnings here; P2.1
-# upgrades critical misses to hard rejects.
+# correlate with downstream hallucination. Hard-rejected in validate_content
+# (P2.1 shipped): missing section yields exit code 1 via cmd_add / cmd_pipe.
 IMPLEMENTATION_SPEC_SECTIONS = [
     "### Target Files",
     "### Interfaces",

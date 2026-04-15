@@ -193,6 +193,82 @@ def embed(text: str, ollama_url: str) -> list[float]:
         return json.loads(resp.read())["embedding"]
 
 
+def rerank_with_llm(
+    query: str,
+    points: list[dict],
+    top_n: int,
+    model: str,
+    ollama_url: str,
+    snippet_chars: int = 240,
+) -> tuple[list[dict], bool]:
+    """
+    LLM-as-reranker. Returns (reranked_points, fell_back).
+    On parse failure, returns original order truncated to top_n with fell_back=True.
+    """
+    if len(points) <= 1:
+        return points[:top_n], False
+
+    lines = []
+    for i, p in enumerate(points, start=1):
+        payload = p.get("payload", {}) or {}
+        topic   = payload.get("topic", "(no topic)") or "(no topic)"
+        body    = " ".join(str(payload.get("content", "") or "").split())[:snippet_chars]
+        lines.append(f"[{i}] {topic}: {body}")
+
+    prompt = (
+        f"Query: {query}\n\n"
+        "For each document below, output a relevance score between 0.0 and 1.0 "
+        "(1.0 = perfectly answers the query). Output JSON only, no prose.\n\n"
+        + "\n".join(lines)
+        + "\n\nOutput format: [{\"i\":1,\"s\":0.9},{\"i\":2,\"s\":0.3}]"
+    )
+
+    body = {
+        "model":   model,
+        "prompt":  prompt,
+        "stream":  False,
+        "format":  "json",
+        "options": {"temperature": 0, "num_predict": 512},
+    }
+    req = urllib.request.Request(
+        f"{ollama_url}/api/generate",
+        data=json.dumps(body).encode(),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            raw = json.loads(resp.read()).get("response", "")
+        parsed = json.loads(raw)
+        if not isinstance(parsed, list):
+            # Ollama format:"json" may wrap arrays inside an object
+            arrs = [v for v in parsed.values() if isinstance(v, list)] if isinstance(parsed, dict) else []
+            if not arrs:
+                raise ValueError("no array in reranker output")
+            parsed = arrs[0]
+
+        score_by_idx: dict[int, float] = {}
+        for item in parsed:
+            i = int(item.get("i", item.get("index", item.get("id", 0))))
+            s = float(item.get("s", item.get("score", 0.0)))
+            if 1 <= i <= len(points):
+                score_by_idx[i] = max(0.0, min(1.0, s))
+
+        if not score_by_idx:
+            raise ValueError("no valid scores parsed")
+
+        reranked = []
+        for i, p in enumerate(points, start=1):
+            new_p = dict(p)
+            new_p["rrf_score"] = p.get("score", 0.0)
+            new_p["score"]     = score_by_idx.get(i, 0.0)
+            reranked.append(new_p)
+        reranked.sort(key=lambda x: x["score"], reverse=True)
+        return reranked[:top_n], False
+    except Exception:
+        return points[:top_n], True
+
+
 # ─── SEARCH STRATEGIES ───────────────────────────────────────────────────────
 
 def _project_filter(project: str) -> dict:
@@ -408,6 +484,9 @@ def print_header(limit: int, prefetch_mult: int, project_filter: Optional[str], 
     print(f"  Collection : {COLLECTION}  |  Vectors: {DENSE_VECTOR} (768-dim) + {SPARSE_VECTOR} (djb2)")
     print(f"  Timestamp  : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"  Strategies : dense-only | sparse-only | hybrid-rrf")
+    rerank_note = globals().get("_RERANK_NOTE")
+    if rerank_note:
+        print(f"  Reranker   : {rerank_note}")
     print(f"  Prefetch   : limit × {prefetch_mult} per leg  |  limit={limit}")
     if project_filter:
         print(f"  Project    : {project_filter}")
@@ -576,6 +655,9 @@ def run_evaluation(
     prefetch_mult: int,
     output_path: Optional[str],
     debug: bool,
+    rerank: bool = False,
+    rerank_model: str = "llama3.2:3b",
+    rerank_candidates: int = 20,
 ):
     suite = [tc for tc in TEST_SUITE if project_filter is None or tc.project == project_filter]
     if not suite:
@@ -609,9 +691,16 @@ def run_evaluation(
         sparse_pts = search_sparse_only(sparse_vec, tc.project, limit, prefetch_mult, qdrant_url, api_key)
         sparse_ms  = (time.perf_counter() - t0) * 1000
 
-        # Hybrid
+        # Hybrid (optionally reranked)
         t0 = time.perf_counter()
-        hybrid_pts = search_hybrid(dense_vec, sparse_vec, tc.project, limit, prefetch_mult, qdrant_url, api_key)
+        hybrid_fetch = max(rerank_candidates, limit) if rerank else limit
+        hybrid_pts_raw = search_hybrid(dense_vec, sparse_vec, tc.project, hybrid_fetch, prefetch_mult, qdrant_url, api_key)
+        if rerank:
+            hybrid_pts, fell_back = rerank_with_llm(tc.query, hybrid_pts_raw, limit, rerank_model, ollama_url)
+            if fell_back:
+                print(f"    [rerank fell back to RRF order — parse error]")
+        else:
+            hybrid_pts = hybrid_pts_raw[:limit]
         hybrid_ms  = (time.perf_counter() - t0) * 1000
 
         def extract_top_docs(pts: list[dict]) -> list:
@@ -726,7 +815,16 @@ Debug workflow for regression:
     parser.add_argument("--output",          default=None)
     parser.add_argument("--debug",           action="store_true",
                         help="Show actual top-3 documents per strategy per query")
+    parser.add_argument("--rerank",          action="store_true",
+                        help="Apply LLM-as-reranker after RRF fusion on the hybrid leg (P2.2)")
+    parser.add_argument("--rerank-model",    default="llama3.2:3b",
+                        help="Ollama model used for reranking (default: llama3.2:3b)")
+    parser.add_argument("--rerank-candidates", type=int, default=20,
+                        help="Candidate pool size passed to the reranker (default 20)")
     args = parser.parse_args()
+
+    global _RERANK_NOTE
+    _RERANK_NOTE = f"{args.rerank_model} on {args.rerank_candidates} candidates" if args.rerank else None
 
     run_evaluation(
         qdrant_url=args.qdrant_url.rstrip("/"),
@@ -737,6 +835,9 @@ Debug workflow for regression:
         prefetch_mult=args.prefetch_mult,
         output_path=args.output,
         debug=args.debug,
+        rerank=args.rerank,
+        rerank_model=args.rerank_model,
+        rerank_candidates=args.rerank_candidates,
     )
 
 

@@ -85,21 +85,48 @@ Upserts are idempotent by deterministic ID (`{DOC_ID}-chunk-{N}`), so this is sa
 
 ### P2 — Quality gates & precision
 
-**P2.1. Upgrade `validate_content()` from warn to hard reject**
-- Reject when word count < 100 or > 400
-- Reject when `### Key Facts` is absent
-- Reject when em dash is present (no longer a warn)
-- Reject when type is `implementation-spec`/`feature`/`pattern` and `### Target Files` is absent
-- Exit code 1 so `rag add` fails loudly and Claude corrects it
+**P2.1. Upgrade `validate_content()` from warn to hard reject** — **SHIPPED**
 
-**Files:** `scripts/rag-capture-v2/rag_capture.py:181-194` and `rag_capture.py:283-285` (convert `print(w)` to `sys.exit(1)` for hard errors; keep soft ones as warnings).
+`validate_content(content, chunk_type)` now returns `(errors, warns)`. `cmd_add` and `cmd_pipe` call `sys.exit(1)` when `errors` is non-empty; warnings are still printed but do not block.
 
-**P2.2. Reranker after RRF**
-Rerank RRF top-20 to top-5 with BGE-reranker-v2-m3 (lightweight cross-encoder). If Ollama does not support cross-encoders, use LLM-as-reranker with a small model (e.g., Qwen2.5-3B) and a relevance-scoring prompt.
+Hard-reject rules in effect:
+- Word count < 100 or > 400
+- `### Key Facts` absent
+- Em dash (`—`) present
+- `implementation-spec` chunks missing any of: Target Files, Interfaces, Dependencies, Contract, Anti-Patterns, Verification
+- `feature` / `pattern` chunks missing `### Target Files`
 
-**Files:** `scripts/qdrant-mcp-server-v2/qdrant-mcp-server-v2.js` — add a rerank stage after the fusion call at line 99.
+Soft warnings retained: possible Bahasa Indonesia detection, `feature`/`pattern` missing recommended Interfaces/Contract/Verification.
 
-**Impact:** positions 1-3 become much more precise; implementer context window stays clean.
+**Files changed:** `scripts/rag-capture-v2/rag_capture.py` — `validate_content` (line 194), `cmd_add` (line 324), `cmd_pipe` (line 383).
+
+**Verification (smoke tested):**
+```bash
+# Reject: short + no Key Facts
+echo "short content" | rag add -p homelab -t debug --topic "x"   # exit 1
+
+# Reject: feature without Target Files
+cat body.md | rag add -p homelab -t feature --topic "x"          # exit 1
+```
+
+**P2.2. Reranker after RRF** — **SCAFFOLDED, disabled by default; blocked on infra**
+
+LLM-as-reranker (no new infra path) was implemented and evaluated on VM B1 Ollama with `llama3.2:3b`:
+- Aggregate NDCG@5: 0.9361 with rerank vs 0.9361 without — **zero measurable lift** because the current 5-query suite already saturates at Hit@1 = 1.00 / MRR = 1.00 under pure hybrid RRF.
+- Hybrid latency: **~61s/query** vs 248ms without — 30× over the 2s plan budget.
+- Parse reliability: **40% JSON parse-failure rate** (2 of 5 queries fell back to RRF order).
+
+Decision: code shipped as scaffolding, but the default is **off** (`RERANK_ENABLED === "true"` to opt in). Kill switch verified. This preserves the integration point for the real fix below and keeps production on pure RRF — which today is already strong enough that reranker value is invisible on this eval set.
+
+**Files changed (scaffolding):**
+- `scripts/qdrant-mcp-server-v2/qdrant-mcp-server-v2.js` — `rerankWithLLM` helper, wired into both primary and retry search paths; gated on `RERANK_ENABLED` env var; emits `rag_rerank` and `rag_rerank_parse_error` stderr events.
+- `scripts/eval-retrieval-quality.py` — `rerank_with_llm` helper, `--rerank / --rerank-model / --rerank-candidates` CLI flags.
+
+**Real fix — promoted from P4 to active (P2.2-B):**
+Deploy BGE-reranker-v2-m3 via a TEI (text-embeddings-inference) container on VM B1. Cross-encoder reranking gives proper semantic scoring at ~50ms/query instead of ~60s. The MCP scaffolding above already has the call-site — only `rerankWithLLM` needs to be replaced with a `rerankWithTEI` that hits TEI's `/rerank` endpoint.
+
+**Also needed before P2.2-B delivers visible metric gains:**
+P3.2's expanded eval set. Current 5 queries already produce perfect Hit@1 on hybrid RRF, so no reranker improvement is measurable. Grow to 30 queries with harder negatives before re-evaluating.
 
 ### P3 — Lifecycle & feedback
 
@@ -129,14 +156,14 @@ When eval flags NDCG < 0.6 for query X, append the chunk_id that should have ran
 
 ## Recommended Execution Order
 
-1. P1.1 chunk schema enrichment (~1-2 h) — improves quality of all new chunks; existing chunks remain valid
-2. P2.1 hard-reject validation (~30 min) — cheap; blocks bad chunks at the gate
-3. P1.2 contextual retrieval (~1-2 h) — requires re-embedding existing chunks, but the push script is already upsert-safe
-4. P2.2 reranker (~2-3 h) — depends on reranker choice
-5. P3.1 supersede (~1 h)
-6. P3.2 and P3.3 eval expansion + feedback (~3-4 h)
-
-**Total: ~10 hours for full P1-P3. P1 alone (~3 hours) delivers about 70% of the impact against the strategic goal.**
+1. ~~P1.1 chunk schema enrichment~~ — SHIPPED
+2. ~~P2.1 hard-reject validation~~ — SHIPPED
+3. ~~P1.2 contextual retrieval~~ — SHIPPED (Hit@1 0.60→1.00, MRR 0.80→1.00)
+4. ~~P2.2 LLM-as-reranker~~ — SCAFFOLDED, blocked on infra (see P2.2 note above)
+5. **P3.2 eval expansion (now priority)** — current suite saturates at Hit@1=1.0; cannot measure reranker or further tuning without harder queries
+6. P3.1 supersede (~1 h)
+7. P2.2-B TEI + BGE-reranker deployment (~2-3 h once P3.2 shows reranker is needed)
+8. P3.3 feedback loop
 
 ## Critical Files Reference
 

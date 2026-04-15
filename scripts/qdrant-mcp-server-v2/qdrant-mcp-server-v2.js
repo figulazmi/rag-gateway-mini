@@ -19,6 +19,15 @@ const NOT_FOUND_THRESHOLD = 0.65;   // top score below this → NOT FOUND IN RAG
 const QUERY_MIN_WORDS = 8;
 const QUERY_EXPANSION = "implementation details system behavior architecture";
 
+// Reranker (P2.2): LLM-as-reranker scaffolding. Disabled by default because
+// eval on VM B1 Ollama showed ~60s/query latency with llama3.2:3b and ~40%
+// JSON parse-failure rate. Opt-in via RERANK_ENABLED=true; real fix is to
+// deploy BGE-reranker-v2-m3 on TEI (see RAG_V2_ROADMAP.md P2.2 follow-up).
+const RERANK_ENABLED    = process.env.RERANK_ENABLED === "true";
+const RERANK_MODEL      = process.env.RERANK_MODEL    || "llama3.2:3b";
+const RERANK_CANDIDATES = Number(process.env.RERANK_CANDIDATES || 20);
+const RERANK_SNIPPET    = 240;  // chars of content passed to reranker per candidate
+
 // Session state — tracks whether search_knowledge was called this session
 let sessionState = {
   hasSearched: false,
@@ -62,6 +71,79 @@ function djb2Sparse(text) {
   const indices = Object.keys(tf).map(Number);
   const values = indices.map(i => tf[i]);
   return { indices, values };
+}
+
+/**
+ * LLM-as-reranker. Takes RRF-fused candidates, asks a small Ollama model to
+ * score each against the query in [0,1], returns top-N sorted by that score.
+ * Falls through to RRF order on parse failure (soft degrade, never throws).
+ */
+async function rerankWithLLM(query, points, topN) {
+  if (!points || points.length === 0) return { reranked: points, fellBack: false, latencyMs: 0 };
+  if (points.length <= 1) return { reranked: points.slice(0, topN), fellBack: false, latencyMs: 0 };
+
+  const start = Date.now();
+  const snippets = points.map((p, i) => {
+    const topic = p.payload?.topic || "(no topic)";
+    const body  = String(p.payload?.content || "").replace(/\s+/g, " ").slice(0, RERANK_SNIPPET);
+    return `[${i + 1}] ${topic}: ${body}`;
+  }).join("\n");
+
+  const prompt =
+    `Query: ${query}\n\n` +
+    `For each document below, output a relevance score between 0.0 and 1.0 ` +
+    `(1.0 means perfectly answers the query). Output JSON only, no prose.\n\n` +
+    `${snippets}\n\n` +
+    `Output format: [{"i":1,"s":0.9},{"i":2,"s":0.3}]`;
+
+  try {
+    const res = await fetch(`${OLLAMA_URL}/api/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: RERANK_MODEL,
+        prompt,
+        stream: false,
+        format: "json",
+        options: { temperature: 0, num_predict: 512 },
+      }),
+    });
+    const data = await res.json();
+    const raw = data.response || "";
+    // Ollama with format:"json" returns a JSON object; our prompt asks for an
+    // array. Accept either an array directly, or an object containing one.
+    let parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      const arrVal = Object.values(parsed).find(v => Array.isArray(v));
+      if (!arrVal) throw new Error("no array in reranker output");
+      parsed = arrVal;
+    }
+
+    const scoreByIdx = new Map();
+    for (const item of parsed) {
+      const i = Number(item.i ?? item.index ?? item.id);
+      const s = Number(item.s ?? item.score);
+      if (Number.isFinite(i) && Number.isFinite(s)) scoreByIdx.set(i, Math.max(0, Math.min(1, s)));
+    }
+    if (scoreByIdx.size === 0) throw new Error("no valid scores parsed");
+
+    const reranked = points
+      .map((p, i) => ({ ...p, rrfScore: p.score, score: scoreByIdx.get(i + 1) ?? 0 }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, topN);
+
+    return { reranked, fellBack: false, latencyMs: Date.now() - start };
+  } catch (err) {
+    console.error(JSON.stringify({
+      event: "rag_rerank_parse_error",
+      error: String(err.message || err),
+      model: RERANK_MODEL,
+      candidates: points.length,
+      latencyMs: Date.now() - start,
+      timestamp: new Date().toISOString(),
+    }));
+    return { reranked: points.slice(0, topN), fellBack: true, latencyMs: Date.now() - start };
+  }
 }
 
 async function searchQdrant(denseVector, sparseVector, limit = 5, project = null, includePlanned = false) {
@@ -197,7 +279,32 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   try {
     const denseVector = await embedQuery(effectiveQuery);
     const sparseVector = djb2Sparse(effectiveQuery);
-    const results = await searchQdrant(denseVector, sparseVector, limit, project, include_planned);
+    const fetchLimit = RERANK_ENABLED ? Math.max(RERANK_CANDIDATES, limit) : limit;
+    const rawResults = await searchQdrant(denseVector, sparseVector, fetchLimit, project, include_planned);
+
+    let results = rawResults;
+    let rerankMeta = null;
+    if (RERANK_ENABLED && rawResults.length > 1) {
+      const rrfTop = rawResults[0]?.score ?? 0;
+      const { reranked, fellBack, latencyMs } = await rerankWithLLM(effectiveQuery, rawResults, limit);
+      results = reranked;
+      rerankMeta = {
+        event: "rag_rerank",
+        model: RERANK_MODEL,
+        candidates: rawResults.length,
+        topN: limit,
+        rrfTopScore: rrfTop,
+        rerankTopScore: results[0]?.score ?? 0,
+        fellBack,
+        latencyMs,
+        timestamp: new Date().toISOString(),
+      };
+      console.error(JSON.stringify(rerankMeta));
+    } else {
+      results = rawResults.slice(0, limit);
+    }
+
+    // SCORE_THRESHOLD now applies to reranker score when enabled, else RRF score.
     const filteredResults = results.filter(r => r.score >= SCORE_THRESHOLD);
 
     const scores = filteredResults.map((r) => r.score);
@@ -227,7 +334,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const rewrittenQuery = effectiveQuery + " with detailed implementation context in system design";
       const retryDense = await embedQuery(rewrittenQuery);
       const retrySparse = djb2Sparse(rewrittenQuery);
-      const retryRaw = await searchQdrant(retryDense, retrySparse, limit, project, include_planned);
+      const retryFetchLimit = RERANK_ENABLED ? Math.max(RERANK_CANDIDATES, limit) : limit;
+      const retryRawFull = await searchQdrant(retryDense, retrySparse, retryFetchLimit, project, include_planned);
+      let retryRaw = retryRawFull;
+      if (RERANK_ENABLED && retryRawFull.length > 1) {
+        const { reranked } = await rerankWithLLM(rewrittenQuery, retryRawFull, limit);
+        retryRaw = reranked;
+      } else {
+        retryRaw = retryRawFull.slice(0, limit);
+      }
       const retryFiltered = retryRaw.filter(r => r.score >= SCORE_THRESHOLD);
       const retryScores = retryFiltered.map(r => r.score);
       const retryAvgScore = retryScores.length > 0 ? retryScores.reduce((a, b) => a + b, 0) / retryScores.length : 0;
