@@ -1,11 +1,11 @@
 ---
-id: 2026-04-15-project-claudemd-slim-with-fallback-esse-001
+id: 2026-04-15-n8n-contextual-retrieval-prepend-deploym-001
 date: 2026-04-15
 source: claude-code-cli
 project: homelab
-chunk_type: decision
-topic: Project CLAUDE.md Slim with Fallback Essentials Pattern
-tags: [homelab, vm-b1, claude-md, documentation, rtk, rag-first, fallback, self-sufficient]
+chunk_type: debug
+topic: n8n Contextual Retrieval Prepend Deployment Verification
+tags: [homelab, vm-b1, n8n, qdrant, contextual-retrieval, ollama, embedding, verification]
 related: []
 session_type: 
 environment: homelab
@@ -14,23 +14,32 @@ status: implemented
 chunk_source: code
 ---
 
-## CHUNK 1: Project CLAUDE.md Slim with Fallback Essentials Pattern
+## CHUNK 1: n8n Contextual Retrieval Prepend Deployment Verification
 
 ### Context
-Claude Code auto-loads both global ~/.claude/CLAUDE.md and per-project CLAUDE.md into every session context. Large duplicated blocks between the two files waste context tokens on every turn. The rag-gateway-mini project CLAUDE.md grew to 471 lines, with ~150 lines of RTK instructions and RAG-first rules duplicated verbatim from the global file.
+Deploying P1.2 contextual retrieval prepend for knowledge_v2: Validate & Clean node builds embed_content, Ollama node embeds embed_content, payload keeps raw content. After user imported and published the new workflow, stored dense vectors still matched raw-content embeddings rather than prepended embeddings.
 
 ### Problem
-Project CLAUDE.md duplicated the global RTK command reference (145 lines) and portions of the RAG-first protocol. This inflated per-session context cost without adding information. Simply deleting the duplicated blocks and relying solely on the global file would break self-sufficiency: if the repo is cloned to another machine, another Claude Code account, or used by a collaborator without the same global file, RTK prefixing and RAG-first behavior would silently disappear.
+Cosine similarity check: cos(stored_vector, embed(raw_content)) = 1.000000 while cos(stored_vector, embed(prepended_content)) = 0.951857. This indicates the active webhook is still routing to a workflow that feeds content (not embed_content) to Ollama, even though the updated Validate and Clean node code was confirmed present.
 
 ### Solution
-Two-pass optimization. Pass 1: remove full RTK block, verbose RAG capture example, and redundant explanations from project CLAUDE.md, reducing 471 to 92 lines (~80% cut). Pass 2: add a compact Fallback Essentials block (~18 lines) capturing only the load-bearing rules: RTK golden rule + chain example, and the 4-step RAG-first protocol with the ToolSearch schema load. Final size ~110 lines (~77% smaller than original) while remaining self-sufficient if global is absent.
+Verification script (Python plus Qdrant scroll plus Ollama embeddings API) isolates the issue to the Ollama node binding. Fix path: in n8n UI, open Ollama nomic-embed-text node, ensure prompt Body Parameter equals the expression ={{ $json.embed_content }}, then Save workflow and toggle Active off then on to force webhook re-registration. Duplicate workflows owning the same webhook path knowledge-ingest can also shadow the new one.
 
 ### Key Facts
-- Global ~/.claude/CLAUDE.md is auto-loaded by Claude Code every session alongside per-project CLAUDE.md, so duplicating content between them wastes context tokens
-- mcp__qdrant-knowledge__search_knowledge is a deferred MCP tool whose schema must be loaded once per session via ToolSearch select:<name> before it can be called
-- Fallback Essentials pattern: keep the minimum rules needed for self-sufficiency in project CLAUDE.md, point to global file for full detail, avoid full duplication
-- Preserving load-bearing rules means keeping RTK golden rule, the chain-command example, and the full RAG-first decision tree (found vs not_found vs silent-fallback)
-- STRICT RAG MODE rule: call search_knowledge BEFORE reading any source file for architecture or infrastructure questions; if empty, say NOT FOUND IN KNOWLEDGE BASE
+- Stored dense vector exactly equaling embed(raw_content) proves the Ollama node received raw content, not embed_content
+- n8n does not always re-register webhook on Save alone; toggle Active off then on is required
+- Qdrant scroll with with_vector=["dense"] retrieves stored named vector for offline comparison
+- n8n REST /rest/workflows requires auth; without n8n API key or docker sudo access, verification must be done via UI
+- Idempotent upsert by deterministic chunk ID means re-pushing the same file overwrites; delta=0 does not prove the new workflow ran
+
+### Code
+```python
+scroll = post(f"{QDRANT}/collections/knowledge_v2/points/scroll",
+    {"filter":{"must":[{"key":"string_id","match":{"value":SID}}]},
+     "limit":1,"with_payload":True,"with_vector":["dense"]},
+    {"api-key":KEY})
+stored = scroll["result"]["points"][0]["vector"]["dense"]
+```
 
 ---
 

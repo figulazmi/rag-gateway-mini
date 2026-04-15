@@ -54,21 +54,34 @@ Introduce chunk_type `implementation-spec` (or enrich `feature`/`pattern` templa
 
 **Impact:** directly reduces hallucination; implementer model receives an explicit spec, not prose.
 
-**P1.2. Contextual retrieval prepend before embedding**
-In `push-to-qdrant.sh`, before posting to the embedding endpoint, prepend 50-100 tokens of document-level context:
+**P1.2. Contextual retrieval prepend before embedding** — **SHIPPED, needs deployment**
 
+The prepend lives in the n8n workflow's `Validate & Clean` node, not in `push-to-qdrant.sh`. Bash script forwards raw payload; n8n computes `embed_content = "This chunk is from project X, type Y, topic Z, tagged ..., date ... Content: ..."` and feeds that to Ollama. Original `content` is stored untouched in the Qdrant payload and used for sparse vector + LLM consumption — the prepend never leaks to consumers.
+
+**Files changed:**
+- `scripts/n8n-workflows/ingest-knowledge-v2.json` — `Validate & Clean` node adds `embed_content` field; `Ollama: nomic-embed-text` node now reads `{{ $json.embed_content }}` instead of `{{ $json.content }}`
+
+**Deployment steps (manual, one-time):**
+1. In n8n UI at `http://192.168.18.169:5678`, open workflow `knowledge_v2`
+2. Import the updated JSON (Workflow → Import from File → pick `scripts/n8n-workflows/ingest-knowledge-v2.json`) or paste the two changed nodes
+3. Activate the workflow (toggle top-right)
+4. Smoke test: `rag add` a sample chunk → `rag merge` → `bash ~/scripts/push-to-qdrant.sh .claude/summaries/<file>.md` → check n8n execution log shows `embed_content` populated and HTTP 200 back from Qdrant
+
+**Re-embedding existing chunks:**
+Dense vector space has shifted (old chunks embedded on raw content, new ones on prepended content). Hybrid search still works during transition because the sparse vector is unchanged — but for consistent dense retrieval, re-ingest the full corpus:
+```bash
+for f in .claude/summaries/*.md; do
+  rtk bash ~/scripts/push-to-qdrant.sh "$f"
+done
 ```
-This chunk is from project {project}, type {chunk_type}, topic "{topic}",
-tagged {tags}. Session date {date}. Content: {original_chunk}
-```
+Upserts are idempotent by deterministic ID (`{DOC_ID}-chunk-{N}`), so this is safe to re-run. Expect delta = 0 in `POINTS_AFTER - POINTS_BEFORE` (overwrites, not inserts).
 
-Embed the prepended version. **Store the original content in the payload** — never surface the prepend to the consumer LLM.
+**Verification after deployment:**
+- Run `python scripts/eval-retrieval-quality.py --project homelab --debug` before and after re-ingest
+- NDCG@5 should improve; Anthropic benchmark predicts 35-49% retrieval failure reduction
+- Check MCP server stderr: `avg_score` on typical queries should rise
 
-**Files to modify:**
-- `scripts/push-to-qdrant.sh` around lines 181-190 (after frontmatter extraction, before the Ollama embed POST)
-- No changes needed in `qdrant-mcp-server-v2.js` — retrieval still returns the original `content` payload
-
-**Impact:** 35-49% retrieval failure reduction (Anthropic benchmark). The right chunk reaches the implementer more often.
+**Impact:** chunks with ambiguous content (e.g., "fix the validation bug") now embed with disambiguating context → right chunk reaches implementer more often.
 
 ### P2 — Quality gates & precision
 

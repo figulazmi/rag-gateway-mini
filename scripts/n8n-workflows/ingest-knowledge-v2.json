@@ -20,7 +20,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const body = $input.first().json.body ?? $input.first().json;\n\nconst required = ['id', 'content', 'collection', 'project', 'topic'];\nfor (const field of required) {\n  if (!body[field]) {\n    throw new Error(`Missing required field: ${field}`);\n  }\n}\n\nconst cleanContent = body.content\n  .replace(/\\n{3,}/g, '\\n\\n')\n  .trim();\n\nreturn [{\n  json: {\n    ...body,\n    content: cleanContent,\n    ingested_at: new Date().toISOString()\n  }\n}];"
+        "jsCode": "const body = $input.first().json.body ?? $input.first().json;\n\nconst required = ['id', 'content', 'collection', 'project', 'topic'];\nfor (const field of required) {\n  if (!body[field]) {\n    throw new Error(`Missing required field: ${field}`);\n  }\n}\n\nconst cleanContent = body.content\n  .replace(/\\n{3,}/g, '\\n\\n')\n  .trim();\n\n// ── Contextual Retrieval prepend (Anthropic 2024) ─────────────────────────\n// Dense embedding is computed over embed_content, which prepends document\n// metadata so the vector captures provenance (project, type, topic, tags,\n// date). Original `content` is stored untouched in the payload and used for\n// sparse vector + LLM consumption — the prepend never leaks to consumers.\n// Anthropic benchmark: 35-49% retrieval failure reduction vs raw embedding.\nconst tagsStr = Array.isArray(body.tags)\n  ? body.tags.join(', ')\n  : (body.tags || '');\nconst chunkType = body.session_type || body.chunk_type || 'unknown';\nconst embed_content =\n  `This chunk is from project ${body.project}, ` +\n  `type ${chunkType}, topic \"${body.topic}\", ` +\n  `tagged ${tagsStr}. Session date ${body.date || 'unknown'}. ` +\n  `Content: ${cleanContent}`;\n\nreturn [{\n  json: {\n    ...body,\n    content: cleanContent,\n    embed_content: embed_content,\n    ingested_at: new Date().toISOString()\n  }\n}];"
       },
       "id": "14ee29c3-847d-41ea-9ac7-e5fc14773bd1",
       "name": "Validate & Clean",
@@ -44,7 +44,7 @@
             },
             {
               "name": "prompt",
-              "value": "={{ $json.content }}"
+              "value": "={{ $json.embed_content }}"
             }
           ]
         },
@@ -83,7 +83,7 @@
           "parameters": [
             {
               "name": "api-key",
-              "value": "<QDRANT_API_KEY>"
+              "value": "={{ $env.QDRANT_API_KEY }}"
             },
             {
               "name": "Content-Type",
