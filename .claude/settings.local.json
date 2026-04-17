@@ -25,7 +25,8 @@
       "Read(**)",
       "WebFetch(domain:localhost)",
       "mcp__qdrant-knowledge__search_knowledge",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "Bash(rag *)"
     ],
     "deny": [
       "Bash(git *)",

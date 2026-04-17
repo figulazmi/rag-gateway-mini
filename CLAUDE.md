@@ -125,6 +125,77 @@ Required sections (rag_capture.py warns if missing; hard-reject in P2.1):
 
 For `feature` / `pattern` types: `### Target Files` is required; Interfaces/Contract/Verification are recommended.
 
+## Session Start Protocol (EVERY new session — run FIRST)
+
+```bash
+rag resume          # check for open checkpoints from previous sessions
+```
+
+- **FOUND** → load all fields from checkpoint, skip codebase exploration entirely,
+  execute `next_step` directly using `rtk read` on `files_modified` only
+- **NOT FOUND** → proceed with normal RAG-first protocol
+
+RTK precision reads on resume (saves ~75-90% tokens vs broad exploration):
+```bash
+# For each file in checkpoint's files_modified:
+rtk read src/Controllers/RagController.cs   # targeted, not full exploration
+```
+
+State explicitly: "Resuming checkpoint: [topic] — executing: [next_step]"
+
+## Checkpoint Trigger Rules
+
+Emit `rag checkpoint` when ANY of these:
+1. `/status` shows token usage **>= 85%** (hard limit — safety buffer of 15%)
+2. `/status` shows token usage **>= 75%** (early warning — use `--quick` flag)
+3. User says "checkpoint" / "save progress" / "lanjut besok" / "lanjut sesi baru"
+4. End of complex multi-step session (even if not at token limit)
+5. Before switching to a different problem mid-session
+
+**Token budget rule: checkpoint MUST cost < 15% of remaining tokens.**
+Achieve this by writing content from active context ONLY. Zero new file reads.
+
+| What | How | ~Tokens |
+|------|-----|---------|
+| Body (Problem/Progress/Key Facts) | from memory | 800-1200 |
+| `files_modified` | `rtk git diff --name-only HEAD` (auto) | 50 |
+| `decisions_made` | `rtk git log --oneline -5` (auto) | 100 |
+| CLI overhead | heredoc pipe | 150 |
+| **Total** | | **~1100-1500** |
+
+Heredoc template (standard mode, ~85% trigger):
+```bash
+cat <<'RAGCHK' | rag checkpoint -p PROJECT --topic "..." \
+  --next-step "exact action: file.cs:line" \
+  --hypothesis "current working theory" \
+  --trigger "85%"
+### Problem
+[what we're solving]
+### Progress
+[what was done this session]
+### Key Facts
+- fact 1
+- fact 2
+- fact 3
+RAGCHK
+```
+
+Emergency quick mode (~75% trigger or <5% remaining):
+```bash
+rag checkpoint -p PROJECT --topic "..." --next-step "exact action" --trigger "75%" --quick
+```
+
+Then push immediately:
+```bash
+bash ~/scripts/push-to-qdrant.sh .claude/checkpoints/YYYY-MM-DD-*.md
+```
+
+When problem is solved, promote checkpoint to knowledge:
+```bash
+rag promote --file .claude/checkpoints/YYYY-MM-DD-[slug]-001.md
+bash ~/scripts/push-to-qdrant.sh .claude/summaries/YYYY-MM-DD-[slug]-promoted.md
+```
+
 ## Session end (before /clear)
 
 1. Capture any solved-but-unsaved problems via `rag add`

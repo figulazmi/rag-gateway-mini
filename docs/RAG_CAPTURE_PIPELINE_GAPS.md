@@ -69,10 +69,10 @@
 
 | # | Step | Ideal | Actual | Gap | Status |
 |---|------|-------|--------|-----|--------|
-| G1 | **Trigger** | Automatic on confirmation signal | Claude judgment per CLAUDE.md prompt rules | No hook/daemon/cron — depends entirely on Claude's attention | `[ ] OPEN` |
-| G2 | **Detect** | Structured signal parsing | LLM heuristic | `rag pipe` + `<<<RAG_META:...>>>` exists but CLAUDE.md explicitly forbids emitting those markers — automated detection path is disabled | `[ ] OPEN` |
+| G1 | **Trigger** | Automatic on confirmation signal | Claude judgment per CLAUDE.md prompt rules | No hook/daemon/cron — depends entirely on Claude's attention | `[x] FIXED (2026-04-18)` — Checkpoint Trigger Rules added to CLAUDE.md (85%/75% token thresholds) |
+| G2 | **Detect** | Structured signal parsing | LLM heuristic | `rag pipe` + `<<<RAG_META:...>>>` exists but CLAUDE.md explicitly forbids emitting those markers — automated detection path is disabled | `[x] FIXED (2026-04-18)` — `rag checkpoint` replaces need for signal detection; explicit command with structured flags |
 | G3 | **Draft** | Per-chunk, immediate, isolated | `rag add` heredoc via Bash | (a) Heredoc terminator collisions when body contains literal "CONTENT"; (b) cp1252 em dash corruption on Windows stdin; (c) Draft folder is global — multi-project sessions silently mix | `[ ] OPEN` |
-| G4 | **Merge** | Automatic at session end | Manual — Claude must remember before `/clear` | If session cleared without merge, drafts orphaned in `~/.rag_drafts/` with no in-session reminder | `[ ] OPEN` |
+| G4 | **Merge** | Automatic at session end | Manual — Claude must remember before `/clear` | If session cleared without merge, drafts orphaned in `~/.rag_drafts/` with no in-session reminder | `[x] FIXED (2026-04-18)` — Checkpoints bypass draft/merge cycle entirely; saved directly to `.claude/checkpoints/` |
 | G5 | **Push** | Automatic post-merge | Manual — user copies push command from stdout text | No hook, no CI trigger. Reminder is text only, not executed. Creates backlog of unpushed `.md` files | `[ ] OPEN` |
 | G6 | **Verify** | Confirm searchable in Qdrant | None | HTTP 200 from n8n != vector indexed. Ollama/Qdrant failure inside n8n is invisible to the shell | `[ ] OPEN` |
 
@@ -85,20 +85,20 @@ Ranked by likelihood. Fix these to prevent silent capture loss.
 ---
 
 ### SPOF-1 — Claude skips `rag add` entirely
-**Status:** `[ ] OPEN`
+**Status:** `[x] FIXED (2026-04-18)`
 
-**What happens:** Claude does not recognize confirmation signals → no `rag add` is called → nothing is saved even after a solved session.
+**What happened:** Claude did not recognize confirmation signals → no capture even after solved session.
 
-**Fix hint:** Add a Claude Code hook on `Stop` event that runs `rag status` and warns if drafts are zero after a long session, or enable the `rag pipe` signal path (see G2).
+**Fix applied:** `rag checkpoint` command added with explicit 85%/75% token triggers in CLAUDE.md. Checkpoint captures *momentum* (in-progress state) regardless of whether problem is solved. `rag resume` at session start surfaces any missed captures.
 
 ---
 
 ### SPOF-2 — Session cleared before `rag merge`
-**Status:** `[ ] OPEN`
+**Status:** `[x] FIXED (2026-04-18)`
 
-**What happens:** `/clear` wipes conversation context. Drafts survive on disk in `~/scripts/.rag_drafts/` but user has no in-session cue they exist.
+**What happened:** `/clear` wiped context; drafts orphaned in `~/.rag_drafts/`.
 
-**Fix hint:** Add a `PreToolUse` hook on the `/clear` slash command (or `Stop` event) that runs `rag remind` and blocks clear if draft count > 0.
+**Fix applied:** Checkpoints bypass the draft/merge cycle entirely — `rag checkpoint` writes directly to `.claude/checkpoints/` and should be pushed immediately. No merge step needed before `/clear`. `rag resume` at next session start recovers any un-pushed checkpoints from disk.
 
 ---
 
@@ -147,17 +147,23 @@ Ranked by likelihood. Fix these to prevent silent capture loss.
 
 ---
 
-## Fix Priority Order (suggested)
+## Fix Priority Order
 
 ```
-SPOF-2 (session clear guard)  ← highest ROI, prevents most common loss scenario
-SPOF-1 (trigger reliability)  ← hooks or signal path
-G2     (re-enable rag pipe)   ← unblocks SPOF-1 fix
-SPOF-6 (heredoc terminator)   ← quick CLAUDE.md edit
-SPOF-3 (auto-push on merge)   ← automates last manual step
-SPOF-4 (push queue)           ← robustness
-SPOF-5 (n8n retry)            ← robustness
-G6     (verify step)          ← observability
+[x] SPOF-2 (session clear guard)  ← FIXED 2026-04-18 via checkpoint bypass
+[x] SPOF-1 (trigger reliability)  ← FIXED 2026-04-18 via 85%/75% token triggers
+[x] G2     (re-enable rag pipe)   ← FIXED 2026-04-18 via rag checkpoint command
+[x] G1     (trigger automation)   ← FIXED 2026-04-18 via CLAUDE.md trigger rules
+[x] G4     (merge dependency)     ← FIXED 2026-04-18 via direct checkpoint save
+
+[ ] SPOF-6 (heredoc terminator)   ← next: use RAGCHK not CONTENT as terminator
+[ ] SPOF-3 (auto-push on merge)   ← automates last manual step
+[ ] SPOF-4 (push queue)           ← robustness for network outage
+[ ] SPOF-5 (n8n retry)            ← robustness for n8n downtime
+[ ] SPOF-7 (rag pipe dead code)   ← cleanup or re-enable
+[ ] G3     (draft folder mix)     ← per-project draft isolation
+[ ] G5     (push automation)      ← hook or CI trigger
+[ ] G6     (verify step)          ← observability after push
 ```
 
 ---

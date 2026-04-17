@@ -188,6 +188,7 @@ DOC_SESSION_TYPE=$(extract_field "session_type")
 DOC_ENVIRONMENT=$(extract_field "environment")
 DOC_GIT_BRANCH=$(extract_field "git_branch")
 DOC_RELATED=$(extract_field "related")
+DOC_COLLECTION=$(extract_field "collection")
 FILENAME=$(basename "$FILE")
 # ──────────────────────────────────────────────────────────────────────────────
 
@@ -296,6 +297,7 @@ for i in "${!CHUNKS[@]}"; do
     --arg filename     "$FILENAME" \
     --arg chunk_num    "$CHUNK_NUM" \
     --arg content      "$CHUNK_CONTENT" \
+    --arg collection   "${DOC_COLLECTION:-knowledge_v2}" \
     --arg api_key      "$QDRANT_API_KEY" \
     '{
       id:             $id,
@@ -312,7 +314,7 @@ for i in "${!CHUNKS[@]}"; do
       filename:       $filename,
       chunk_num:      ($chunk_num | tonumber),
       content:        $content,
-      collection:     "knowledge_v2",
+      collection:     $collection,
       qdrant_api_key: $api_key
     }'
   )
@@ -348,7 +350,7 @@ echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 if [ "$FAIL_COUNT" -eq 0 ]; then
   echo "✅ Done — $SUCCESS_COUNT/$TOTAL_CHUNKS chunks pushed to Qdrant"
-  echo "   Collection : knowledge_v2"
+  echo "   Collection : ${DOC_COLLECTION:-knowledge_v2}"
   echo "   Doc ID     : $DOC_ID"
 else
   echo "⚠️  Partial — $SUCCESS_COUNT OK, $FAIL_COUNT FAILED"
