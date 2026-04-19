@@ -52,8 +52,8 @@ by default — just need the pipeline to set `status: deprecated` on old chunks.
 
 | # | Task | File(s) | Status |
 |---|------|---------|--------|
-| P3-A | Add `supersedes` and `superseded_by` frontmatter fields to `rag_capture.py`. Validation: `supersedes` value must be a valid existing chunk ID format. | `scripts/rag-capture-v2/rag_capture.py:222` | `[ ] OPEN` |
-| P3-B | In `push-to-qdrant.sh`: when `supersedes` field is present, PATCH the old chunk's Qdrant payload to `status: deprecated` before upserting the new chunk. | `scripts/push-to-qdrant.sh` | `[ ] OPEN` |
+| P3-A | Add `supersedes` and `superseded_by` frontmatter fields to `rag_capture.py`. Validation: `supersedes` value must be a valid existing chunk ID format. | `scripts/rag-capture-v2/rag_capture.py:222` | `[x] DONE (2026-04-19)` |
+| P3-B | In `push-to-qdrant.sh`: when `supersedes` field is present, PATCH the old chunk's Qdrant payload to `status: deprecated` before upserting the new chunk. | `scripts/push-to-qdrant.sh` | `[x] DONE (2026-04-19)` |
 
 **Acceptance:** Capture a chunk with `supersedes: <old-id>` → push → verify old chunk in Qdrant has `status: deprecated` → MCP search no longer returns it.
 
@@ -104,7 +104,7 @@ Systematic capture for daily .NET and Python work turns this into a real externa
 ```
 Phase 1 — Reliability        [x] P1-A  [x] P1-B  [x] P1-C  [x] P1-D
 Phase 2 — Eval Expansion     [x] P2-A  [x] P2-B
-Phase 3 — Supersede          [ ] P3-A  [ ] P3-B
+Phase 3 — Supersede          [x] P3-A  [x] P3-B
 Phase 4 — Coverage/Deploy    [ ] P4-A  [x] P4-B  [ ] P4-C
 Phase 5 — TEI Reranker       [BLOCKED] [BLOCKED] [BLOCKED]
 ```

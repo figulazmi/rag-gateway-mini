@@ -203,6 +203,17 @@ def extract_body(text: str) -> str:
 
 # --- VALIDATION ---------------------------------------------------------------
 
+CHUNK_ID_RE = re.compile(r"^\d{4}-\d{2}-\d{2}-.+-\d{3}$")
+
+def validate_supersedes(value: str) -> list:
+    """Validate that a supersedes/superseded_by value matches chunk ID format."""
+    if not value:
+        return []
+    if not CHUNK_ID_RE.match(value):
+        return [f"supersedes '{value}' does not match chunk ID format YYYY-MM-DD-<slug>-NNN"]
+    return []
+
+
 def validate_content(content: str) -> list:
     warns = []
     w = count_words(content)
@@ -257,21 +268,26 @@ def build_frontmatter(meta: dict, config: dict, chunk_number: int) -> str:
     environment  = environment or proj_cfg.get("default_environment") or config.get("default_environment", "dev")
     chunk_source = chunk_source or config.get("default_chunk_source", "code")
 
+    supersedes    = meta.get("supersedes", "")
+    superseded_by = meta.get("superseded_by", "")
+
     fields = [
-        ("id",           chunk_id),
-        ("date",         date),
-        ("source",       "claude-code-cli"),
-        ("collection",   collection),
-        ("project",      project),
-        ("chunk_type",   chunk_type),
-        ("topic",        topic),
-        ("tags",         f"[{', '.join(all_tags)}]"),
-        ("related",      f"[{related}]" if related else "[]"),
-        ("session_type", session_type),
-        ("environment",  environment),
-        ("git_branch",   branch),
-        ("status",       status),
-        ("chunk_source", chunk_source),
+        ("id",            chunk_id),
+        ("date",          date),
+        ("source",        "claude-code-cli"),
+        ("collection",    collection),
+        ("project",       project),
+        ("chunk_type",    chunk_type),
+        ("topic",         topic),
+        ("tags",          f"[{', '.join(all_tags)}]"),
+        ("related",       f"[{related}]" if related else "[]"),
+        ("session_type",  session_type),
+        ("environment",   environment),
+        ("git_branch",    branch),
+        ("status",        status),
+        ("chunk_source",  chunk_source),
+        ("supersedes",    supersedes),
+        ("superseded_by", superseded_by),
     ]
 
     # Checkpoint-specific momentum fields
@@ -350,9 +366,13 @@ def cmd_add(args, config: dict):
         "chunk_source": getattr(args, "chunk_source", "") or "",
         "session_type": getattr(args, "session_type", "") or "",
         "status":       getattr(args, "status", "implemented") or "implemented",
+        "supersedes":   getattr(args, "supersedes", "") or "",
+        "superseded_by": getattr(args, "superseded_by", "") or "",
     }
 
     for w in validate_content(content):
+        print(w)
+    for w in validate_supersedes(meta.get("supersedes", "")):
         print(w)
 
     path, n = save_draft(content, meta, config)
@@ -837,6 +857,10 @@ Examples:
         p.add_argument("--chunk-source",  dest="chunk_source", choices=VALID_CHUNK_SOURCES)
         p.add_argument("--branch",        "-b")
         p.add_argument("--status",        choices=VALID_STATUSES, default="implemented")
+        p.add_argument("--supersedes",    default="",
+                       help="Chunk ID this replaces — old chunk will be deprecated on push (format: YYYY-MM-DD-<slug>-NNN)")
+        p.add_argument("--superseded-by", dest="superseded_by", default="",
+                       help="Chunk ID that replaces this one (back-link)")
 
     add_p = sub.add_parser("add", help="Add one chunk (interactive or --content)")
     chunk_args(add_p, required=True)

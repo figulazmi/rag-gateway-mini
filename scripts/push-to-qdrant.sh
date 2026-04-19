@@ -192,6 +192,7 @@ DOC_ENVIRONMENT=$(extract_field "environment")
 DOC_GIT_BRANCH=$(extract_field "git_branch")
 DOC_RELATED=$(extract_field "related")
 DOC_COLLECTION=$(extract_field "collection")
+DOC_SUPERSEDES=$(extract_field "supersedes")
 FILENAME=$(basename "$FILE")
 # ──────────────────────────────────────────────────────────────────────────────
 
@@ -282,6 +283,25 @@ get_point_count() {
 }
 
 COUNT_BEFORE=$(get_point_count 2>/dev/null || echo "?")
+
+# ─── SUPERSEDE: deprecate old chunk before upserting new one ──────────────────
+if [ -n "$DOC_SUPERSEDES" ] && [ "$DOC_SUPERSEDES" != "unknown" ]; then
+  echo "  ♻️  Supersedes: $DOC_SUPERSEDES — patching status → deprecated"
+  SUPERSEDE_STATUS=$(curl -s -o /tmp/supersede_resp.json -w "%{http_code}" \
+    --max-time 10 \
+    -X POST "${QDRANT_BASE_URL}/collections/${DOC_COLLECTION:-knowledge_v2}/points/payload" \
+    -H "api-key: ${QDRANT_API_KEY}" \
+    -H "Content-Type: application/json" \
+    -d "{
+      \"payload\": {\"status\": \"deprecated\", \"superseded_by\": \"${DOC_ID}\"},
+      \"filter\": {\"must\": [{\"key\": \"string_id\", \"match\": {\"value\": \"${DOC_SUPERSEDES}\"}}]}
+    }" 2>/dev/null)
+  if [ "$SUPERSEDE_STATUS" -ge 200 ] && [ "$SUPERSEDE_STATUS" -lt 300 ]; then
+    echo "     Old chunk deprecated ✅ (HTTP $SUPERSEDE_STATUS)"
+  else
+    echo "     ⚠️  Could not deprecate old chunk (HTTP $SUPERSEDE_STATUS) — check string_id: $DOC_SUPERSEDES"
+  fi
+fi
 # ──────────────────────────────────────────────────────────────────────────────
 
 SUCCESS_COUNT=0
