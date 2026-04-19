@@ -71,10 +71,10 @@
 |---|------|-------|--------|-----|--------|
 | G1 | **Trigger** | Automatic on confirmation signal | Claude judgment per CLAUDE.md prompt rules | No hook/daemon/cron — depends entirely on Claude's attention | `[x] FIXED (2026-04-18)` — Checkpoint Trigger Rules added to CLAUDE.md (85%/75% token thresholds) |
 | G2 | **Detect** | Structured signal parsing | LLM heuristic | `rag pipe` + `<<<RAG_META:...>>>` exists but CLAUDE.md explicitly forbids emitting those markers — automated detection path is disabled | `[x] FIXED (2026-04-18)` — `rag checkpoint` replaces need for signal detection; explicit command with structured flags |
-| G3 | **Draft** | Per-chunk, immediate, isolated | `rag add` heredoc via Bash | (a) Heredoc terminator collisions when body contains literal "CONTENT"; (b) cp1252 em dash corruption on Windows stdin; (c) Draft folder is global — multi-project sessions silently mix | `[ ] OPEN` |
+| G3 | **Draft** | Per-chunk, immediate, isolated | `rag add` heredoc via Bash | (a) ~~Heredoc terminator collisions~~ **FIXED 2026-04-19** — `RAGBODY_EOF` terminator in CLAUDE.md; (b) cp1252 em dash corruption on Windows stdin; (c) Draft folder is global — multi-project sessions silently mix | `[ ] PARTIAL — (a) fixed, (b)(c) still open` |
 | G4 | **Merge** | Automatic at session end | Manual — Claude must remember before `/clear` | If session cleared without merge, drafts orphaned in `~/.rag_drafts/` with no in-session reminder | `[x] FIXED (2026-04-18)` — Checkpoints bypass draft/merge cycle entirely; saved directly to `.claude/checkpoints/` |
-| G5 | **Push** | Automatic post-merge | Manual — user copies push command from stdout text | No hook, no CI trigger. Reminder is text only, not executed. Creates backlog of unpushed `.md` files | `[ ] OPEN` |
-| G6 | **Verify** | Confirm searchable in Qdrant | None | HTTP 200 from n8n != vector indexed. Ollama/Qdrant failure inside n8n is invisible to the shell | `[ ] OPEN` |
+| G5 | **Push** | Automatic post-merge | Manual — user copies push command from stdout text | No hook, no CI trigger. Reminder is text only, not executed. Creates backlog of unpushed `.md` files | `[x] FIXED (2026-04-19)` — `auto_push()` in `cmd_merge()` runs push-to-qdrant.sh immediately; on fail queues to `~/.rag_push_queue` |
+| G6 | **Verify** | Confirm searchable in Qdrant | None | HTTP 200 from n8n != vector indexed. Ollama/Qdrant failure inside n8n is invisible to the shell | `[x] FIXED (2026-04-19)` — `get_point_count()` in push-to-qdrant.sh checks delta before/after; logs `+N indexed` or `⚠️ delta=0` to stderr |
 
 ---
 
@@ -103,38 +103,38 @@ Ranked by likelihood. Fix these to prevent silent capture loss.
 ---
 
 ### SPOF-3 — `push-to-qdrant.sh` never run after merge
-**Status:** `[ ] OPEN`
+**Status:** `[x] FIXED (2026-04-19)`
 
-**What happens:** `.claude/summaries/` accumulates `.md` files that were never pushed. Knowledge never reaches Qdrant.
+**What happened:** `.claude/summaries/` accumulated `.md` files that were never pushed.
 
-**Fix hint:** Run `push-to-qdrant.sh` automatically as the last step inside `cmd_merge()` when network is reachable, or add a `Stop` hook that checks for unpushed summaries.
+**Fix applied:** `auto_push()` added to `cmd_merge()` in `rag_capture.py`. After writing the merged file, immediately runs `bash ~/scripts/push-to-qdrant.sh <file>`. On network failure (non-zero exit), appends file path to `~/.rag_push_queue` instead of silently exiting.
 
 ---
 
 ### SPOF-4 — Network unreachable at push time
-**Status:** `[ ] OPEN`
+**Status:** `[x] FIXED (2026-04-19)`
 
-**What happens:** Neither LAN (`192.168.18.169`) nor Tailscale (`100.120.249.99`) reachable → `push-to-qdrant.sh` exits 1 with no queuing or retry.
+**What happened:** LAN + Tailscale both unreachable → push failed silently with no retry.
 
-**Fix hint:** Add a local queue file (e.g., `~/.rag_push_queue`) that records unpushed file paths. A separate `rag push-pending` command drains the queue when network returns.
+**Fix applied:** `auto_push()` writes to `~/.rag_push_queue` on failure. New `rag push-pending` command reads the queue and retries each file with exponential backoff (2s, 4s, 8s). Removes entry on success; re-writes remaining failures back to queue file.
 
 ---
 
 ### SPOF-5 — n8n workflow down
-**Status:** `[ ] OPEN`
+**Status:** `[x] FIXED (2026-04-19)` — via queue integration
 
-**What happens:** n8n returns non-2xx → `FAIL_COUNT > 0` → script exits with fail count but no retry, no dead-letter queue.
+**What happened:** n8n non-2xx → script exits, no retry, no dead-letter.
 
-**Fix hint:** Add `--retry N` flag to `push-to-qdrant.sh` with exponential backoff, or integrate with SPOF-4 queue solution.
+**Fix applied:** When `auto_push()` catches a non-zero exit (regardless of cause — network or n8n down), the file is queued to `~/.rag_push_queue`. `rag push-pending` drains the queue with retries when n8n is back up. Direct per-chunk retry (inside `push-to-qdrant.sh`) remains a future improvement.
 
 ---
 
 ### SPOF-6 — Heredoc terminator collision
-**Status:** `[ ] OPEN`
+**Status:** `[x] FIXED (2026-04-19)`
 
-**What happens:** If chunk body contains the literal word `CONTENT` on its own line, the heredoc closes early. Body silently truncated. `validate_content()` may still pass if remaining words are >= 50.
+**What happened:** Chunk body containing literal `CONTENT` on its own line caused early heredoc termination, silently truncating the body.
 
-**Fix hint:** Always use a unique terminator like `RAGBODY_EOF` or `RAG_CHUNK_BODY_END` in `rag add` invocations, especially when body includes code examples. Document this in CLAUDE.md auto-capture section.
+**Fix applied:** Changed terminator in `CLAUDE.md` auto-capture section from `CONTENT` to `RAGBODY_EOF` — unique enough to never appear in chunk content. Lines 76 and 89 of `CLAUDE.md`.
 
 ---
 
@@ -156,14 +156,16 @@ Ranked by likelihood. Fix these to prevent silent capture loss.
 [x] G1     (trigger automation)   ← FIXED 2026-04-18 via CLAUDE.md trigger rules
 [x] G4     (merge dependency)     ← FIXED 2026-04-18 via direct checkpoint save
 
-[ ] SPOF-6 (heredoc terminator)   ← next: use RAGCHK not CONTENT as terminator
-[ ] SPOF-3 (auto-push on merge)   ← automates last manual step
-[ ] SPOF-4 (push queue)           ← robustness for network outage
-[ ] SPOF-5 (n8n retry)            ← robustness for n8n downtime
+[x] SPOF-6 (heredoc terminator)   ← FIXED 2026-04-19: RAGBODY_EOF in CLAUDE.md
+[x] SPOF-3 (auto-push on merge)   ← FIXED 2026-04-19: auto_push() in cmd_merge()
+[x] SPOF-4 (push queue)           ← FIXED 2026-04-19: ~/.rag_push_queue + rag push-pending
+[x] SPOF-5 (n8n retry)            ← FIXED 2026-04-19: via queue integration
+[x] G5     (push automation)      ← FIXED 2026-04-19: auto_push() in cmd_merge()
+[x] G6     (verify step)          ← FIXED 2026-04-19: get_point_count() delta in push-to-qdrant.sh
+
 [ ] SPOF-7 (rag pipe dead code)   ← cleanup or re-enable
-[ ] G3     (draft folder mix)     ← per-project draft isolation
-[ ] G5     (push automation)      ← hook or CI trigger
-[ ] G6     (verify step)          ← observability after push
+[ ] G3(b)  (cp1252 em dash)       ← Windows stdin encoding
+[ ] G3(c)  (draft folder mix)     ← per-project draft isolation
 ```
 
 ---

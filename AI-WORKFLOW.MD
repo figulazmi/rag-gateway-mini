@@ -274,8 +274,9 @@ Selalu gunakan `-p` untuk filter knowledge sesuai proyek.
 
 | Project            | Gunakan untuk                                               |
 | ------------------ | ----------------------------------------------------------- |
-| `petrochina-eproc` | .NET code, Blazor, EF Core, API, Hangfire, MediatR, dll     |
-| `homelab`          | VM B1, Proxmox, Docker, n8n, Qdrant, Ollama, infrastructure |
+| `petrochina-eproc` | .NET code, Blazor, EF Core, API, Hangfire, MediatR, dll — tag pertama: `dotnet` |
+| `homelab`          | VM B1, Proxmox, Docker, n8n, Qdrant, Ollama, infra — tag pertama: `homelab`     |
+| (Python scripts)   | rag_capture, eval, automation tools — tag pertama: `python`                     |
 
 ```bash
 # ✅ Benar
@@ -391,19 +392,42 @@ Setiap kali selesai sesi coding dengan Claude, simpan knowledge ke Qdrant
 agar developer lain bisa manfaatkan hasil kerja kamu.
 
 ```bash
-# Step 1: Di Claude Code — ketik
-/cost
+# Step 1: Capture knowledge dengan rag add (Claude jalankan otomatis)
+cat <<'RAGBODY_EOF' | rag add -p PROJECT -t TYPE --topic "..." --tags "tag1,tag2"
+### Context
+...
+### Solution
+...
+### Key Facts
+- fact 1
+- fact 2
+RAGBODY_EOF
 
-# Step 2: Jalankan RAG knowledge capture
-@.claude/skills/rag-knowledge-capture-cli/SKILL.md
+# Step 2: Merge semua drafts → auto-push ke Qdrant
+rag merge --output YYYY-MM-DD-[topic].md
+# ↑ auto_push() berjalan otomatis setelah merge.
+# Jika network down → file di-queue ke ~/.rag_push_queue
 
-# Step 3: Push ke Qdrant (dari Git Bash, bukan PowerShell)
-bash ~/scripts/push-to-qdrant.sh .claude/summaries/YYYY-MM-DD-[topic].md
+# Step 3: Jika ada yang gagal push (network down tadi)
+rag push-pending
+# ↑ drains ~/.rag_push_queue dengan exponential backoff (2s/4s/8s per file)
+
+# Step 4: Untuk token >= 85% — simpan checkpoint dulu sebelum /clear
+cat <<'RAGCHK' | rag checkpoint -p PROJECT --topic "..." \
+  --next-step "file.cs:line — action" --trigger "85%"
+### Problem
+...
+### Progress
+...
+### Key Facts
+- fact 1
+RAGCHK
+bash ~/scripts/push-to-qdrant.sh .claude/checkpoints/YYYY-MM-DD-*.md
 ```
 
 > **Kenapa ini penting?**
 > Knowledge yang tidak disimpan = hilang setelah sesi selesai.
-> Knowledge yang disimpan = bisa dipakai seluruh tim selamanya.
+> `rag merge` sekarang auto-push — tidak perlu jalankan push-to-qdrant.sh manual lagi.
 
 ---
 

@@ -26,7 +26,7 @@ Edit `appsettings.json` (development) or `appsettings.Production.json` (producti
     "OllamaBaseUrl": "http://localhost:11434",
     "QdrantBaseUrl": "http://localhost:6333",
     "OllamaModel": "nomic-embed-text",
-    "QdrantCollection": "knowledge",
+    "QdrantCollection": "knowledge_v2",
     "QdrantApiKey": "",
     "ScoreThreshold": 0.55,
     "ResultLimit": 5
@@ -39,7 +39,7 @@ Edit `appsettings.json` (development) or `appsettings.Production.json` (producti
 | `OllamaBaseUrl` | Ollama server URL | `http://localhost:11434` |
 | `QdrantBaseUrl` | Qdrant server URL | `http://localhost:6333` |
 | `OllamaModel` | Embedding model name | `nomic-embed-text` |
-| `QdrantCollection` | Qdrant collection to search | `knowledge` |
+| `QdrantCollection` | Qdrant collection to search | `knowledge_v2` |
 | `QdrantApiKey` | Qdrant API key (leave empty if none) | `""` |
 | `ScoreThreshold` | Minimum similarity score to include a result | `0.55` |
 | `ResultLimit` | Maximum number of results returned from Qdrant | `5` |
