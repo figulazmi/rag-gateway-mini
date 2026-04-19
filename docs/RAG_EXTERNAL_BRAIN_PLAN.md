@@ -37,8 +37,8 @@ is useless. Fix the pipeline gaps before adding more knowledge.
 
 | # | Task | File(s) | Status |
 |---|------|---------|--------|
-| P2-A | Grow eval set from 7 to 30 queries. At least 15 must be `implementation-spec` type. Cover .NET 9 and Python domains. Add harder negatives — queries where the wrong chunk is tempting. | `scripts/eval-retrieval-quality.py`, `scripts/eval-fixtures/implementation-tests.json` (new) | `[ ] OPEN` |
-| P2-B | Add `--end-to-end` mode to eval: retrieve top-5 chunks → feed to `qwen2.5-coder` via Ollama → generate code → diff against expected snippet in fixture → report hallucination rate as a metric. | `scripts/eval-retrieval-quality.py` | `[ ] OPEN` |
+| P2-A | Grow eval set from 7 to 30 queries. At least 15 must be `implementation-spec` type. Cover .NET 9 and Python domains. Add harder negatives — queries where the wrong chunk is tempting. | `scripts/eval-retrieval-quality.py`, `scripts/eval-fixtures/implementation-tests.json` (new) | `[x] DONE (2026-04-19)` |
+| P2-B | Add `--end-to-end` mode to eval: retrieve top-5 chunks → feed to `qwen2.5-coder` via Ollama → generate code → diff against expected snippet in fixture → report hallucination rate as a metric. | `scripts/eval-retrieval-quality.py` | `[x] DONE (2026-04-19)` |
 
 **Acceptance:** `python scripts/eval-retrieval-quality.py --project homelab --debug` runs 30 queries; `--end-to-end` flag generates code and reports hallucination % per query.
 
@@ -103,7 +103,7 @@ Systematic capture for daily .NET and Python work turns this into a real externa
 
 ```
 Phase 1 — Reliability        [x] P1-A  [x] P1-B  [x] P1-C  [x] P1-D
-Phase 2 — Eval Expansion     [ ] P2-A  [ ] P2-B
+Phase 2 — Eval Expansion     [x] P2-A  [x] P2-B
 Phase 3 — Supersede          [ ] P3-A  [ ] P3-B
 Phase 4 — Coverage/Deploy    [ ] P4-A  [x] P4-B  [ ] P4-C
 Phase 5 — TEI Reranker       [BLOCKED] [BLOCKED] [BLOCKED]

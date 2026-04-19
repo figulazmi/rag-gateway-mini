@@ -75,6 +75,33 @@ class TestCase:
     gold_keywords: list
     gold_topics: list
     description: str = ""
+    chunk_type: str = ""
+    expected_snippet: str = ""  # used by --end-to-end mode
+
+
+def load_json_fixtures(fixtures_dir: "Path") -> "list[TestCase]":
+    """Load additional test cases from JSON files in fixtures_dir."""
+    from pathlib import Path
+    fixtures_path = Path(fixtures_dir)
+    if not fixtures_path.exists():
+        return []
+    cases: list[TestCase] = []
+    for jf in sorted(fixtures_path.glob("*.json")):
+        try:
+            entries = json.loads(jf.read_text(encoding="utf-8"))
+            for e in entries:
+                cases.append(TestCase(
+                    query=e["query"],
+                    project=e["project"],
+                    gold_keywords=e.get("gold_keywords", []),
+                    gold_topics=e.get("gold_topics", []),
+                    description=e.get("description", ""),
+                    chunk_type=e.get("chunk_type", ""),
+                    expected_snippet=e.get("expected_snippet", ""),
+                ))
+        except Exception as exc:
+            print(f"[warn] Could not load fixture {jf.name}: {exc}", flush=True)
+    return cases
 
 
 TEST_SUITE: list[TestCase] = [
@@ -644,6 +671,83 @@ def print_summary(
     print()
 
 
+# ─── END-TO-END HALLUCINATION TEST ──────────────────────────────────────────
+
+def run_end_to_end(
+    suite: "list[TestCase]",
+    hybrid_results_map: "dict[str, list[dict]]",
+    ollama_url: str,
+) -> dict:
+    """For test cases with expected_snippet: retrieve → generate → diff."""
+    import difflib
+    tested = [tc for tc in suite if tc.expected_snippet]
+    if not tested:
+        print("\n  [end-to-end] No test cases have expected_snippet — skipping.")
+        return {}
+
+    W = 62
+    print()
+    print("=" * W)
+    print("  END-TO-END HALLUCINATION TEST")
+    print("  Model: qwen2.5-coder  |  Strategy: hybrid-rrf")
+    print("=" * W)
+
+    per_query = []
+    hallucinated = 0
+
+    for tc in tested:
+        pts = hybrid_results_map.get(tc.query, [])
+        context = "\n\n---\n\n".join(
+            p.get("payload", {}).get("content", "")[:800]
+            for p in pts[:5]
+        )
+        prompt = (
+            f"Context (retrieved knowledge):\n{context}\n\n"
+            f"Task: {tc.query}\n\n"
+            "Generate ONLY the code. No explanation."
+        )
+        payload = json.dumps({
+            "model": "qwen2.5-coder",
+            "prompt": prompt,
+            "stream": False,
+        }).encode()
+        try:
+            req = urllib.request.Request(
+                f"{ollama_url}/api/generate",
+                data=payload,
+                headers={"Content-Type": "application/json"},
+            )
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                generated = json.loads(resp.read())["response"].strip()
+        except Exception as exc:
+            print(f"  [skip] {tc.description[:50]}: Ollama error — {exc}")
+            continue
+
+        ratio = difflib.SequenceMatcher(None, generated, tc.expected_snippet).ratio()
+        is_hallucinated = ratio < 0.3
+        if is_hallucinated:
+            hallucinated += 1
+        symbol = "❌ HALLUCINATED" if is_hallucinated else "✅ MATCH"
+        print(f"  [{symbol}]  {tc.description[:48]}  ratio={ratio:.2f}")
+        if is_hallucinated:
+            print(f"    Expected : {tc.expected_snippet[:80]}")
+            print(f"    Got      : {generated[:80]}")
+
+        per_query.append({
+            "query": tc.query,
+            "description": tc.description,
+            "match_ratio": round(ratio, 3),
+            "hallucinated": is_hallucinated,
+            "generated_preview": generated[:200],
+        })
+
+    rate = hallucinated / len(per_query) if per_query else 0.0
+    print(f"\n  Hallucination rate: {hallucinated}/{len(per_query)} = {rate:.1%}")
+    print("=" * W)
+    return {"tested": len(per_query), "hallucinated": hallucinated,
+            "hallucination_rate": round(rate, 3), "per_query": per_query}
+
+
 # ─── MAIN ────────────────────────────────────────────────────────────────────
 
 def run_evaluation(
@@ -658,8 +762,13 @@ def run_evaluation(
     rerank: bool = False,
     rerank_model: str = "llama3.2:3b",
     rerank_candidates: int = 20,
+    fixtures_dir: str = "",
+    end_to_end: bool = False,
 ):
-    suite = [tc for tc in TEST_SUITE if project_filter is None or tc.project == project_filter]
+    from pathlib import Path
+    _fixtures_dir = fixtures_dir or str(Path(__file__).parent / "eval-fixtures")
+    all_tests = TEST_SUITE + load_json_fixtures(_fixtures_dir)
+    suite = [tc for tc in all_tests if project_filter is None or tc.project == project_filter]
     if not suite:
         print(f"No test cases for project '{project_filter}'. "
               f"Available: {list({tc.project for tc in TEST_SUITE})}")
@@ -671,6 +780,7 @@ def run_evaluation(
     dense_results:  list[QueryResult] = []
     sparse_results: list[QueryResult] = []
     hybrid_results: list[QueryResult] = []
+    hybrid_pts_map: dict[str, list] = {}  # query → raw hybrid points for end-to-end
 
     for idx, tc in enumerate(suite, start=1):
         print(f"  [{idx}/{len(suite)}] {tc.query[:65]}...")
@@ -738,6 +848,7 @@ def run_evaluation(
         dense_results.append(dr)
         sparse_results.append(sr)
         hybrid_results.append(hr)
+        hybrid_pts_map[tc.query] = hybrid_pts
 
         print_query_result(dr, sr, hr, idx, debug)
 
@@ -749,6 +860,10 @@ def run_evaluation(
 
     print_summary(dense_avg, sparse_avg, hybrid_avg, d_vs_dense, prefetch_mult)
     print_regression_analysis(dense_results, sparse_results, hybrid_results, suite)
+
+    e2e_report = {}
+    if end_to_end:
+        e2e_report = run_end_to_end(suite, hybrid_pts_map, ollama_url)
 
     # JSON report
     if output_path:
@@ -775,12 +890,14 @@ def run_evaluation(
                     "description": suite[i].description,
                     "query":       suite[i].query,
                     "project":     suite[i].project,
+                    "chunk_type":  suite[i].chunk_type,
                     "dense":       asdict(dr),
                     "sparse":      asdict(sr),
                     "hybrid":      asdict(hr),
                 }
                 for i, (dr, sr, hr) in enumerate(zip(dense_results, sparse_results, hybrid_results))
             ],
+            **({"end_to_end": e2e_report} if e2e_report else {}),
         }
         with open(output_path, "w", encoding="utf-8") as f:
             json.dump(report, f, indent=2)
@@ -821,6 +938,10 @@ Debug workflow for regression:
                         help="Ollama model used for reranking (default: llama3.2:3b)")
     parser.add_argument("--rerank-candidates", type=int, default=20,
                         help="Candidate pool size passed to the reranker (default 20)")
+    parser.add_argument("--fixtures-dir",   default="",
+                        help="Directory with JSON fixture files (default: scripts/eval-fixtures/)")
+    parser.add_argument("--end-to-end",     action="store_true",
+                        help="Run end-to-end hallucination test via qwen2.5-coder for cases with expected_snippet")
     args = parser.parse_args()
 
     global _RERANK_NOTE
@@ -838,6 +959,8 @@ Debug workflow for regression:
         rerank=args.rerank,
         rerank_model=args.rerank_model,
         rerank_candidates=args.rerank_candidates,
+        fixtures_dir=args.fixtures_dir,
+        end_to_end=args.end_to_end,
     )
 
 

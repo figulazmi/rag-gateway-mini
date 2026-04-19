@@ -1,0 +1,189 @@
+[
+  {
+    "query": "RAG checkpoint session continuity next_step hypothesis token budget trigger",
+    "project": "homelab",
+    "gold_keywords": ["next_step", "hypothesis", "token_trigger", "checkpoint", "session_number"],
+    "gold_topics": ["RAG Checkpoint", "session continuity", "checkpoint system"],
+    "description": "RAG checkpoint system — session momentum capture",
+    "chunk_type": "implementation-spec"
+  },
+  {
+    "query": "contextual retrieval prepend embed_content Anthropic metadata provenance failure reduction",
+    "project": "homelab",
+    "gold_keywords": ["embed_content", "contextual", "prepend", "provenance"],
+    "gold_topics": ["contextual retrieval", "embed_content", "Anthropic"],
+    "description": "Contextual retrieval embed_content prepend strategy",
+    "chunk_type": "implementation-spec"
+  },
+  {
+    "query": "n8n ingest workflow webhook Ollama nomic-embed-text upsert Qdrant payload collection",
+    "project": "homelab",
+    "gold_keywords": ["nomic-embed-text", "upsert", "webhook", "ingest"],
+    "gold_topics": ["n8n", "ingest", "knowledge_v2", "workflow"],
+    "description": "n8n knowledge ingest workflow end-to-end",
+    "chunk_type": "implementation-spec"
+  },
+  {
+    "query": "rag merge auto_push summaries network fail queue push-to-qdrant bash",
+    "project": "homelab",
+    "gold_keywords": ["cmd_merge", "auto_push", "summaries", "push_queue"],
+    "gold_topics": ["rag merge", "auto push", "capture pipeline"],
+    "description": "cmd_merge auto-push with queue fallback",
+    "chunk_type": "implementation-spec"
+  },
+  {
+    "query": "push-pending exponential backoff retry queue drain 2s 4s 8s sleep",
+    "project": "homelab",
+    "gold_keywords": ["push-pending", "backoff", "retry", "queue"],
+    "gold_topics": ["push pending", "retry queue", "rag push"],
+    "description": "rag push-pending queue drain with exponential backoff",
+    "chunk_type": "implementation-spec"
+  },
+  {
+    "query": "Qdrant sparse vector BM25 djb2 hash tokenizer indices values client-side",
+    "project": "homelab",
+    "gold_keywords": ["djb2", "sparse", "indices", "values", "tokenizer"],
+    "gold_topics": ["sparse vector", "BM25", "djb2 hash"],
+    "description": "Client-side djb2 BM25 sparse vector — HARD NEGATIVE vs dense cosine",
+    "chunk_type": "implementation-spec"
+  },
+  {
+    "query": "rag add heredoc RAGBODY_EOF chunk draft save validate frontmatter project topic",
+    "project": "homelab",
+    "gold_keywords": ["RAGBODY_EOF", "heredoc", "validate_content", "draft"],
+    "gold_topics": ["rag add", "chunk capture", "RAG capture CLI"],
+    "description": "rag add heredoc terminator fix and draft save",
+    "chunk_type": "runbook"
+  },
+  {
+    "query": "rag resume open checkpoints in_progress session start skip exploration files_modified next_step",
+    "project": "homelab",
+    "gold_keywords": ["rag resume", "in_progress", "files_modified", "skip"],
+    "gold_topics": ["rag resume", "session start", "open checkpoints"],
+    "description": "rag resume session-start protocol — HARD NEGATIVE vs rag checkpoint",
+    "chunk_type": "runbook"
+  },
+  {
+    "query": "Clean Architecture .NET 9 solution layers Application Infrastructure Domain WebAPI project structure",
+    "project": "petrochina-eproc",
+    "gold_keywords": ["Application", "Infrastructure", "Domain", "Clean Architecture", "layer"],
+    "gold_topics": ["Clean Architecture", ".NET", "solution structure"],
+    "description": ".NET 9 Clean Architecture project structure",
+    "chunk_type": "implementation-spec",
+    "expected_snippet": "public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Result<Guid>>"
+  },
+  {
+    "query": "CQRS MediatR command query handler IRequest pipeline behavior .NET 9",
+    "project": "petrochina-eproc",
+    "gold_keywords": ["IRequest", "IRequestHandler", "MediatR", "command", "handler"],
+    "gold_topics": ["CQRS", "MediatR", "command handler"],
+    "description": "CQRS + MediatR command/query handler pattern",
+    "chunk_type": "implementation-spec",
+    "expected_snippet": "public class Handler : IRequestHandler<Query, Result<ResponseDto>>"
+  },
+  {
+    "query": "EF Core 9 migration add-migration update-database DbContext OnModelCreating entity configuration",
+    "project": "petrochina-eproc",
+    "gold_keywords": ["DbContext", "OnModelCreating", "migration", "EF Core"],
+    "gold_topics": ["EF Core", "migration", "DbContext"],
+    "description": "EF Core 9 migration and entity configuration",
+    "chunk_type": "implementation-spec"
+  },
+  {
+    "query": "Hangfire recurring job AddOrUpdate cron expression background job client schedule",
+    "project": "petrochina-eproc",
+    "gold_keywords": ["Hangfire", "AddOrUpdate", "cron", "recurring", "IBackgroundJobClient"],
+    "gold_topics": ["Hangfire", "background job", "recurring"],
+    "description": "Hangfire recurring background job setup",
+    "chunk_type": "implementation-spec"
+  },
+  {
+    "query": "Blazor component lifecycle OnInitializedAsync StateHasChanged parameter cascading value",
+    "project": "petrochina-eproc",
+    "gold_keywords": ["OnInitializedAsync", "StateHasChanged", "CascadingParameter", "Blazor"],
+    "gold_topics": ["Blazor", "component lifecycle", "state"],
+    "description": "Blazor component lifecycle and state — HARD NEGATIVE vs Blazor auth",
+    "chunk_type": "implementation-spec"
+  },
+  {
+    "query": ".NET 9 minimal API MapGet MapPost endpoint route handler filter validation",
+    "project": "petrochina-eproc",
+    "gold_keywords": ["MapGet", "MapPost", "minimal API", "endpoint", "RouteHandlerBuilder"],
+    "gold_topics": ["minimal API", "endpoint", ".NET 9"],
+    "description": ".NET 9 minimal API endpoint definition",
+    "chunk_type": "implementation-spec"
+  },
+  {
+    "query": "generic repository pattern IRepository FindAsync AddAsync UnitOfWork interface",
+    "project": "petrochina-eproc",
+    "gold_keywords": ["IRepository", "FindAsync", "AddAsync", "UnitOfWork", "repository"],
+    "gold_topics": ["repository pattern", "IRepository", "UnitOfWork"],
+    "description": "Generic repository + UnitOfWork pattern",
+    "chunk_type": "pattern"
+  },
+  {
+    "query": "FluentValidation AbstractValidator RuleFor Must custom rule validation chain .NET",
+    "project": "petrochina-eproc",
+    "gold_keywords": ["AbstractValidator", "RuleFor", "FluentValidation", "Must"],
+    "gold_topics": ["FluentValidation", "validation", "AbstractValidator"],
+    "description": "FluentValidation custom rule chain",
+    "chunk_type": "implementation-spec"
+  },
+  {
+    "query": ".NET 9 global exception handler ProblemDetails middleware UseExceptionHandler response",
+    "project": "petrochina-eproc",
+    "gold_keywords": ["ProblemDetails", "UseExceptionHandler", "exception handler", "middleware"],
+    "gold_topics": ["exception handler", "ProblemDetails", "error handling"],
+    "description": ".NET 9 global exception middleware — HARD NEGATIVE vs SDL middleware",
+    "chunk_type": "implementation-spec"
+  },
+  {
+    "query": "Serilog structured logging enricher sink configuration appsettings WriteTo",
+    "project": "petrochina-eproc",
+    "gold_keywords": ["Serilog", "WriteTo", "enricher", "sink", "structured"],
+    "gold_topics": ["Serilog", "logging", "structured logging"],
+    "description": "Serilog structured logging configuration",
+    "chunk_type": "implementation-spec"
+  },
+  {
+    "query": "Python subprocess run timeout returncode stderr stdout communicate bash script",
+    "project": "homelab",
+    "gold_keywords": ["subprocess", "returncode", "timeout", "communicate"],
+    "gold_topics": ["subprocess", "Python", "bash script"],
+    "description": "Python subprocess.run with timeout and error handling",
+    "chunk_type": "pattern",
+    "expected_snippet": "result = subprocess.run([\"bash\", push_script, str(path)], timeout=180)"
+  },
+  {
+    "query": "pathlib Path glob read_text write_text encoding UTF-8 mkdir parents exist_ok",
+    "project": "homelab",
+    "gold_keywords": ["pathlib", "read_text", "write_text", "glob", "mkdir"],
+    "gold_topics": ["pathlib", "Python", "file IO"],
+    "description": "Python pathlib file operations pattern",
+    "chunk_type": "pattern"
+  },
+  {
+    "query": "argparse subparser add_parser add_argument dest choices required action store_true",
+    "project": "homelab",
+    "gold_keywords": ["argparse", "add_subparsers", "add_parser", "add_argument"],
+    "gold_topics": ["argparse", "CLI", "Python"],
+    "description": "Python argparse subcommand CLI pattern",
+    "chunk_type": "pattern"
+  },
+  {
+    "query": "Python dataclass field default_factory asdict frozen slots post_init validation",
+    "project": "homelab",
+    "gold_keywords": ["dataclass", "field", "default_factory", "asdict"],
+    "gold_topics": ["dataclass", "Python", "schema"],
+    "description": "Python dataclass pattern with field defaults",
+    "chunk_type": "pattern"
+  },
+  {
+    "query": "Qdrant collection create named vector dense cosine sparse index on_disk REST PUT",
+    "project": "homelab",
+    "gold_keywords": ["named vector", "cosine", "sparse", "on_disk", "collections"],
+    "gold_topics": ["Qdrant collection", "named vector", "collection create"],
+    "description": "Qdrant collection creation with named vectors — HARD NEGATIVE vs migration",
+    "chunk_type": "runbook"
+  }
+]
