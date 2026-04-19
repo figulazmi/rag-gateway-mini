@@ -79,11 +79,20 @@ Systematic capture for daily .NET and Python work turns this into a real externa
 
 | # | Task | File(s) | Status |
 |---|------|---------|--------|
-| P4-A | Add `.NET` and `Python` tag conventions to CLAUDE.md field rules. Require one of `dotnet`, `python`, `homelab` as the first tag on every chunk. | `CLAUDE.md` (field rules section) | `[ ] OPEN` |
+| P4-A | Add `.NET` and `Python` tag conventions to CLAUDE.md field rules. Require one of `dotnet`, `python`, `homelab` as the first tag on every chunk. | `CLAUDE.md` (field rules section) | `[x] DONE (2026-04-19)` |
 | P4-B | Deploy contextual retrieval prepend to n8n (P1.2 is shipped in code but not deployed). Import updated `ingest-knowledge-v2.json` into n8n UI at `http://192.168.18.169:5678`. Smoke test with one chunk. | `scripts/n8n-workflows/ingest-knowledge-v2.json` (n8n UI) | `[x] DONE (2026-04-19)` — embed_content verified in workflow vm7AIcsMvjzstjkb; snap Ollama disabled, Docker Ollama recreated via docker-compose.stage2.yml; pipeline verified 200→201 Qdrant points |
-| P4-C | Re-embed existing corpus after n8n deploy: loop over `.claude/summaries/*.md` and re-push all files (upsert is idempotent by deterministic ID). Run eval before/after to confirm NDCG@5 improvement. | `bash ~/scripts/push-to-qdrant.sh` | `[ ] OPEN` |
+| P4-C | Re-embed existing corpus after n8n deploy: loop over `.claude/summaries/*.md` and re-push all files (upsert is idempotent by deterministic ID). Run eval before/after to confirm NDCG@5 improvement. | `bash ~/scripts/push-to-qdrant.sh` | `[ ] OPEN — no local summaries yet; run command below when summaries accumulate` |
 
 **Acceptance (P4-B/C):** `python scripts/eval-retrieval-quality.py` NDCG@5 improves vs pre-deploy baseline. MCP server stderr shows higher `avg_score` on typical queries.
+
+**P4-C re-embed command (run when summaries exist):**
+```bash
+for f in ~/.claude/summaries/*.md; do
+  echo "Pushing $f..."
+  bash ~/scripts/push-to-qdrant.sh "$f"
+  sleep 2
+done
+```
 
 ---
 
@@ -105,7 +114,7 @@ Systematic capture for daily .NET and Python work turns this into a real externa
 Phase 1 — Reliability        [x] P1-A  [x] P1-B  [x] P1-C  [x] P1-D
 Phase 2 — Eval Expansion     [x] P2-A  [x] P2-B
 Phase 3 — Supersede          [x] P3-A  [x] P3-B
-Phase 4 — Coverage/Deploy    [ ] P4-A  [x] P4-B  [ ] P4-C
+Phase 4 — Coverage/Deploy    [x] P4-A  [x] P4-B  [ ] P4-C
 Phase 5 — TEI Reranker       [BLOCKED] [BLOCKED] [BLOCKED]
 ```
 

@@ -102,6 +102,10 @@ Then print ONE status line:
 - **type**: `debug` (bug fix) | `feature` | `runbook` | `pattern` | `decision` | `reference` (config/topology) | `implementation-spec` (code-ready spec for implementer models)
 - **topic**: plain ASCII, no em dash, max 60 chars
 - **tags**: comma-separated for `rag add` CLI, max 8, lowercase-hyphenated
+  - **First tag MUST be one of**: `dotnet` | `python` | `homelab`
+  - `dotnet` — .NET 9, Blazor, EF Core, MediatR, Hangfire, C# patterns
+  - `python` — Python scripts, tools, rag_capture, eval, automation
+  - `homelab` — VM B1, Docker, n8n, Qdrant, Ollama, infra, networking
 
 ## Content rules
 
