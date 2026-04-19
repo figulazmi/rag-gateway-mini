@@ -114,7 +114,7 @@ Phase 5 — TEI Reranker       [BLOCKED] [BLOCKED] [BLOCKED]
 ## Recommended Execution Order
 
 ```
-1. P4-B  Deploy contextual retrieval to n8n  (~30 min, high impact, already coded)
+1. [x] P4-B  Deploy contextual retrieval to n8n  — DONE 2026-04-19
 2. P1-A  Fix heredoc terminator              (~10 min, prevents silent truncation)
 3. P1-B  Auto-push in cmd_merge             (~1h, eliminates biggest SPOF)
 4. P1-C  Push queue + retry                 (~1h, robustness)
