@@ -73,7 +73,7 @@ Emit a chunk when ANY of these is true:
 Run `rag add` via Bash heredoc directly. **Never print chunk content to chat.**
 
 ```bash
-cat <<'CONTENT' | rag add -p PROJECT -t TYPE --topic "TOPIC" --tags "tag1,tag2,tag3"
+cat <<'RAGBODY_EOF' | rag add -p PROJECT -t TYPE --topic "TOPIC" --tags "tag1,tag2,tag3"
 ### Context
 [1-2 sentences. Self-contained. What system, goal, constraint.]
 ### Problem
@@ -86,7 +86,7 @@ cat <<'CONTENT' | rag add -p PROJECT -t TYPE --topic "TOPIC" --tags "tag1,tag2,t
 - [Atomic, independently searchable fact 3]
 ### Code
 [Only if essential. Snippet only, not full file.]
-CONTENT
+RAGBODY_EOF
 ```
 
 Then print ONE status line:

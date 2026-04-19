@@ -90,14 +90,17 @@ NETWORK=$(detect_network)
 case "$NETWORK" in
   "local-b1")
     N8N_WEBHOOK_URL="$B1_LOCALHOST_URL"
+    QDRANT_BASE_URL="http://localhost:6333"
     NETWORK_LABEL="VM B1 (localhost)"
     ;;
   "lan")
     N8N_WEBHOOK_URL="http://${B1_LOCAL_IP}:${B1_LOCAL_PORT}/${N8N_WEBHOOK_PATH}"
+    QDRANT_BASE_URL="http://${B1_LOCAL_IP}:6333"
     NETWORK_LABEL="LAN Kantor Bandung (${B1_LOCAL_IP})"
     ;;
   "tailscale")
     N8N_WEBHOOK_URL="http://${B1_TAILSCALE_IP}:${B1_TAILSCALE_PORT}/${N8N_WEBHOOK_PATH}"
+    QDRANT_BASE_URL="http://${B1_TAILSCALE_IP}:6333"
     NETWORK_LABEL="Tailscale VPN (${B1_TAILSCALE_IP})"
     ;;
   "unreachable")
@@ -269,6 +272,18 @@ echo "  Webhook  : $N8N_WEBHOOK_URL"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
+# ─── VERIFY HELPER ────────────────────────────────────────────────────────────
+get_point_count() {
+  local collection="${DOC_COLLECTION:-knowledge_v2}"
+  curl -s --max-time 5 \
+    -H "api-key: ${QDRANT_API_KEY}" \
+    "${QDRANT_BASE_URL}/collections/${collection}" \
+    | grep -o '"points_count":[0-9]*' | grep -o '[0-9]*$'
+}
+
+COUNT_BEFORE=$(get_point_count 2>/dev/null || echo "?")
+# ──────────────────────────────────────────────────────────────────────────────
+
 SUCCESS_COUNT=0
 FAIL_COUNT=0
 
@@ -356,6 +371,20 @@ else
   echo "⚠️  Partial — $SUCCESS_COUNT OK, $FAIL_COUNT FAILED"
   echo "   Re-run script to retry failed chunks"
 fi
+
+# ─── VERIFY: point count delta ────────────────────────────────────────────────
+COUNT_AFTER=$(get_point_count 2>/dev/null || echo "?")
+if [ "$COUNT_BEFORE" != "?" ] && [ "$COUNT_AFTER" != "?" ]; then
+  DELTA=$(( COUNT_AFTER - COUNT_BEFORE ))
+  if [ "$DELTA" -gt 0 ]; then
+    echo "   Verified   : +${DELTA} points indexed (${COUNT_BEFORE} → ${COUNT_AFTER})" >&2
+  elif [ "$FAIL_COUNT" -eq 0 ]; then
+    echo "   ⚠️  Delta=0 — points may be updates of existing IDs (${COUNT_AFTER} total)" >&2
+  fi
+else
+  echo "   Verify     : skipped (Qdrant unreachable for count check)" >&2
+fi
+# ──────────────────────────────────────────────────────────────────────────────
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 # ──────────────────────────────────────────────────────────────────────────────

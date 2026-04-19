@@ -10,7 +10,8 @@ Commands:
   rag resume     [-p PROJECT]
   rag promote    --file <checkpoint.md>
   rag list
-  rag merge      [--output filename.md]
+  rag merge        [--output filename.md]
+  rag push-pending
   rag clear
   rag status
   rag remind
@@ -35,6 +36,7 @@ if hasattr(sys.stdout, 'reconfigure'):
 
 GLOBAL_DRAFTS_DIR   = Path.home() / "scripts" / ".rag_drafts"
 GLOBAL_CONFIG_PATH  = Path.home() / ".rag_config.json"
+PUSH_QUEUE_PATH     = Path.home() / ".rag_push_queue"
 
 RAG_SIGNAL_START    = "<<<RAG_CHUNK_START>>>"
 RAG_SIGNAL_END      = "<<<RAG_CHUNK_END>>>"
@@ -604,6 +606,76 @@ def cmd_list(config: dict):
     print(f"  Total: {len(drafts)} chunks, ~{total_words} words")
     print(f"\n  rag merge --output YYYY-MM-DD-[topic].md")
 
+def auto_push(output_path: Path, config: dict) -> bool:
+    """Attempt push-to-qdrant.sh immediately after merge. Queue on failure."""
+    push_script = os.path.expanduser(config.get("push_script", "~/scripts/push-to-qdrant.sh"))
+    try:
+        result = subprocess.run(
+            ["bash", push_script, str(output_path)],
+            timeout=180,
+        )
+        if result.returncode == 0:
+            print(f"  \u2705 Auto-pushed to Qdrant: {output_path.name}")
+            return True
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        pass
+    # Network unreachable or script error — queue for later
+    with open(PUSH_QUEUE_PATH, "a", encoding="utf-8") as f:
+        f.write(str(output_path) + "\n")
+    print(f"  \u26a0\ufe0f  Network unreachable — queued: {output_path}")
+    print(f"       Run 'rag push-pending' when network returns.")
+    return False
+
+
+def cmd_push_pending(config: dict):
+    """Drain ~/.rag_push_queue with exponential backoff (2s, 4s, 8s per file)."""
+    import time
+    if not PUSH_QUEUE_PATH.exists():
+        print("\u2705 Push queue is empty.")
+        return
+
+    entries = [l.strip() for l in PUSH_QUEUE_PATH.read_text(encoding="utf-8").splitlines() if l.strip()]
+    if not entries:
+        print("\u2705 Push queue is empty.")
+        PUSH_QUEUE_PATH.unlink(missing_ok=True)
+        return
+
+    print(f"\n\U0001f4e4 Push queue: {len(entries)} file(s) pending\n")
+    push_script = os.path.expanduser(config.get("push_script", "~/scripts/push-to-qdrant.sh"))
+    still_pending = []
+
+    for entry in entries:
+        path = Path(entry)
+        if not path.exists():
+            print(f"  \u26a0\ufe0f  Skipping (not found): {entry}")
+            continue
+
+        success = False
+        for attempt, delay in enumerate([0, 2, 4, 8], start=1):
+            if delay:
+                print(f"    Retry {attempt}/3 in {delay}s...")
+                time.sleep(delay)
+            try:
+                result = subprocess.run(["bash", push_script, str(path)], timeout=180)
+                if result.returncode == 0:
+                    print(f"  \u2705 Pushed: {path.name}")
+                    success = True
+                    break
+            except (FileNotFoundError, subprocess.TimeoutExpired):
+                break
+
+        if not success:
+            print(f"  \u274c Failed (all retries): {entry}")
+            still_pending.append(entry)
+
+    if still_pending:
+        PUSH_QUEUE_PATH.write_text("\n".join(still_pending) + "\n", encoding="utf-8")
+        print(f"\n  {len(still_pending)} file(s) remain in queue. Re-run when network returns.")
+    else:
+        PUSH_QUEUE_PATH.unlink(missing_ok=True)
+        print("\n\u2705 Queue cleared.")
+
+
 def cmd_merge(args, config: dict):
     drafts = sorted(GLOBAL_DRAFTS_DIR.glob("chunk_*.md")) if GLOBAL_DRAFTS_DIR.exists() else []
     if not drafts:
@@ -643,7 +715,7 @@ def cmd_merge(args, config: dict):
 
     output_path.write_text("\n".join(sections), encoding="utf-8")
     print(f"\n\u2705 Merged {len(drafts)} chunks -> {output_path}")
-    print_push_reminder(config, output_path)
+    auto_push(output_path, config)
 
     if sys.stdin.isatty():
         confirm = input("\U0001f9f9 Clear draft folder? [y/N]: ").strip().lower()
@@ -802,9 +874,10 @@ Examples:
     merge_p = sub.add_parser("merge", help="Merge all drafts into final .md")
     merge_p.add_argument("--output", "-o")
 
-    sub.add_parser("clear",  help="Discard all draft chunks")
-    sub.add_parser("status", help="Show current state and paths")
-    sub.add_parser("remind", help="Print push reminder (used at session end)")
+    sub.add_parser("clear",        help="Discard all draft chunks")
+    sub.add_parser("status",       help="Show current state and paths")
+    sub.add_parser("remind",       help="Print push reminder (used at session end)")
+    sub.add_parser("push-pending", help="Drain ~/.rag_push_queue with exponential backoff (2s/4s/8s)")
 
     cfg_p = sub.add_parser("config", help="Manage global config")
     cfg_p.add_argument("--show", action="store_true")
@@ -821,8 +894,9 @@ Examples:
         "merge":      lambda: cmd_merge(args, config),
         "clear":      lambda: cmd_clear(args, config),
         "status":     lambda: cmd_status(config),
-        "remind":     lambda: cmd_remind(config),
-        "config":     lambda: cmd_config_show(config),
+        "remind":       lambda: cmd_remind(config),
+        "push-pending": lambda: cmd_push_pending(config),
+        "config":       lambda: cmd_config_show(config),
     }
 
     fn = dispatch.get(args.command)

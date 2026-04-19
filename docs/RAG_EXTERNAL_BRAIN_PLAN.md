@@ -21,10 +21,10 @@ is useless. Fix the pipeline gaps before adding more knowledge.
 
 | # | Task | File(s) | Status |
 |---|------|---------|--------|
-| P1-A | Change heredoc terminator `CONTENT` → `RAGBODY_EOF` in all `rag add` examples in CLAUDE.md. Prevents body truncation when chunk content contains the literal word `CONTENT` on its own line. | `CLAUDE.md` (auto-capture section) | `[ ] OPEN` |
-| P1-B | Auto-push inside `cmd_merge()`: after writing `.claude/summaries/*.md`, immediately attempt `push-to-qdrant.sh`. On network fail, append file path to `~/.rag_push_queue` instead of silently exiting. | `scripts/rag-capture-v2/rag_capture.py` | `[ ] OPEN` |
-| P1-C | New command `rag push-pending`: reads `~/.rag_push_queue`, retries each file with exponential backoff (2s, 4s, 8s), removes entry on 2xx. | `scripts/rag-capture-v2/rag_capture.py`, `scripts/push-to-qdrant.sh` | `[ ] OPEN` |
-| P1-D | Verify step after push: query Qdrant `GET /collections/knowledge_v2` point count before and after ingest; log delta to stderr. Non-zero delta = verified indexed. Zero delta on new chunk = warning. | `scripts/push-to-qdrant.sh` | `[ ] OPEN` |
+| P1-A | Change heredoc terminator `CONTENT` → `RAGBODY_EOF` in all `rag add` examples in CLAUDE.md. Prevents body truncation when chunk content contains the literal word `CONTENT` on its own line. | `CLAUDE.md` (auto-capture section) | `[x] DONE (2026-04-19)` |
+| P1-B | Auto-push inside `cmd_merge()`: after writing `.claude/summaries/*.md`, immediately attempt `push-to-qdrant.sh`. On network fail, append file path to `~/.rag_push_queue` instead of silently exiting. | `scripts/rag-capture-v2/rag_capture.py` | `[x] DONE (2026-04-19)` |
+| P1-C | New command `rag push-pending`: reads `~/.rag_push_queue`, retries each file with exponential backoff (2s, 4s, 8s), removes entry on 2xx. | `scripts/rag-capture-v2/rag_capture.py`, `scripts/push-to-qdrant.sh` | `[x] DONE (2026-04-19)` |
+| P1-D | Verify step after push: query Qdrant `GET /collections/knowledge_v2` point count before and after ingest; log delta to stderr. Non-zero delta = verified indexed. Zero delta on new chunk = warning. | `scripts/push-to-qdrant.sh` | `[x] DONE (2026-04-19)` |
 
 **Acceptance:** Run `rag merge` on a test chunk → summary auto-pushed → Qdrant point count increments → `~/.rag_push_queue` only populated on actual network failure.
 
@@ -102,7 +102,7 @@ Systematic capture for daily .NET and Python work turns this into a real externa
 ## Quick Status Overview
 
 ```
-Phase 1 — Reliability        [ ] P1-A  [ ] P1-B  [ ] P1-C  [ ] P1-D
+Phase 1 — Reliability        [x] P1-A  [x] P1-B  [x] P1-C  [x] P1-D
 Phase 2 — Eval Expansion     [ ] P2-A  [ ] P2-B
 Phase 3 — Supersede          [ ] P3-A  [ ] P3-B
 Phase 4 — Coverage/Deploy    [ ] P4-A  [x] P4-B  [ ] P4-C
@@ -115,7 +115,7 @@ Phase 5 — TEI Reranker       [BLOCKED] [BLOCKED] [BLOCKED]
 
 ```
 1. [x] P4-B  Deploy contextual retrieval to n8n  — DONE 2026-04-19
-2. P1-A  Fix heredoc terminator              (~10 min, prevents silent truncation)
+2. [x] P1-A  Fix heredoc terminator         — DONE 2026-04-19
 3. P1-B  Auto-push in cmd_merge             (~1h, eliminates biggest SPOF)
 4. P1-C  Push queue + retry                 (~1h, robustness)
 5. P1-D  Verify step                        (~30 min, observability)
