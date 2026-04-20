@@ -44,7 +44,7 @@ RAG_META_PREFIX     = "<<<RAG_META:"
 
 DEFAULT_CONFIG = {
     "qdrant_collection":   "knowledge_v2",
-    "qdrant_url":          "http://192.168.18.169:6333",
+    "qdrant_url":          "http://192.168.18.199:6333",
     "author":              "Figur Ulul Azmi",
     "default_environment": "dev",
     "default_chunk_source":"code",

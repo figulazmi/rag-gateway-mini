@@ -14,7 +14,7 @@ set -euo pipefail
 # =============================================================================
 
 # IP lokal VM B1 di jaringan kantor Bandung (LAN)
-B1_LOCAL_IP="192.168.18.169"          # ← ganti dengan IP lokal B1 di kantor
+B1_LOCAL_IP="192.168.18.199"          # ← ganti dengan IP lokal B1 di kantor
 B1_LOCAL_PORT="5678"
 
 # IP Tailscale VM B1 (untuk akses dari luar kantor)

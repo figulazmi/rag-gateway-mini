@@ -28,7 +28,7 @@ Usage:
   python3 scripts/eval-retrieval-quality.py --project homelab --debug
   python3 scripts/eval-retrieval-quality.py --prefetch-mult 8
   python3 scripts/eval-retrieval-quality.py --limit 5 --output .claude/reports/eval.json
-  python3 scripts/eval-retrieval-quality.py --qdrant-url http://192.168.18.169:6333
+  python3 scripts/eval-retrieval-quality.py --qdrant-url http://192.168.18.199:6333
 
 IMPORTANT — named vectors:
   knowledge_v2 uses named vectors ("dense" / "sparse").
@@ -915,7 +915,7 @@ Examples:
   python3 scripts/eval-retrieval-quality.py --project homelab --prefetch-mult 8
   python3 scripts/eval-retrieval-quality.py --project petrochina-eproc
   python3 scripts/eval-retrieval-quality.py --output .claude/reports/eval-2026-04-14.json
-  python3 scripts/eval-retrieval-quality.py --qdrant-url http://192.168.18.169:6333
+  python3 scripts/eval-retrieval-quality.py --qdrant-url http://192.168.18.199:6333
 
 Debug workflow for regression:
   python3 scripts/eval-retrieval-quality.py --debug --project homelab

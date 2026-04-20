@@ -5,11 +5,14 @@
 Full versions live in `~/.claude/CLAUDE.md`. Minimal rules below keep this repo self-sufficient.
 
 ### RTK (Rust Token Killer)
+
 - Prefix every shell command with `rtk` (git, docker, gh, pnpm, curl, ls, grep, find, etc.). RTK is always safe — passes through if no filter exists.
 - Inside chains too: `rtk git add . && rtk git commit -m "..." && rtk git push`.
 
 ### RAG-First Protocol
+
 Before answering project-specific questions (architecture, patterns, prior decisions, deploy procedures, past bugs):
+
 1. Load deferred schema once per session: `ToolSearch select:mcp__qdrant-knowledge__search_knowledge`
 2. Call `search_knowledge(query, project="homelab")` — query ≥ 8 descriptive words.
 3. If found → answer from RAG as ground truth. If not found → state "⚠️ NOT FOUND IN RAG" and proceed with general knowledge disclaimer.
@@ -19,7 +22,7 @@ Skip RAG for: general programming questions, framework docs, small talk.
 
 ## Project: rag-gateway-mini
 
-ASP.NET Core 9 RAG gateway. Stack: .NET 9, Serilog, Scalar. Infra: Ollama (embeddings) + Qdrant (vectors). Runs on VM B1 `192.168.18.169:5200` via Docker Compose.
+ASP.NET Core 9 RAG gateway. Stack: .NET 9, Serilog, Scalar. Infra: Ollama (embeddings) + Qdrant (vectors). Runs on VM B1 `192.168.18.199:5200` via Docker Compose.
 
 ```
 src/
@@ -39,8 +42,8 @@ cd src && docker compose up -d --build      # docker
 
 ```bash
 git push origin main
-ssh figulazmi@192.168.18.169 'cd /opt/homelab/ai-stack/rag-gateway-mini && git pull && cd src && docker compose up -d --build'
-curl http://192.168.18.169:5200/health
+ssh figulazmi@192.168.18.199 'cd /opt/homelab/ai-stack/rag-gateway-mini && git pull && cd src && docker compose up -d --build'
+curl http://192.168.18.199:5200/health
 ```
 
 Secrets live outside repo at `/opt/rag-gateway/appsettings.Production.json` (template: `src/appsettings.Production.json.template`). Build context is repo root so `Directory.Packages.props` is included.
@@ -54,12 +57,15 @@ Secrets live outside repo at `/opt/rag-gateway/appsettings.Production.json` (tem
 - **STRICT RAG MODE**: call `search_knowledge(query, project="homelab")` BEFORE reading any source file for architecture/infra/prior-work questions. If empty → say "NOT FOUND IN KNOWLEDGE BASE".
 
 # ═══════════════════════════════════════════════
+
 # RAG INCREMENTAL CAPTURE
+
 # ═══════════════════════════════════════════════
 
 ## When to auto-capture (no prompting needed)
 
 Emit a chunk when ANY of these is true:
+
 1. Problem solved + confirmed working ("works", "fixed", "berhasil", "oke")
 2. Concrete feature implementation explained
 3. Architectural decision made with clear reasoning
@@ -90,6 +96,7 @@ RAGBODY_EOF
 ```
 
 Then print ONE status line:
+
 ```
 📦 Captured chunk N: [TOPIC] → ~/scripts/.rag_drafts/chunk_NNN.md
 ```
@@ -119,6 +126,7 @@ Then print ONE status line:
 For chunks targeting consumption by implementer models (qwen2.5-coder etc.) to write code without hallucination. See `docs/RAG_V2_ROADMAP.md` and `~/.claude/commands/rag-knowledge-capture-cli.md` for full template.
 
 Required sections (rag_capture.py warns if missing; hard-reject in P2.1):
+
 - `### Target Files` — repo-relative paths, optional line ranges
 - `### Interfaces` — function signatures, class names, DTO shapes
 - `### Dependencies` — imports, package versions, config keys, external services
@@ -140,6 +148,7 @@ rag resume          # check for open checkpoints from previous sessions
 - **NOT FOUND** → proceed with normal RAG-first protocol
 
 RTK precision reads on resume (saves ~75-90% tokens vs broad exploration):
+
 ```bash
 # For each file in checkpoint's files_modified:
 rtk read src/Controllers/RagController.cs   # targeted, not full exploration
@@ -150,6 +159,7 @@ State explicitly: "Resuming checkpoint: [topic] — executing: [next_step]"
 ## Checkpoint Trigger Rules
 
 Emit `rag checkpoint` when ANY of these:
+
 1. `/status` shows token usage **>= 85%** (hard limit — safety buffer of 15%)
 2. `/status` shows token usage **>= 75%** (early warning — use `--quick` flag)
 3. User says "checkpoint" / "save progress" / "lanjut besok" / "lanjut sesi baru"
@@ -159,15 +169,16 @@ Emit `rag checkpoint` when ANY of these:
 **Token budget rule: checkpoint MUST cost < 15% of remaining tokens.**
 Achieve this by writing content from active context ONLY. Zero new file reads.
 
-| What | How | ~Tokens |
-|------|-----|---------|
-| Body (Problem/Progress/Key Facts) | from memory | 800-1200 |
-| `files_modified` | `rtk git diff --name-only HEAD` (auto) | 50 |
-| `decisions_made` | `rtk git log --oneline -5` (auto) | 100 |
-| CLI overhead | heredoc pipe | 150 |
-| **Total** | | **~1100-1500** |
+| What                              | How                                    | ~Tokens        |
+| --------------------------------- | -------------------------------------- | -------------- |
+| Body (Problem/Progress/Key Facts) | from memory                            | 800-1200       |
+| `files_modified`                  | `rtk git diff --name-only HEAD` (auto) | 50             |
+| `decisions_made`                  | `rtk git log --oneline -5` (auto)      | 100            |
+| CLI overhead                      | heredoc pipe                           | 150            |
+| **Total**                         |                                        | **~1100-1500** |
 
 Heredoc template (standard mode, ~85% trigger):
+
 ```bash
 cat <<'RAGCHK' | rag checkpoint -p PROJECT --topic "..." \
   --next-step "exact action: file.cs:line" \
@@ -185,16 +196,19 @@ RAGCHK
 ```
 
 Emergency quick mode (~75% trigger or <5% remaining):
+
 ```bash
 rag checkpoint -p PROJECT --topic "..." --next-step "exact action" --trigger "75%" --quick
 ```
 
 Then push immediately:
+
 ```bash
 bash ~/scripts/push-to-qdrant.sh .claude/checkpoints/YYYY-MM-DD-*.md
 ```
 
 When problem is solved, promote checkpoint to knowledge:
+
 ```bash
 rag promote --file .claude/checkpoints/YYYY-MM-DD-[slug]-001.md
 bash ~/scripts/push-to-qdrant.sh .claude/summaries/YYYY-MM-DD-[slug]-promoted.md

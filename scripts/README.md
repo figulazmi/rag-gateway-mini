@@ -15,6 +15,7 @@ ssh -V           # koneksi ke VM B1
 ```
 
 Jika `jq` belum ada di Windows Git Bash:
+
 ```bash
 # Download jq untuk Windows dari: https://jqlang.github.io/jq/download/
 # Letakkan jq.exe di folder yang ada di PATH (misal: C:\Program Files\Git\usr\bin\)
@@ -32,6 +33,7 @@ cp scripts/qdrant-knowledge.env.example ~/.config/qdrant-knowledge.env
 ```
 
 Edit file tersebut dan isi dengan nilai asli:
+
 ```bash
 # Buka dengan text editor, ganti "your-api-key-here"
 notepad ~/.config/qdrant-knowledge.env      # Windows
@@ -39,6 +41,7 @@ nano ~/.config/qdrant-knowledge.env         # Linux / Git Bash
 ```
 
 Dapatkan nilai `QDRANT_API_KEY` dari:
+
 - Tanya Azmi, ATAU
 - SSH ke VM B1 → `cat /opt/homelab/ai-stack/.env | grep QDRANT_API_KEY`
 
@@ -53,15 +56,16 @@ Agar script bisa SSH ke B1 tanpa password prompt setiap kali:
 ssh-keygen -t ed25519 -C "claude-code-rag"
 
 # Copy public key ke B1 via LAN
-type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh figulazmi@192.168.18.169 "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
+type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh figulazmi@192.168.18.199 "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
 
 # Copy public key ke B1 via Tailscale (untuk akses dari luar kantor)
 type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh figulazmi@100.120.249.99 "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
 ```
 
 Test koneksi:
+
 ```bash
-ssh figulazmi@192.168.18.169 "echo OK"   # harusnya print: OK
+ssh figulazmi@192.168.18.199 "echo OK"   # harusnya print: OK
 ```
 
 ---
@@ -94,8 +98,8 @@ bash scripts/push-to-qdrant.sh .claude/summaries/2026-04-08-single-device-login.
   Project  : petrochina-eproc
   Topic    : Single Device Login Implementation
   Chunks   : 3
-  Network  : LAN Kantor Bandung (192.168.18.169)
-  Webhook  : http://192.168.18.169:5678/webhook/knowledge-ingest
+  Network  : LAN Kantor Bandung (192.168.18.199)
+  Webhook  : http://192.168.18.199:5678/webhook/knowledge-ingest
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   [1/3] Sending: CHUNK 1 — Session Handling Design ... ✅ OK (200)
@@ -111,13 +115,13 @@ bash scripts/push-to-qdrant.sh .claude/summaries/2026-04-08-single-device-login.
 
 ### Troubleshooting
 
-| Error | Penyebab | Solusi |
-|-------|----------|--------|
-| `QDRANT_API_KEY not set` | Env file belum dibuat | Ikuti Step 1 setup di atas |
-| `Cannot reach VM B1` | Tidak terhubung LAN / Tailscale | Connect ke WiFi kantor atau `tailscale up` |
-| `No ## CHUNK blocks found` | File .md tidak mengikuti format RAG | Pastikan file punya header `## CHUNK N:` |
-| `HTTP 401` | API key salah | Cek nilai di `~/.config/qdrant-knowledge.env` |
-| `HTTP 500` / timeout | Ollama atau n8n lambat/down | Tunggu beberapa menit, coba lagi |
+| Error                      | Penyebab                            | Solusi                                        |
+| -------------------------- | ----------------------------------- | --------------------------------------------- |
+| `QDRANT_API_KEY not set`   | Env file belum dibuat               | Ikuti Step 1 setup di atas                    |
+| `Cannot reach VM B1`       | Tidak terhubung LAN / Tailscale     | Connect ke WiFi kantor atau `tailscale up`    |
+| `No ## CHUNK blocks found` | File .md tidak mengikuti format RAG | Pastikan file punya header `## CHUNK N:`      |
+| `HTTP 401`                 | API key salah                       | Cek nilai di `~/.config/qdrant-knowledge.env` |
+| `HTTP 500` / timeout       | Ollama atau n8n lambat/down         | Tunggu beberapa menit, coba lagi              |
 
 ---
 
@@ -155,7 +159,7 @@ bash scripts/test-qdrant-retrieval.sh "SSH passwordless setup Windows to VM" 3
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   Query   : single device login session handling
   Limit   : 5
-  Network : LAN (192.168.18.169)
+  Network : LAN (192.168.18.199)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 {
@@ -192,27 +196,28 @@ const { query, limit = 5, project = null } = request.params.arguments;
 
 Panduan pilih limit berdasarkan use case:
 
-| Use case | Limit ideal |
-|----------|-------------|
-| Query spesifik (satu bug / satu fitur) | 3 |
-| Query umum (arsitektur, flow) | 5 (default) |
-| Research lintas sesi / banyak konteks | 8–10 |
+| Use case                               | Limit ideal |
+| -------------------------------------- | ----------- |
+| Query spesifik (satu bug / satu fitur) | 3           |
+| Query umum (arsitektur, flow)          | 5 (default) |
+| Research lintas sesi / banyak konteks  | 8–10        |
 
 Untuk ubah default global, SSH ke B1 dan edit file MCP server:
+
 ```bash
-ssh figulazmi@192.168.18.169
+ssh figulazmi@192.168.18.199
 nano /opt/mcp-servers/qdrant-knowledge/qdrant-mcp-server.js
 # Ganti: const { query, limit = 5 ... } → const { query, limit = 8 ... }
 ```
 
 ### Cara baca hasil (score interpretation)
 
-| Score | Artinya |
-|-------|---------|
-| 0.90 – 1.00 | Sangat relevan — hasil bagus |
-| 0.75 – 0.89 | Cukup relevan |
+| Score       | Artinya                                                           |
+| ----------- | ----------------------------------------------------------------- |
+| 0.90 – 1.00 | Sangat relevan — hasil bagus                                      |
+| 0.75 – 0.89 | Cukup relevan                                                     |
 | 0.60 – 0.74 | Kurang relevan — chunk mungkin perlu ditulis ulang lebih spesifik |
-| < 0.60 | Tidak relevan — query terlalu ambigu atau chunk belum ada |
+| < 0.60      | Tidak relevan — query terlalu ambigu atau chunk belum ada         |
 
 ### Tips query yang baik
 
@@ -230,6 +235,7 @@ bash scripts/test-qdrant-retrieval.sh "cara setup login satu perangkat"
 ### Log files
 
 Setiap test otomatis disimpan ke `.claude/retrieval-tests/` dengan format:
+
 ```
 .claude/retrieval-tests/
   2026-04-08-143022-retrieval.log
@@ -246,7 +252,7 @@ Folder ini di-gitignore — tidak akan ter-commit ke repo.
 Kedua script otomatis mendeteksi jaringan dengan prioritas:
 
 1. **VM B1 langsung** — jika script dijalankan dari dalam VM B1 itu sendiri
-2. **LAN Kantor Bandung** — jika bisa reach `192.168.18.169` (WiFi/kabel kantor)
+2. **LAN Kantor Bandung** — jika bisa reach `192.168.18.199` (WiFi/kabel kantor)
 3. **Tailscale VPN** — jika bisa reach `100.120.249.99` (dari luar kantor)
 
 Jika ketiga gagal → script berhenti dengan pesan error dan saran perbaikan.

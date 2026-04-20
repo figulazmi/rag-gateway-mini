@@ -15,7 +15,7 @@
 # Usage:
 #   bash scripts/qdrant-graph.sh --point-id <UUID>               # explore from a point
 #   bash scripts/qdrant-graph.sh --point-id <UUID> --depth 2     # 2-hop graph
-#   bash scripts/qdrant-graph.sh --url http://192.168.18.169:6333 --point-id <UUID>
+#   bash scripts/qdrant-graph.sh --url http://192.168.18.199:6333 --point-id <UUID>
 #   bash scripts/qdrant-graph.sh --random                         # pick a random point first
 # =============================================================================
 

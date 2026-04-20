@@ -57,7 +57,7 @@ if [ ! -f "$CONFIG_PATH" ]; then
     cat > "$CONFIG_PATH" << 'EOF'
 {
   "qdrant_collection": "knowledge_v2",
-  "qdrant_url": "http://192.168.18.169:6333",
+  "qdrant_url": "http://192.168.18.199:6333",
   "author": "Figur Ulul Azmi",
   "default_environment": "dev",
   "default_chunk_source": "code",

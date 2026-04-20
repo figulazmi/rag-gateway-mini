@@ -120,8 +120,8 @@ count_in_file() {
   grep -c "$pattern" "$file" 2>/dev/null | tr -d '[:space:]' || echo "0"
 }
 
-QDRANT_URL="http://192.168.18.169:6333"
-OLLAMA_URL="http://192.168.18.169:11434"
+QDRANT_URL="http://192.168.18.199:6333"
+OLLAMA_URL="http://192.168.18.199:11434"
 
 # ─── HEADER ────────────────────────────────────────────────────
 echo ""

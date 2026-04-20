@@ -114,7 +114,7 @@ Problem selesai → Claude emit signal → rag add/pipe
                    │ HTTP POST per chunk
                    ▼
 ┌──────────────────────────────┐
-│   VM B1 (192.168.18.169)    │
+│   VM B1 (192.168.18.199)    │
 │                              │
 │   n8n webhook (5678)         │
 │     │                        │
@@ -200,7 +200,7 @@ rag status
 mkdir -p ~/.config
 cat > ~/.config/qdrant-knowledge.env << 'EOF'
 QDRANT_API_KEY=your-api-key-here
-QDRANT_URL=http://192.168.18.169:6333
+QDRANT_URL=http://192.168.18.199:6333
 QDRANT_COLLECTION=knowledge_v2
 EOF
 ```
@@ -396,5 +396,5 @@ Initial release. Batch capture via SKILL.md + Claude CLI. Single dense vector co
 ## Author
 
 **Figur Ulul Azmi** — MIT Dev Team  
-Qdrant: `knowledge_v2` @ VM B1 (`192.168.18.169:6333`)  
+Qdrant: `knowledge_v2` @ VM B1 (`192.168.18.199:6333`)  
 Stack: .NET 9 · Blazor · Qdrant · n8n · Ollama · Claude CLI

@@ -12,7 +12,7 @@
 # Usage:
 #   bash scripts/qdrant-visualize.sh                          # 100 points, localhost
 #   bash scripts/qdrant-visualize.sh --limit 200
-#   bash scripts/qdrant-visualize.sh --url http://192.168.18.169:6333
+#   bash scripts/qdrant-visualize.sh --url http://192.168.18.199:6333
 #   bash scripts/qdrant-visualize.sh --project homelab --limit 50
 # =============================================================================
 

@@ -7,9 +7,9 @@ chunk_type: debug
 topic: PQ Cancel Fail full flow fix - disable fields, documents, reason filter
 tags: [petrochina, eproc, pq, cancel-fail, blazor, media, attachment, handler]
 related: []
-session_type: 
+session_type:
 environment: dev
-git_branch: 
+git_branch:
 status: implemented
 chunk_source: code
 ---
@@ -17,22 +17,27 @@ chunk_source: code
 ## CHUNK 1: PQ Cancel Fail full flow fix - disable fields, documents, reason filter
 
 ### Context
+
 PetroChina Eproc PQ Cancel/Fail flow (Pq-41 Init, Pq-42 Review, Pq-43 Approve) had multiple bugs after initial implementation. Fixed in session covering FE disable state, document persistence, and reason filtering.
 
 ### Problem
+
 Three bugs found post-implementation:
+
 1. Form fields at Pq-42/43 remained editable - SPV/Manager should be read-only reviewers only.
 2. Uploaded documents disappeared at Pq-42 - Add/Edit handlers never called IMediaHelper, so AttachmentId was always null.
 3. Reason dropdown showed all reasons regardless of Method - Cancel should show Code="C*", Fail should show Code="F*".
 
 ### Solution
+
 Bug 1 (disable fields): Added `[Parameter] ActivityPQ Activity` to PqCancelFail component. Passed from Index.razor as `Activity="@_ActivityPQ"`. Disabled all form fields with `Disabled="@(Activity != ActivityPQ.InitiatePqCancelFail)"`. Upload section and delete buttons hidden entirely via `@if (Activity == ActivityPQ.InitiatePqCancelFail)`. NOTE: ActivityHelper.IsApprovalOrHigher cannot be used here - Pq-41=41 is >= Proposal_Review=2, so a direct equality check is required.
 
 Bug 2 (documents): Added `List<AttachmentFileRequest> Attachments` and `List<Guid> DeletedMediaIds` to Core PqCancelFailRequest. Rewrote AddPqCancelFailHandler to use IMediaHelper.SaveMultipleFile (removed IMapper, constructs entity manually). Rewrote EditPqCancelFailHandler to use DeleteSingleFile + SaveMultipleFile, preserving/nulling AttachmentId correctly. GetPqCancelFailListHandler now injects IMediaHelper and calls GetMultipleFile(AttachmentId) per row to populate Attachments on the response DTO.
 
-Bug 3 (reason filter): Added FilteredReasonList computed property in PqCancelFail.razor.cs filtering by Code.StartsWith("C") or Code.StartsWith("F"). Method MudSelect uses ValueChanged="OnMethodChanged" to reset _SelectedPqCancelFailReason when method changes.
+Bug 3 (reason filter): Added FilteredReasonList computed property in PqCancelFail.razor.cs filtering by Code.StartsWith("C") or Code.StartsWith("F"). Method MudSelect uses ValueChanged="OnMethodChanged" to reset \_SelectedPqCancelFailReason when method changes.
 
 ### Key Facts
+
 - ActivityHelper.IsApprovalOrHigher CANNOT be used for PqCancelFail tab - use `Activity != ActivityPQ.InitiatePqCancelFail` directly since Pq-41=41 is already >= Proposal_Review=2
 - Core PqCancelFailRequest at Pq/Internal/Process/PqCancelFail/Model/ needed Attachments + DeletedMediaIds fields to pass files to handlers
 - Add/Edit handlers follow exact pattern from AddTenderCancelFailHandler/EditTenderCancelFailHandler in Tender/CancelFail/Command/
@@ -41,20 +46,22 @@ Bug 3 (reason filter): Added FilteredReasonList computed property in PqCancelFai
 - PqCancelFailResponse DTO is at Core/Pq/Internal/Process/PqCancelFail/Model/ namespace PetroChina.Eproc.Core.Model
 - Reason Code convention: "C*" for Cancel methods, "F*" for Fail methods from PqCancelFailReason reference table
 
-
-
 ## CHUNK 3: Proxmox apt-get update exit code 100 enterprise repo fix
 
 ### Context
-Proxmox VE 9 (Debian Trixie) node named "media" at 192.168.18.167. Task log pada Proxmox selalu menampilkan TASK ERROR saat VM start/boot: "command 'apt-get update' failed: exit code 100". VM B1 (Ubuntu 24.04 at 192.168.18.169) berfungsi normal dan bukan sumber error.
+
+Proxmox VE 9 (Debian Trixie) node named "media" at 192.168.18.167. Task log pada Proxmox selalu menampilkan TASK ERROR saat VM start/boot: "command 'apt-get update' failed: exit code 100". VM B1 (Ubuntu 24.04 at 192.168.18.199) berfungsi normal dan bukan sumber error.
 
 ### Problem
+
 Proxmox node memiliki dua enterprise repos aktif tanpa subscription berbayar:
+
 - `/etc/apt/sources.list.d/pve-enterprise.sources` pointing ke `https://enterprise.proxmox.com/debian/pve` (suite: trixie, component: pve-enterprise)
 - `/etc/apt/sources.list.d/ceph.sources` pointing ke `https://enterprise.proxmox.com/debian/ceph-squid` (suite: trixie, component: enterprise)
-Keduanya mengembalikan 401 Unauthorized sehingga apt-get update exit code 100.
+  Keduanya mengembalikan 401 Unauthorized sehingga apt-get update exit code 100.
 
 ### Solution
+
 1. Disable kedua enterprise repos dengan menambahkan `Enabled: no` ke file .sources
 2. Buat repo no-subscription baru di /etc/apt/sources.list.d/
 
@@ -85,21 +92,25 @@ apt-get update
 ```
 
 ### Key Facts
+
 - Proxmox VE 9 menggunakan Debian Trixie (bukan Bookworm), suite name harus `trixie` bukan `bookworm`
 - Error "exit code 100" pada Proxmox task log saat VM boot adalah dari Proxmox node sendiri, BUKAN dari dalam VM
 - File pve-enterprise.sources dan ceph.sources tidak memiliki baris `Enabled:` by default; perlu append `Enabled: no`
 - Cloud-init di VM B1 disabled via `/etc/cloud/cloud-init.disabled` â€” bukan sumber error ini
-- Proxmox node di 192.168.18.167 (media), VM B1 Ubuntu 24.04 di 192.168.18.169 (figulazmi)
+- Proxmox node di 192.168.18.167 (media), VM B1 Ubuntu 24.04 di 192.168.18.199 (figulazmi)
 
 ## CHUNK 4: claude-mem provider fix: Gemini quota to OpenRouter with fallback chain
 
 ### Context
+
 claude-mem plugin on Windows (Claude Code). Worker processes session observations using an LLM provider. Config lives at `~/.claude-mem/settings.json`. Worker binary requires bun.exe, not node.
 
 ### Problem
+
 Worker crash loop: `CLAUDE_MEM_PROVIDER=gemini` hitting free tier quota (20 req/day limit for `gemini-2.5-flash-lite`). After crash, port 37777 stuck as zombie socket on Windows (process dead, socket still bound). `xiaomi/mimo-v2-flash:free` on OpenRouter also ended its free period (404).
 
 ### Solution
+
 1. Edit `~/.claude-mem/settings.json`:
    - `CLAUDE_MEM_PROVIDER`: `"gemini"` -> `"openrouter"`
    - `CLAUDE_MEM_OPENROUTER_API_KEY`: set key
@@ -113,6 +124,7 @@ Worker crash loop: `CLAUDE_MEM_PROVIDER=gemini` hitting free tier quota (20 req/
 3. Start worker: `"C:/Users/Clandesitine/.bun/bin/bun.exe" worker-service.cjs &`
 
 ### Key Facts
+
 - claude-mem config file: `C:\Users\Clandesitine\.claude-mem\settings.json` (not ~/.claude settings.json)
 - Worker needs bun.exe at `C:/Users/Clandesitine/.bun/bin/bun.exe` - not compatible with node
 - Fallback chain (setFallbackAgent) exists in code but is NOT wired by default - must be manually patched in worker-service.cjs
