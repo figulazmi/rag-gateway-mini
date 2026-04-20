@@ -14,7 +14,8 @@ public static class QueryNormalizer
 
     /// <summary>
     /// Ensures the query has at least 8 words for a semantically rich embedding.
-    /// Deterministic: same input always produces same output.
+    /// Skips padding for queries containing proper nouns (uppercase) or identifiers
+    /// (hyphens/underscores/dots) — padding shifts embeddings away from specific entities.
     /// </summary>
     public static string Normalize(string query)
     {
@@ -27,6 +28,9 @@ public static class QueryNormalizer
         if (words.Length >= MinWordCount)
             return string.Join(' ', words);
 
+        if (HasSpecificIdentity(query))
+            return string.Join(' ', words);
+
         var parts = new List<string>(words);
         foreach (var word in PaddingWords)
         {
@@ -37,4 +41,7 @@ public static class QueryNormalizer
 
         return string.Join(' ', parts);
     }
+
+    private static bool HasSpecificIdentity(string query) =>
+        query.Any(char.IsUpper) || query.Contains('-') || query.Contains('_') || query.Contains('.');
 }
