@@ -192,7 +192,8 @@ DOC_ENVIRONMENT=$(extract_field "environment")
 DOC_GIT_BRANCH=$(extract_field "git_branch")
 DOC_RELATED=$(extract_field "related")
 DOC_COLLECTION=$(extract_field "collection")
-DOC_SUPERSEDES=$(extract_field "supersedes")
+DOC_CHUNK_TYPE=$(extract_field "chunk_type")
+DOC_STATUS=$(extract_field "status")
 FILENAME=$(basename "$FILE")
 # ──────────────────────────────────────────────────────────────────────────────
 
@@ -283,25 +284,6 @@ get_point_count() {
 }
 
 COUNT_BEFORE=$(get_point_count 2>/dev/null || echo "?")
-
-# ─── SUPERSEDE: deprecate old chunk before upserting new one ──────────────────
-if [ -n "$DOC_SUPERSEDES" ] && [ "$DOC_SUPERSEDES" != "unknown" ]; then
-  echo "  ♻️  Supersedes: $DOC_SUPERSEDES — patching status → deprecated"
-  SUPERSEDE_STATUS=$(curl -s -o /tmp/supersede_resp.json -w "%{http_code}" \
-    --max-time 10 \
-    -X POST "${QDRANT_BASE_URL}/collections/${DOC_COLLECTION:-knowledge_v2}/points/payload" \
-    -H "api-key: ${QDRANT_API_KEY}" \
-    -H "Content-Type: application/json" \
-    -d "{
-      \"payload\": {\"status\": \"deprecated\", \"superseded_by\": \"${DOC_ID}\"},
-      \"filter\": {\"must\": [{\"key\": \"string_id\", \"match\": {\"value\": \"${DOC_SUPERSEDES}\"}}]}
-    }" 2>/dev/null)
-  if [ "$SUPERSEDE_STATUS" -ge 200 ] && [ "$SUPERSEDE_STATUS" -lt 300 ]; then
-    echo "     Old chunk deprecated ✅ (HTTP $SUPERSEDE_STATUS)"
-  else
-    echo "     ⚠️  Could not deprecate old chunk (HTTP $SUPERSEDE_STATUS) — check string_id: $DOC_SUPERSEDES"
-  fi
-fi
 # ──────────────────────────────────────────────────────────────────────────────
 
 SUCCESS_COUNT=0
@@ -325,6 +307,8 @@ for i in "${!CHUNKS[@]}"; do
     --arg project      "$DOC_PROJECT" \
     --arg topic        "$DOC_TOPIC" \
     --argjson tags     "$DOC_TAGS_JSON" \
+    --arg chunk_type   "$DOC_CHUNK_TYPE" \
+    --arg status       "$DOC_STATUS" \
     --arg session_type "$DOC_SESSION_TYPE" \
     --arg environment  "$DOC_ENVIRONMENT" \
     --arg git_branch   "$DOC_GIT_BRANCH" \
@@ -342,6 +326,8 @@ for i in "${!CHUNKS[@]}"; do
       project:        $project,
       topic:          $topic,
       tags:           $tags,
+      chunk_type:     $chunk_type,
+      status:         $status,
       session_type:   $session_type,
       environment:    $environment,
       git_branch:     $git_branch,
@@ -397,12 +383,12 @@ COUNT_AFTER=$(get_point_count 2>/dev/null || echo "?")
 if [ "$COUNT_BEFORE" != "?" ] && [ "$COUNT_AFTER" != "?" ]; then
   DELTA=$(( COUNT_AFTER - COUNT_BEFORE ))
   if [ "$DELTA" -gt 0 ]; then
-    echo "   Verified   : +${DELTA} points indexed (${COUNT_BEFORE} → ${COUNT_AFTER})" >&2
-  elif [ "$FAIL_COUNT" -eq 0 ]; then
-    echo "   ⚠️  Delta=0 — points may be updates of existing IDs (${COUNT_AFTER} total)" >&2
+    echo "   Points     : ${COUNT_BEFORE} → ${COUNT_AFTER} (+${DELTA} new)"
+  else
+    echo "   Points     : ${COUNT_BEFORE} → ${COUNT_AFTER} (updates only, no new points)"
   fi
 else
-  echo "   Verify     : skipped (Qdrant unreachable for count check)" >&2
+  echo "   Points     : skipped (Qdrant unreachable for count check)"
 fi
 # ──────────────────────────────────────────────────────────────────────────────
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

@@ -15,7 +15,7 @@ const OLLAMA_URL = "http://localhost:11434";
 const COLLECTION = "knowledge_v2";
 const SCORE_THRESHOLD = 0.5;
 const RETRY_THRESHOLD = 0.6;
-const NOT_FOUND_THRESHOLD = 0.65;   // top score below this → NOT FOUND IN RAG
+const NOT_FOUND_THRESHOLD = 0.50;   // top score below this → NOT FOUND IN RAG
 const QUERY_MIN_WORDS = 8;
 const QUERY_EXPANSION = "implementation details system behavior architecture";
 
@@ -168,13 +168,13 @@ async function searchQdrant(denseVector, sparseVector, limit = 5, project = null
       {
         query: denseVector,
         using: "dense",
-        limit: limit * 4,
+        limit: limit * 6,
         ...(filterClause && { filter: filterClause }),
       },
       {
         query: sparseVector,
         using: "sparse",
-        limit: limit * 4,
+        limit: limit * 6,
         ...(filterClause && { filter: filterClause }),
       },
     ],
