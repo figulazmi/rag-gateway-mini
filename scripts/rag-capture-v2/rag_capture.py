@@ -626,6 +626,29 @@ def cmd_list(config: dict):
     print(f"  Total: {len(drafts)} chunks, ~{total_words} words")
     print(f"\n  rag merge --output YYYY-MM-DD-[topic].md")
 
+def get_point_count(collection: str, config: dict) -> int | None:
+    """Return current point count for a Qdrant collection, or None on error."""
+    import urllib.request
+    qdrant_url = config.get("qdrant_url", DEFAULT_CONFIG["qdrant_url"]).rstrip("/")
+    api_key = os.environ.get("QDRANT_API_KEY", "")
+    if not api_key:
+        env_file = Path.home() / ".config" / "qdrant-knowledge.env"
+        if env_file.exists():
+            for line in env_file.read_text(encoding="utf-8").splitlines():
+                if line.startswith("QDRANT_API_KEY="):
+                    api_key = line.split("=", 1)[1].strip()
+                    break
+    try:
+        req = urllib.request.Request(f"{qdrant_url}/collections/{collection}")
+        if api_key:
+            req.add_header("api-key", api_key)
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read())
+            return data["result"]["points_count"]
+    except Exception:
+        return None
+
+
 def auto_push(output_path: Path, config: dict) -> bool:
     """Attempt push-to-qdrant.sh immediately after merge. Queue on failure."""
     push_script = os.path.expanduser(config.get("push_script", "~/scripts/push-to-qdrant.sh"))
@@ -735,7 +758,16 @@ def cmd_merge(args, config: dict):
 
     output_path.write_text("\n".join(sections), encoding="utf-8")
     print(f"\n\u2705 Merged {len(drafts)} chunks -> {output_path}")
-    auto_push(output_path, config)
+    count_before = get_point_count(collection, config)
+    pushed = auto_push(output_path, config)
+    if pushed:
+        count_after = get_point_count(collection, config)
+        if count_before is not None and count_after is not None:
+            delta = count_after - count_before
+            sign = "+" if delta >= 0 else ""
+            print(f"  \U0001f4ca {collection}: {count_before} \u2192 {count_after} ({sign}{delta} points)")
+        elif count_after is not None:
+            print(f"  \U0001f4ca {collection}: {count_after} points total")
 
     if sys.stdin.isatty():
         confirm = input("\U0001f9f9 Clear draft folder? [y/N]: ").strip().lower()

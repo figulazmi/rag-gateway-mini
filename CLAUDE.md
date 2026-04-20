@@ -9,6 +9,23 @@ Full versions live in `~/.claude/CLAUDE.md`. Minimal rules below keep this repo 
 - Prefix every shell command with `rtk` (git, docker, gh, pnpm, curl, ls, grep, find, etc.). RTK is always safe — passes through if no filter exists.
 - Inside chains too: `rtk git add . && rtk git commit -m "..." && rtk git push`.
 
+### RTK inside SSH to VM B1 (MANDATORY)
+
+VM B1 (`192.168.18.199`) has a lightweight `rtk` shim at `~/bin/rtk`. ALWAYS use `rtk` inside SSH command bodies — never raw `cat`, `ls`, `grep`, `find`:
+
+```bash
+# Correct
+ssh figulazmi@192.168.18.199 'rtk read /path/to/file'
+ssh figulazmi@192.168.18.199 'rtk ls /opt/homelab/'
+ssh figulazmi@192.168.18.199 'rtk git log --oneline -10'
+
+# Wrong — no filtering, wastes tokens
+ssh figulazmi@192.168.18.199 'cat /path/to/file'
+ssh figulazmi@192.168.18.199 'ls -la /opt/homelab/'
+```
+
+Available on VM B1: `rtk read`, `rtk cat`, `rtk ls`, `rtk git`, `rtk grep`, `rtk find`, `rtk log`
+
 ### RAG-First Protocol
 
 Before answering project-specific questions (architecture, patterns, prior decisions, deploy procedures, past bugs):

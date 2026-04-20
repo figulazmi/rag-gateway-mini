@@ -29,7 +29,12 @@
       "Bash(rag *)",
       "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); n=[x for x in d.get\\('nodes',[]\\) if x.get\\('name'\\)=='Validate & Clean']; print\\('embed_content in node:', 'embed_content' in str\\(n\\)\\)\")",
       "Bash(python -c ' *)",
-      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('status:', d.get\\('status'\\)\\); print\\('topic:', d.get\\('topic'\\)\\); print\\('qdrant_id:', d.get\\('qdrant_id'\\)\\)\")"
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('status:', d.get\\('status'\\)\\); print\\('topic:', d.get\\('topic'\\)\\); print\\('qdrant_id:', d.get\\('qdrant_id'\\)\\)\")",
+      "Bash(rtk --version)",
+      "Bash(rtk --help)",
+      "Bash(rtk hook *)",
+      "Bash(rtk rewrite *)",
+      "Bash(rtk gain *)"
     ],
     "deny": [
       "Bash(git *)",
