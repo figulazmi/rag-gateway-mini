@@ -194,7 +194,47 @@ DOC_RELATED=$(extract_field "related")
 DOC_COLLECTION=$(extract_field "collection")
 DOC_CHUNK_TYPE=$(extract_field "chunk_type")
 DOC_STATUS=$(extract_field "status")
+DOC_SUPERSEDES=$(extract_field "supersedes")
 FILENAME=$(basename "$FILE")
+# ──────────────────────────────────────────────────────────────────────────────
+
+# ─── SUPERSEDE: deprecate old chunk ──────────────────────────────────────────
+# If frontmatter has supersedes: <old_chunk_id>, patch that point's status to
+# "deprecated" in Qdrant so the default status==implemented filter hides it.
+deprecate_chunk() {
+  local old_id="$1"
+  local collection="${DOC_COLLECTION:-knowledge_v2}"
+
+  # Convert string ID to numeric via djb2 (must match n8n + C# algorithm)
+  local numeric_id
+  numeric_id=$(python3 - "$old_id" <<'PYEOF'
+import sys, functools
+s = sys.argv[1]
+h = functools.reduce(lambda h, c: ((h << 5) + h + ord(c)) & 0x7FFFFFFF, s, 5381)
+print(abs(h))
+PYEOF
+  )
+
+  local resp
+  resp=$(curl -s --max-time 10 \
+    -X POST "${QDRANT_BASE_URL}/collections/${collection}/points/payload" \
+    -H "Content-Type: application/json" \
+    -H "api-key: ${QDRANT_API_KEY}" \
+    -d "{\"payload\":{\"status\":\"deprecated\",\"superseded_by\":\"${DOC_ID}\"},\"points\":[${numeric_id}]}" \
+    2>/dev/null)
+
+  if echo "$resp" | grep -q '"status":"ok"'; then
+    echo "  🗑  Deprecated old chunk: ${old_id} (id=${numeric_id})"
+  else
+    echo "  ⚠️  Could not deprecate ${old_id}: ${resp}"
+  fi
+}
+
+if [ -n "$DOC_SUPERSEDES" ] && [ "$DOC_SUPERSEDES" != "unknown" ]; then
+  echo ""
+  echo "  ℹ  This document supersedes: $DOC_SUPERSEDES"
+  deprecate_chunk "$DOC_SUPERSEDES"
+fi
 # ──────────────────────────────────────────────────────────────────────────────
 
 # ─── CHUNK SPLITTING ──────────────────────────────────────────────────────────

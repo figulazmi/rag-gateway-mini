@@ -748,6 +748,45 @@ def run_end_to_end(
             "hallucination_rate": round(rate, 3), "per_query": per_query}
 
 
+# ─── P3.3 REVISION QUEUE ────────────────────────────────────────────────────
+
+REVISION_QUEUE_PATH = os.path.expanduser("~/scripts/.rag_revision_queue.md")
+NDCG_REVISION_THRESHOLD = 0.6
+
+
+def _write_revision_queue(
+    suite: list,
+    hybrid_results: "list[QueryResult]",
+    hybrid_pts_map: "dict[str, list]",
+):
+    """Append entries to revision queue for hybrid queries where NDCG@5 < threshold."""
+    flagged = [
+        (tc, hr, hybrid_pts_map.get(tc.query, []))
+        for tc, hr in zip(suite, hybrid_results)
+        if hr.ndcg5 < NDCG_REVISION_THRESHOLD
+    ]
+    if not flagged:
+        return
+
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M")
+    lines = [f"\n## Eval run {ts} — {len(flagged)} query(ies) below NDCG threshold ({NDCG_REVISION_THRESHOLD})\n"]
+    for tc, hr, pts in flagged:
+        top_chunk_id = pts[0].get("payload", {}).get("string_id", pts[0].get("id", "?")) if pts else "?"
+        lines.append(
+            f"- [ ] **{tc.description}**  "
+            f"NDCG={hr.ndcg5:.4f}  project={tc.project}  "
+            f"top_chunk={top_chunk_id}\n"
+            f"  query: `{tc.query[:90]}`\n"
+        )
+
+    try:
+        with open(REVISION_QUEUE_PATH, "a", encoding="utf-8") as f:
+            f.writelines(lines)
+        print(f"\n  [P3.3] Revision queue updated: {REVISION_QUEUE_PATH} ({len(flagged)} entries)")
+    except OSError as exc:
+        print(f"\n  [P3.3] Could not write revision queue: {exc}")
+
+
 # ─── MAIN ────────────────────────────────────────────────────────────────────
 
 def run_evaluation(
@@ -864,6 +903,9 @@ def run_evaluation(
     e2e_report = {}
     if end_to_end:
         e2e_report = run_end_to_end(suite, hybrid_pts_map, ollama_url)
+
+    # P3.3 — write low-NDCG queries to revision queue
+    _write_revision_queue(suite, hybrid_results, hybrid_pts_map)
 
     # JSON report
     if output_path:
