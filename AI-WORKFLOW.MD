@@ -54,6 +54,7 @@ pada knowledge base proyek yang sudah kita isi sendiri — zero hallucination.
 | **Qdrant**         | Memory / ground truth — semua knowledge proyek tersimpan di sini |
 | **RAG Gateway**    | API layer — diakses oleh `rag` CLI                               |
 | **rag CLI**        | Tool yang kamu pakai di terminal                                 |
+| **rag-tools**      | Repo tooling terpisah — rag CLI, push script, MCP server, n8n workflow |
 | **GitHub Copilot** | Generator kode cepat untuk task ringan                           |
 | **Claude**         | Reasoning engine untuk task besar & kompleks                     |
 
@@ -82,33 +83,31 @@ Kalau belum ada:
 winget install jqlang.jq
 ```
 
-### 3. Tambahkan `~/scripts` ke PATH (Git Bash)
-
-Buka file `~/.bashrc` dan tambahkan baris ini:
+### 3. Clone rag-tools dan jalankan setup otomatis
 
 ```bash
-export PATH="$PATH:$HOME/scripts"
+git clone https://github.com/figulazmi/rag-tools.git ~/rag-tools
+bash ~/rag-tools/rag-capture-v2/rag-setup.sh
 ```
 
-Lalu reload:
+Script akan otomatis:
+- Install `rag` CLI
+- Buat `~/.rag_config.json` (Qdrant URL, API key, author)
+- Buat `~/.claude/claude-mcp-connect.ps1` (Windows) atau `.sh` (Mac/Linux)
+- Patch `~/.claude/settings.json` dengan MCP server config
+
+### 4. Append RAG-first protocol ke Claude Code
 
 ```bash
-source ~/.bashrc
-```
-
-### 4. Copy script `rag` ke `~/scripts/`
-
-Script `rag` ada di folder `scripts/` dalam repo ini. Copy ke home scripts kamu:
-
-```bash
-cp scripts/rag ~/scripts/rag
-chmod +x ~/scripts/rag
+cat ~/rag-tools/rag-capture-v2/CLAUDE_snippet.md >> ~/.claude/CLAUDE.md
+# Restart Claude Code untuk aktifkan MCP server
 ```
 
 Verifikasi:
 
 ```bash
 rag --help
+rag status
 ```
 
 ---
@@ -422,7 +421,7 @@ cat <<'RAGCHK' | rag checkpoint -p PROJECT --topic "..." \
 ### Key Facts
 - fact 1
 RAGCHK
-bash ~/scripts/push-to-qdrant.sh .claude/checkpoints/YYYY-MM-DD-*.md
+bash ~/rag-tools/push-to-qdrant.sh .claude/checkpoints/YYYY-MM-DD-*.md
 ```
 
 > **Kenapa ini penting?**

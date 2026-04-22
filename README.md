@@ -35,6 +35,7 @@ The repo also ships a **RAG CLI pipeline**: a set of Bash scripts that let any d
 | **Qdrant** | Vector store — ground truth for all project knowledge |
 | **RAG Gateway** | API layer — called by `rag` CLI and MCP server |
 | **rag CLI** | Your daily terminal tool for search and capture |
+| **rag-tools** | Separate repo — rag CLI, push-to-qdrant.sh, MCP server, n8n workflow |
 | **GitHub Copilot** | Fast code generation for small tasks |
 | **Claude** | Reasoning engine for complex tasks and architecture |
 
@@ -56,30 +57,23 @@ The repo also ships a **RAG CLI pipeline**: a set of Bash scripts that let any d
 ### Install
 
 ```bash
-git clone <repo-url>
-cd rag-gateway-mini
-bash install.sh
+# 1. Clone rag-tools (tooling repo, separate from this project)
+git clone https://github.com/figulazmi/rag-tools.git ~/rag-tools
+bash ~/rag-tools/rag-capture-v2/rag-setup.sh
+# Prompts: Qdrant URL, API key, author name, VM B1 LAN IP, Tailscale IP, SSH user
+# Installs: rag CLI wrapper, ~/.rag_config.json, MCP connect script, patches ~/.claude/settings.json
+
+# 2. Append RAG-first protocol to Claude Code global config
+cat ~/rag-tools/rag-capture-v2/CLAUDE_snippet.md >> ~/.claude/CLAUDE.md
+
+# 3. Restart Claude Code to activate MCP server
 ```
 
-The installer will:
-1. Copy `rag` and `push-to-qdrant.sh` to `~/scripts/`
-2. Add `~/scripts` to your `PATH`
-3. Ask for your `QDRANT_API_KEY` (saved to `~/.config/qdrant-knowledge.env`)
-4. Set up `RAG_BASE_URL` — auto-detected at runtime (no manual config needed)
-5. Print MCP setup instructions for Claude Code
-
-After install:
+### Update (after changes to rag-tools)
 
 ```bash
-source ~/.bashrc          # reload PATH
-bash install.sh --check   # verify everything works
-```
-
-### Update (after git pull)
-
-```bash
-git pull && bash install.sh --update
-# or: make update
+cd ~/rag-tools && git pull
+# Wrapper points to repo clone — git pull takes effect immediately, no reinstall needed
 ```
 
 ---
@@ -208,43 +202,21 @@ rag "single device login session management refresh token" -p petrochina-eproc \
 
 The MCP server `qdrant-knowledge` lets Claude query Qdrant directly — no CLI needed.
 
-**Windows:**
+MCP setup is handled automatically by `rag-setup.sh` (cross-platform: Windows + Mac/Linux).
+No manual configuration needed — the script generates the connect script and patches
+`~/.claude/settings.json` for you.
+
+To set up or re-run:
 
 ```bash
-# 1. Copy template
-cp scripts/claude-mcp-connect.ps1.template ~/.claude/claude-mcp-connect.ps1
-
-# 2. Add to ~/.claude/settings.json:
-{
-  "mcpServers": {
-    "qdrant-knowledge": {
-      "command": "powershell",
-      "args": ["-ExecutionPolicy", "Bypass", "-File",
-               "C:\\Users\\<YOU>\\.claude\\claude-mcp-connect.ps1"]
-    }
-  }
-}
-
-# 3. Verify
-claude mcp list
+bash ~/rag-tools/rag-capture-v2/rag-setup.sh
+# Restart Claude Code after setup
 ```
 
-**Linux / Mac:**
+Verify:
 
-```json
-{
-  "mcpServers": {
-    "qdrant-knowledge": {
-      "command": "ssh",
-      "args": [
-        "-o", "StrictHostKeyChecking=no",
-        "-o", "BatchMode=yes",
-        "figulazmi@192.168.18.199",
-        "set -a; . ~/.qdrant-mcp.env; set +a; node /opt/mcp-servers/qdrant-knowledge/qdrant-mcp-server.js"
-      ]
-    }
-  }
-}
+```bash
+claude mcp list   # should show qdrant-knowledge
 ```
 
 ---
