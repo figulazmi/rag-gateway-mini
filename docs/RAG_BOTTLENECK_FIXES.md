@@ -126,7 +126,7 @@ pull all 5 chunk types for that feature in one call.
 
 ---
 
-## #4 — QueryNormalizer Padding Adds Semantic Noise `[ ] OPEN`
+## #4 — QueryNormalizer Padding Adds Semantic Noise `[x] FIXED`
 
 **Severity**: Medium  
 **File**: `src/Infrastructure/Helpers/QueryNormalizer.cs`  
@@ -251,7 +251,7 @@ tapi tidak menghilangkan root cause.
 |----------|-----|--------|--------|
 | 1 | #1 Embedding asymmetry | Done | `[x] FIXED` |
 | 2 | #2 Sparse noise (Opsi A+B) | Done | `[x] FIXED` |
-| 3 | #4 Remove QueryNormalizer padding | Small | `[ ] OPEN` |
+| 3 | #4 Remove QueryNormalizer padding | Done | `[x] FIXED` |
 | 4 | #6 Cosine gate in push-to-qdrant.sh | Small | `[ ] OPEN` |
 | 5 | #3 Cross-chunk feature_slug linking | Medium | `[ ] OPEN` |
 | 6 | #5 Widen RRF funnel | Trivial | `[ ] OPEN` |
