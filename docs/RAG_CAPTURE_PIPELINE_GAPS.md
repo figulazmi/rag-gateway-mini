@@ -71,7 +71,7 @@
 |---|------|-------|--------|-----|--------|
 | G1 | **Trigger** | Automatic on confirmation signal | Claude judgment per CLAUDE.md prompt rules | No hook/daemon/cron — depends entirely on Claude's attention | `[x] FIXED (2026-04-18)` — Checkpoint Trigger Rules added to CLAUDE.md (85%/75% token thresholds) |
 | G2 | **Detect** | Structured signal parsing | LLM heuristic | `rag pipe` + `<<<RAG_META:...>>>` exists but CLAUDE.md explicitly forbids emitting those markers — automated detection path is disabled | `[x] FIXED (2026-04-18)` — `rag checkpoint` replaces need for signal detection; explicit command with structured flags |
-| G3 | **Draft** | Per-chunk, immediate, isolated | `rag add` heredoc via Bash | (a) ~~Heredoc terminator collisions~~ **FIXED 2026-04-19** — `RAGBODY_EOF` terminator in CLAUDE.md; (b) cp1252 em dash corruption on Windows stdin; (c) Draft folder is global — multi-project sessions silently mix | `[ ] PARTIAL — (a) fixed, (b)(c) still open` |
+| G3 | **Draft** | Per-chunk, immediate, isolated | `rag add` heredoc via Bash | (a) ~~Heredoc terminator collisions~~ **FIXED 2026-04-19** — `RAGBODY_EOF` terminator in CLAUDE.md; (b) ~~cp1252 em dash corruption~~ **FIXED 2026-04-25** — `encoding="utf-8"` enforced on all stdin reads; (c) ~~Draft folder global mix~~ **FIXED 2026-04-25** — `get_project_draft_dir(project)` isolates per-project subdirs | `[x] FIXED (2026-04-25)` |
 | G4 | **Merge** | Automatic at session end | Manual — Claude must remember before `/clear` | If session cleared without merge, drafts orphaned in `~/.rag_drafts/` with no in-session reminder | `[x] FIXED (2026-04-18)` — Checkpoints bypass draft/merge cycle entirely; saved directly to `.claude/checkpoints/` |
 | G5 | **Push** | Automatic post-merge | Manual — user copies push command from stdout text | No hook, no CI trigger. Reminder is text only, not executed. Creates backlog of unpushed `.md` files | `[x] FIXED (2026-04-19)` — `auto_push()` in `cmd_merge()` runs push-to-qdrant.sh immediately; on fail queues to `~/.rag_push_queue` |
 | G6 | **Verify** | Confirm searchable in Qdrant | None | HTTP 200 from n8n != vector indexed. Ollama/Qdrant failure inside n8n is invisible to the shell | `[x] FIXED (2026-04-19)` — `get_point_count()` in push-to-qdrant.sh checks delta before/after; logs `+N indexed` or `⚠️ delta=0` to stderr |
@@ -139,11 +139,11 @@ Ranked by likelihood. Fix these to prevent silent capture loss.
 ---
 
 ### SPOF-7 — `rag pipe` signal path blocked by CLAUDE.md
-**Status:** `[ ] OPEN`
+**Status:** `[x] FIXED (2026-04-25)`
 
-**What happens:** `rag_capture.py` has full signal-based auto-detection via `<<<RAG_META:...>>>` and `<<<RAG_CHUNK_START/END>>>` — but CLAUDE.md line 97 explicitly forbids Claude from emitting these markers. The feature is architecturally present but operationally dead.
+**What happened:** `rag_capture.py` had full signal-based auto-detection via `<<<RAG_META:...>>>` and `<<<RAG_CHUNK_START/END>>>` — but CLAUDE.md line 97 explicitly forbids Claude from emitting these markers. The feature was architecturally present but operationally dead.
 
-**Fix hint:** Either (a) remove the prohibition in CLAUDE.md and enable the pipe path for structured capture, or (b) remove the dead `cmd_pipe` / signal parser code to reduce confusion.
+**Fix applied:** Dead code path (`cmd_pipe` + signal parser) removed from `rag_capture.py`. The `rag checkpoint` / `rag add` explicit-command flow is the canonical path; signal-based pipe added confusion without benefit.
 
 ---
 
@@ -163,9 +163,9 @@ Ranked by likelihood. Fix these to prevent silent capture loss.
 [x] G5     (push automation)      ← FIXED 2026-04-19: auto_push() in cmd_merge()
 [x] G6     (verify step)          ← FIXED 2026-04-19: get_point_count() delta in push-to-qdrant.sh
 
-[ ] SPOF-7 (rag pipe dead code)   ← cleanup or re-enable
-[ ] G3(b)  (cp1252 em dash)       ← Windows stdin encoding
-[ ] G3(c)  (draft folder mix)     ← per-project draft isolation
+[x] SPOF-7 (rag pipe dead code)   ← FIXED 2026-04-25: dead cmd_pipe removed
+[x] G3(b)  (cp1252 em dash)       ← FIXED 2026-04-25: utf-8 enforced on stdin
+[x] G3(c)  (draft folder mix)     ← FIXED 2026-04-25: get_project_draft_dir() per-project
 ```
 
 ---
