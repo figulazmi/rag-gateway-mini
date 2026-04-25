@@ -240,6 +240,49 @@ debug:pattern ratio = 8.5:1  [was 15:1] ← significant improvement
 
 ---
 
+### Session 2026-04-25 — Batch 4 (OI-2 + OI-3 completion)
+
+**Goal:** Capture +5 decision chunks (ADRs for major architectural choices) and +5 feature chunks (core homelab RAG system components) to reach 7.0/10.
+
+#### Chunks Captured
+
+| Chunk | Type | Before | After |
+|---|---|---|---|
+| Decision: hybrid RRF dense+sparse over cosine-only | decision | 14 | 15 |
+| Decision: Qdrant over other vector databases | decision | 15 | 16 |
+| Decision: Ollama for local model inference over cloud APIs | decision | 16 | 17 |
+| Decision: nomic-embed-text as embedding model | decision | 17 | 18 |
+| Decision: n8n as orchestrator for RAG ingest pipeline | decision | 18 | 19 |
+| Feature: rag-gateway-mini ASP.NET Core 9 architecture | feature | 24 | 25 |
+| Feature: Qdrant knowledge_v2 named vectors dense+sparse config | feature | 25 | 26 |
+| Feature: RAG auto-capture toolchain rag_capture.py + push-to-qdrant.sh | feature | 26 | 27 |
+| Feature: MCP qdrant-knowledge server for Claude Code context injection | feature | 27 | 28 |
+| Feature: n8n Pipeline A (pure retrieval) vs Pipeline B (RAG+LLM) | feature | 28 | 29 |
+
+#### State After Session 2026-04-25 Batch 4
+
+```
+knowledge_v2:  295 points total
+
+chunk_type distribution:
+  debug:            170  (58%)
+  feature:           29  (10%)   [was 24 → +5]  ← OI-2 TARGET REACHED
+  runbook:           21   (7%)
+  pattern:           20   (7%)
+  decision:          19   (6%)   [was 14 → +5]  ← OI-3 TARGET REACHED
+  checkpoint:        11   (4%)
+  unknown:           14   (5%)   ← pre-existing
+  reference:          5   (2%)
+  (empty):            5   (2%)   ← pre-existing
+
+debug:pattern ratio = 8.5:1  (unchanged — pattern count stable)
+decision coverage: 6%  (was 5%, approaching 8-10% target)
+```
+
+**Coverage score after:** 6.5/10 → **7.0/10** (OI-2+3 complete, balanced feature/decision types)
+
+---
+
 ## Open Items (ordered by impact)
 
 ### OI-1: Capture Pattern Chunks dari Existing Debug Knowledge
@@ -286,7 +329,7 @@ EOF
 Setiap fitur yang selesai di-implement harus punya 1 `feature` chunk yang dokumen:
 architecture decision, files modified, key implementation choices.
 
-**Status:** [ ] OPEN — add to post-ship routine (+2 captured in session 2: n8n ingest v2, Proxmox backup)
+**Status:** [x] DONE 2026-04-25 — +5 feature chunks captured in batch 4 (rag-gateway architecture, knowledge_v2 collection, toolchain, MCP server, Pipeline A/B). Total feature: 29 (10%).
 
 **Target:** +5 feature chunks / bulan
 
@@ -299,7 +342,7 @@ architecture decision, files modified, key implementation choices.
 ADR (Architecture Decision Records): why hybrid RRF, why djb2 not server BM25, why ASP.NET not FastAPI, etc.
 Session 2 captured 3 decision chunks (djb2 BM25, secrets mount, ASP.NET Core choice).
 
-**Status:** [ ] OPEN — ongoing (+3 captured in session 2; target 8-10% still not reached)
+**Status:** [x] DONE 2026-04-25 — +5 decision chunks captured in batch 4 (hybrid RRF rationale, Qdrant choice, Ollama choice, nomic-embed-text choice, n8n orchestrator choice). Total decision: 19 (6%).
 
 **Target:** +5 more decision chunks untuk choices yang belum terdokumentasi
 
@@ -324,7 +367,7 @@ ssh figulazmi@192.168.18.199 'curl -s "http://localhost:6333/collections/knowled
   "import sys,json; r=json.load(sys.stdin)[\"result\"]; print(r[\"points_count\"], \"total |\", r[\"indexed_vectors_count\"], \"indexed\")"'
 ```
 
-**Status:** [ ] OPEN — 199/275 indexed as of 2026-04-25 session 2; background optimizer running
+**Status:** [ ] OPEN — 199/275 indexed as of 2026-04-25 session 2; background optimizer running. 295 total points as of batch 4 -- re-check index count.
 
 ---
 
@@ -346,7 +389,7 @@ Membutuhkan reranker (P2.2-B) untuk prioritisasi sebelum fully useful.
 | Baseline | 1 | 3 | 5.0/10 | |
 | Session 2026-04-25 | 4 | 5 | 5.5/10 | Pipeline bug fixed |
 | OI-1: +20 pattern | ~24 | 5 | 6.5/10 | ratio 7:1 |
-| OI-2+3: +10 feature/decision | ~24 | 5 | 7.0/10 | balanced types |
+| OI-2+3: +10 feature/decision | ~24 | 5 | 7.0/10 | balanced types ← DONE batch 4 |
 | OI-4: full index | ~24 | 5 | 7.5/10 | hybrid fully active |
 | OI-5: +10 impl-spec | ~24 | 5 | 8.0/10 | code-gen ready |
 
@@ -362,4 +405,5 @@ Membutuhkan reranker (P2.2-B) untuk prioritisasi sebelum fully useful.
 | 2026-04-25 (session 1) | 262 | 4 | 5 | 10 | 5.5/10 | P0/P1 fixes + pipeline bug |
 | 2026-04-25 (session 2) | 275 | 11 | 5 | 14 | 6.0/10 | Batch 2: +13 chunks, off-by-one fix, patches |
 | 2026-04-25 (session 3) | 284 | 20 | 5 | 14 | 6.5/10 | Batch 3: +9 pattern chunks, OI-1 complete |
-| _(next audit)_ | — | — | — | — | — | Target: 7.0/10 after OI-2+3 |
+| 2026-04-25 (session 4) | 295 | 20 | 5 | 19 | 7.0/10 | Batch 4: +5 decision +5 feature, OI-2+3 complete |
+| _(next audit)_ | — | — | — | — | — | Target: 7.5/10 after OI-4 (full index) |
