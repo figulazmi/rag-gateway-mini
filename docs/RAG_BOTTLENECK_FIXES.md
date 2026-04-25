@@ -151,30 +151,31 @@ Option B: Keep padding but use domain-specific terms drawn from a curated list
 
 ---
 
-## #5 — RRF Funnel Too Aggressive `[ ] OPEN`
+## #5 — RRF Funnel Too Aggressive `[x] FIXED`
 
 **Severity**: Low  
 **File**: `src/appsettings.json` → `HybridPrefetchLimit`, `ResultLimit`  
-**Effort**: Trivial — config change only
+**Commit**: `fix: widen RRF funnel — HybridPrefetchLimit 20→30, ResultLimit 5→8`
 
 ### Problem
 
 ```
-prefetch: dense-20 + sparse-20 = 40 candidates → RRF → top 5 returned (87.5% drop)
+prefetch: dense-20 + sparse-5 = 25 candidates → RRF → top 5 returned (80% drop)
 ```
 
 If the correct chunk ranks 6th in dense but is noisy in sparse, RRF can drop it
-entirely. The gap between prefetch and result limits is too wide.
+entirely. The gap between prefetch and result limits was too wide.
 
-### Fix Needed
+### Fix Applied
 
 ```json
 "HybridPrefetchLimit": 30,
 "ResultLimit": 8
 ```
 
-Only relevant if/when hybrid is re-enabled (Fix #2). No action needed while
-`EnableHybridSearch: false`.
+Unblocked by #7: `knowledge_v2` collection has `modifier: idf` on the sparse config —
+Qdrant applies IDF server-side at query time, making sparse quality sufficient to
+re-enable with a wider funnel without introducing noise regressions.
 
 ---
 
@@ -213,35 +214,37 @@ force webhook re-registration.
 
 ---
 
-## #7 — Sparse TF-only Weighting (Opsi C — Future Fix) `[ ] OPEN`
+## #7 — Sparse TF-only Weighting (Opsi C) `[x] FIXED`
 
-**Severity**: Medium (fix permanen untuk sparse quality)  
+**Severity**: Medium  
 **File**: `src/Infrastructure/AI/QdrantVectorSearchClient.cs` — `BuildSparseVector`  
-**Effort**: 3-4 jam
+**Resolution**: Covered by server-side `modifier: idf` on `knowledge_v2` collection
 
 ### Problem
 
-`BuildSparseVector` menggunakan TF (term frequency) saja sebagai nilai sparse vector.
-Token umum ("docker", "qdrant", "vm") dan token langka ("IVectorSearchClient") mendapat
-bobot yang sama jika frekuensi kemunculannya sama. Ini menyebabkan poor discrimination
-terlepas dari ukuran KB.
+`BuildSparseVector` sends TF-only sparse values. Token umum ("docker", "qdrant") dan
+token langka ("IVectorSearchClient") mendapat bobot sama jika frekuensi kemunculannya sama.
 
-Fix A+B (`SparsePrefetchLimit=5`, `SparseScoreThreshold=0.01`) mengurangi dampaknya
-tapi tidak menghilangkan root cause.
+### Why It's Already Fixed
 
-### Fix Needed (Opsi C)
+`knowledge_v2` collection was created with `modifier: idf` on the sparse vector config:
+```python
+sparse_vectors_config={ "sparse": SparseVectorParams(modifier=Modifier.IDF) }
+```
+Qdrant computes `IDF(t) = log(1 + (N - df(t) + 0.5) / (df(t) + 0.5))` at query time and
+multiplies it into each sparse query term automatically. Effective scoring:
+```
+score(doc, query) = Σ TF_doc(t) × TF_query(t) × IDF(t)
+```
+`BuildSparseVector` correctly sends raw `TF_query` — Qdrant applies IDF. Implementing
+client-side IDF would double-apply it (`IDF²`) and over-weight rare terms.
 
-1. Saat startup (atau background service), scroll semua stored sparse vectors dari Qdrant
-   untuk membangun IDF corpus: `IDF(term) = log(N / df(term))` di mana N = total docs,
-   df = jumlah dokumen yang mengandung term.
-2. Cache IDF map di memory (`Dictionary<int, float>` — key = djb2 hash dari token).
-3. Di `BuildSparseVector`, terapkan: `values[i] = freq * idf[hash]` bukan hanya `freq`.
-4. Refresh IDF corpus periodik (misalnya setiap 100 upsert baru via background service).
+### Why Opsi C (client-side IDF map) Would Be Wrong Now
 
-### When to Execute
-
-- Ketika KB > 300 docs DAN sparse NDCG@5 masih < dense NDCG@5 setelah eval
-- Atau kapanpun sparse retrieval masih miss exact technical terms (class names, error codes)
+`values[i] = freq * idf[hash]` in `BuildSparseVector` would produce `TF × IDF` on the
+client; Qdrant's `modifier: idf` would then apply `IDF` again → `TF × IDF²`. Do not
+implement. The Opsi A+B mitigations (`SparsePrefetchLimit=5`, `SparseScoreThreshold=0.01`)
+remain in place and are still correct.
 
 ---
 
@@ -254,5 +257,5 @@ tapi tidak menghilangkan root cause.
 | 3 | #4 Remove QueryNormalizer padding | Done | `[x] FIXED` |
 | 4 | #6 Cosine gate in push-to-qdrant.sh | Done | `[x] FIXED` |
 | 5 | #3 Cross-chunk feature_slug linking | Done | `[x] FIXED` |
-| 6 | #5 Widen RRF funnel | Trivial | `[ ] OPEN` |
-| 7 | #7 Sparse TF-IDF (Opsi C) | 3-4 jam | `[ ] OPEN` — eksekusi saat KB > 300 docs |
+| 6 | #5 Widen RRF funnel | Done | `[x] FIXED` |
+| 7 | #7 Sparse TF-IDF (Opsi C) | N/A | `[x] FIXED` — covered by modifier: idf server-side |
