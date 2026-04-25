@@ -118,6 +118,76 @@ debug:reference ratio = 34:1 [was 57:1]   ← improving
 
 ---
 
+### Session 2026-04-25 — Batch 2 (Coverage OI-1/OI-2/OI-3)
+
+**Goal:** Capture 13 new chunks covering patterns, decisions, features; fix off-by-one metadata bug; verify and patch misclassified points.
+
+#### Fixes Applied
+
+| Fix | Before | After | Method |
+|---|---|---|---|
+| Capture 8 pattern chunks (Docker/n8n/VM B1) | pattern: 4 (1.5%) | pattern: 11 (4%) | `rag add -t pattern` × 7 via batch |
+| Capture 3 decision chunks (djb2 BM25, secrets, ASP.NET) | decision: 10 (4%) | decision: 14 (5%) | `rag add -t decision` × 3 |
+| Capture 1 feature chunk (n8n ingest workflow v2) | feature: 22 | feature: 23 | `rag add -t feature` |
+| Capture 1 feature chunk (Proxmox VM B1 backup) | feature: 23 | feature: 24 | `rag add -t feature` |
+| Fix off-by-one in `rag_capture.py cmd_merge()` | comment before `## CHUNK N:` header | comment after header (inside chunk) | Edit `rag_capture.py` line 654-656 |
+| Patch misclassified ID 5034039 | decision "Pattern: VM B1 no internet" | pattern | Qdrant SET payload `wait=true` |
+| Patch misclassified ID 156055377 | feature "Decision: ASP.NET Core" | decision | Qdrant SET payload `wait=true` |
+| Push chunk 13 (Proxmox backup) that failed in batch push | missing | pushed → ID 156055375 | Python urllib POST to n8n webhook |
+| OI-4: Force-index unindexed points | 199 indexed | 199 indexed (background optimizer, no manual trigger) | Qdrant auto-optimizer |
+
+**Off-by-one bug detail (now fixed in `rag_capture.py`):**
+`cmd_merge()` prepended `<!-- rag_chunk_meta -->` BEFORE the `## CHUNK N:` header.
+Since `push-to-qdrant.sh` splits on `^##[[:space:]]CHUNK`, the comment accumulated
+into the PREVIOUS chunk's body — so chunk N read chunk N+1's metadata (shift-by-one).
+Fix: comment now inserted AFTER the first line of body (the header), inside the chunk.
+
+**Chunk 13 failure root cause:**
+Chunk content contained `curl http://<VM-IP>:5200/health` — angle brackets caused
+bash to interpret `<VM-IP>` as a stdin redirect in the push script, triggering `set -euo pipefail` exit.
+Workaround: removed angle brackets in content; pushed via Python urllib directly to n8n webhook.
+
+#### State After Session 2026-04-25 Batch 2
+
+```
+knowledge_v2:  275 points total
+               199 indexed (76 = 28% unindexed — background optimizer in progress)
+
+chunk_type distribution:
+  debug:            170  (62%)
+  feature:           24   (9%)   [was 22 → +2]
+  runbook:           21   (8%)
+  decision:          14   (5%)   [was 10 → +4]
+  checkpoint:        11   (4%)
+  pattern:           11   (4%)   [was 4 → +7 new, -1 patched from decision, +1 patched to pattern]
+  unknown:           14   (5%)   ← pre-existing (Apr 17-21 chunks, before pipeline fix)
+  reference:          5   (2%)
+  (empty):            5   (2%)   ← pre-existing
+
+debug:pattern ratio = 15:1  [was 43:1] ← continued improvement
+```
+
+**New-session chunk count:** 13 total (8 pattern, 2 decision, 2 feature, 1 decision/pattern fix)
+
+**Chunks captured this batch:**
+- Pattern: n8n blocks env vars in expressions by default requires explicit flag
+- Pattern: inside Docker network always use service hostname not localhost
+- Pattern: Docker Compose v2 uses space separator not hyphen
+- Pattern: docker cp changes are ephemeral and lost on container recreate
+- Pattern: Qdrant cannot add sparse vector config to existing collection requires recreation
+- Pattern: Docker volume mount path must exactly match host filesystem path
+- Pattern: Snap service and Docker service conflict on same port disable Snap first
+- Pattern: VM B1 has no internet access build images locally then deploy via SCP
+- Decision: client-side djb2 BM25 chosen over Qdrant server-side inference for knowledge_v2
+- Decision: production secrets as Docker volume mount not baked into image
+- Decision: ASP.NET Core chosen over FastAPI for rag-gateway because of type safety and DI ecosystem
+- Feature: n8n knowledge-ingest workflow v2 pipeline Ollama embed then Qdrant upsert
+- Feature: Proxmox VM B1 backup and restore workflow via vzdump vma.zst
+
+**Coverage score after:** 5.5/10 → **6.0/10** (pattern ratio improved significantly, decision coverage up)
+
+---
+
 ## Open Items (ordered by impact)
 
 ### OI-1: Capture Pattern Chunks dari Existing Debug Knowledge
@@ -151,20 +221,20 @@ cat <<'EOF' | rag add -p homelab -t pattern --topic "Pattern: [rule name]" --tag
 EOF
 ```
 
-**Status:** [ ] OPEN — ongoing, not a one-time task
+**Status:** [ ] OPEN — ongoing (+7 captured in session 2: pattern count 4→11, ratio 43:1→15:1)
 
-**Target:** 20 pattern chunks by next audit
+**Target:** 20 pattern chunks by next audit (11 captured so far)
 
 ---
 
 ### OI-2: Capture Feature Chunks untuk Setiap Feature yang Ship
 
-**Impact:** Medium — feature: 22 (8%), target 15-20%
+**Impact:** Medium — feature: 24 (9%), target 15-20%
 
 Setiap fitur yang selesai di-implement harus punya 1 `feature` chunk yang dokumen:
 architecture decision, files modified, key implementation choices.
 
-**Status:** [ ] OPEN — add to post-ship routine
+**Status:** [ ] OPEN — add to post-ship routine (+2 captured in session 2: n8n ingest v2, Proxmox backup)
 
 **Target:** +5 feature chunks / bulan
 
@@ -172,19 +242,20 @@ architecture decision, files modified, key implementation choices.
 
 ### OI-3: Capture Decision Chunks untuk Major Choices
 
-**Impact:** Medium — decision: 10 (4%), target 8-10%
+**Impact:** Medium — decision: 14 (5%), target 8-10%
 
 ADR (Architecture Decision Records): why hybrid RRF, why djb2 not server BM25, why ASP.NET not FastAPI, etc.
+Session 2 captured 3 decision chunks (djb2 BM25, secrets mount, ASP.NET Core choice).
 
-**Status:** [ ] OPEN
+**Status:** [ ] OPEN — ongoing (+3 captured in session 2; target 8-10% still not reached)
 
-**Target:** +5 decision chunks untuk choices yang belum terdokumentasi
+**Target:** +5 more decision chunks untuk choices yang belum terdokumentasi
 
 ---
 
-### OI-4: Force-Index 56 Unindexed Points
+### OI-4: Force-Index Unindexed Points
 
-**Impact:** Medium — 56 points hanya searchable via dense, sparse BM25 tidak aktif
+**Impact:** Medium — unindexed points hanya searchable via dense, sparse BM25 tidak aktif
 
 ```bash
 ssh figulazmi@192.168.18.199 'curl -s -X POST \
@@ -194,14 +265,14 @@ ssh figulazmi@192.168.18.199 'curl -s -X POST \
   -d "{\"wait\": true}"'
 ```
 
-Note: Qdrant biasanya auto-index background. Cek dulu apakah count sudah 262/262:
+Note: Qdrant biasanya auto-index background. Cek dulu apakah count sudah 275/275 (as of 2026-04-25 session 2):
 ```bash
 ssh figulazmi@192.168.18.199 'curl -s "http://localhost:6333/collections/knowledge_v2" \
   -H "api-key: QDRANT_API_KEY_REDACTED" | python3 -c \
   "import sys,json; r=json.load(sys.stdin)[\"result\"]; print(r[\"points_count\"], \"total |\", r[\"indexed_vectors_count\"], \"indexed\")"'
 ```
 
-**Status:** [ ] OPEN
+**Status:** [ ] OPEN — 199/275 indexed as of 2026-04-25 session 2; background optimizer running
 
 ---
 
@@ -233,8 +304,9 @@ Membutuhkan reranker (P2.2-B) untuk prioritisasi sebelum fully useful.
 
 ## Audit Schedule
 
-| Date | Points | Pattern | Reference | Score | Notes |
-|---|---|---|---|---|---|
-| 2026-04-25 (baseline) | 255 | 1 | 3 | 5.0/10 | Initial audit |
-| 2026-04-25 (session) | 262 | 4 | 5 | 5.5/10 | P0/P1 fixes + pipeline bug |
-| _(next audit)_ | — | — | — | — | Target: 6.5/10 after OI-1 |
+| Date | Points | Pattern | Reference | Decision | Score | Notes |
+|---|---|---|---|---|---|---|
+| 2026-04-25 (baseline) | 255 | 1 | 3 | 10 | 5.0/10 | Initial audit |
+| 2026-04-25 (session 1) | 262 | 4 | 5 | 10 | 5.5/10 | P0/P1 fixes + pipeline bug |
+| 2026-04-25 (session 2) | 275 | 11 | 5 | 14 | 6.0/10 | Batch 2: +13 chunks, off-by-one fix, patches |
+| _(next audit)_ | — | — | — | — | — | Target: 6.5/10 after OI-1 |
