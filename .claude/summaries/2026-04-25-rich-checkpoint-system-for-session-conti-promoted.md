@@ -1,8 +1,8 @@
 ---
-id: 2026-04-18-rich-checkpoint-system-for-session-conti-001
+id: 2026-04-25-rich-checkpoint-system-for-session-conti-promoted
 date: 2026-04-18
 source: claude-code-cli
-collection: checkpoints
+collection: knowledge_v2
 project: homelab
 chunk_type: checkpoint
 topic: Rich checkpoint system for session continuity
@@ -20,7 +20,7 @@ token_trigger: manual
 session_number: 1
 files_modified: [.claude/settings.local.json, CLAUDE.md, docs/RAG_CAPTURE_PIPELINE_GAPS.md, scripts/push-to-qdrant.sh, scripts/rag-capture-v2/rag_capture.py, --- Changes ---]
 decisions_made: [92ab5c9 refactor: streamline permissions in settings.local.json by removing obsolete entries and consolidating allowe...; 87483d3 Delete obsolete summaries for n8n workflow status field, contextual retrieval prepend deployment, rag-gateway...; db09236 feat: update settings.local.json and add summary for git bash path issue with rag and rtk; 4f860cb feat: implement LLM-as-reranker scaffolding and enhance validation in rag_capture.py; 1139bac feat: add evaluation report and verification summary for n8n contextual retrieval deployment]
-parent_id: 2026-04-25-rich-checkpoint-system-for-session-conti-promoted
+parent_id: 2026-04-18-rich-checkpoint-system-for-session-conti-001
 
 ## CHECKPOINT: Rich checkpoint system for session continuity
 
