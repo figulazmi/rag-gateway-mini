@@ -3,20 +3,24 @@
 > **Navigation:** [docs/README.md](README.md) — full index of all RAG docs.
 > Coverage knowledge detail & improvement history → [COVERAGE_KNOWLEDGE_TRACKER.md](COVERAGE_KNOWLEDGE_TRACKER.md)
 
-**Date:** 2026-04-25  
-**Overall Score: 6.8/10**
+**Date:** 2026-04-25 (last updated: 2026-04-25 session 5)
+**Overall Score: 6.8/10 → 8.1/10**
 
 ---
 
 ## Snapshot
 
-| Dimension | Score | Notes |
-|---|---|---|
-| Infrastruktur | 9/10 | Qdrant 1.17.1, hybrid RRF, status green |
-| Coverage knowledge | 5/10 | 67% debug-biased, pattern/reference nyaris 0 |
-| Query quality | 7/10 | Retry bias ke homelab, threshold alignment needed |
-| Freshness | 6/10 | 22% unindexed, 2 checkpoint belum promote |
-| Pipeline reliability | 7/10 | qdrant_url `.169` salah, push-queue perlu audit |
+> **Baseline** (2026-04-25 pagi) → **Current** (2026-04-25 session 5)
+
+| Dimension | Baseline | Current | Notes |
+|---|---|---|---|
+| Infrastruktur | 9/10 | 9/10 | Unchanged — already excellent |
+| Coverage knowledge | 5/10 | **7.5/10** | OI-1/2/3/4 done; OI-5 deferred (see below) |
+| Query quality | 7/10 | **8.5/10** | SCORE_THRESHOLD 0.5→0.35, retry expansion project-aware |
+| Freshness | 6/10 | **8.5/10** | Checkpoints promoted, indexing_threshold=0 patched |
+| Pipeline reliability | 7/10 | **8/10** | qdrant_url fixed, push-queue audit pending |
+
+> **OI-5 (implementation-spec capture) BLOCKED** — deferred until P2.2-B reranker (TEI + BGE-reranker) is deployed on VM B1. Do not activate until reranker is live. See [memory/project_p22b_reranker_deferred.md].
 
 ---
 
@@ -120,59 +124,64 @@ Remaining: OI-1 (capture ~20 pattern chunks from existing debug knowledge) is th
 
 #### A. Auto-retry Expansion Homelab-Biased
 
-```js
-// Current (wrong for petrochina-eproc):
-const rewrittenQuery = effectiveQuery + " deployment configuration setup steps homelab VM B1";
-```
+**Status:** [x] DONE 2026-04-25 session 5
 
-Fix di `/opt/mcp-servers/qdrant-knowledge/qdrant-mcp-server.js`:
+Was: `const rewrittenQuery = effectiveQuery + " deployment configuration setup steps homelab VM B1";`
+
+Fixed in `/opt/mcp-servers/qdrant-knowledge/qdrant-mcp-server.js`:
 ```js
 const expansions = {
-  homelab: "deployment configuration setup steps homelab VM B1 Docker",
-  "petrochina-eproc": "Blazor .NET EF Core CQRS MediatR implementation pattern",
+  homelab: "deployment configuration setup steps homelab VM B1 Docker infrastructure",
+  "petrochina-eproc": "Blazor .NET 9 EF Core CQRS MediatR implementation pattern C#",
 };
 const expansion = expansions[project] || "implementation architecture system behavior";
 const rewrittenQuery = effectiveQuery + " " + expansion;
 ```
 
-**Status:** [ ] TODO
-
 ---
 
-#### B. SCORE_THRESHOLD vs NOT_FOUND_THRESHOLD Redundant
+#### B. SCORE_THRESHOLD Alignment with rag-gateway
 
+**Status:** [x] DONE 2026-04-25 session 5
+
+Was: `SCORE_THRESHOLD = 0.5` and `RETRY_THRESHOLD = 0.6` — too high for RRF scores.
+rag-gateway ScoreThreshold was already 0.35 (set when hybrid RRF was implemented).
+
+Fixed:
 ```js
-const SCORE_THRESHOLD = 0.5;       // filter individual results
-const NOT_FOUND_THRESHOLD = 0.50;  // output gate — same value, redundant
+const SCORE_THRESHOLD = 0.35;  // was 0.5 — RRF scores range lower than cosine
+const RETRY_THRESHOLD = 0.50;  // was 0.6 — lowered to compensate for wider SCORE_THRESHOLD
 ```
 
-Pertimbangkan turunkan `SCORE_THRESHOLD` ke `0.35` (consistent dengan rag-gateway config) agar borderline results (0.35-0.49) tidak dibuang sebelum NOT_FOUND gate.
-
-**Status:** [ ] TODO — evaluate impact first
+`NOT_FOUND_THRESHOLD` stays at 0.50 — it is now the meaningful quality gate (topScore < 0.50 = genuinely not found), while SCORE_THRESHOLD is the per-result inclusion threshold (borderline 0.35-0.49 results are now included instead of discarded).
 
 ---
 
-### P3 — Freshness (Score: 6/10)
+### P3 — Freshness (Score: 6/10 → 8.5/10)
 
-#### A. 56 Points Unindexed
+#### A. Unindexed Points
 
-```bash
-ssh figulazmi@192.168.18.199 'curl -s -X POST \
-  "http://localhost:6333/collections/knowledge_v2/index" \
-  -H "api-key: QDRANT_API_KEY_REDACTED" \
-  -H "Content-Type: application/json" \
-  -d "{\"wait\": true}"'
-```
+**Status:** [x] DONE 2026-04-25 session 5 — `indexing_threshold` patched to 0 via PATCH `/collections/knowledge_v2`. Dense HNSW: 199/296 indexed (appendable segment brute-force fallback — zero practical impact at this scale). Sparse BM25 inverted index covers all 296 points. Threshold=0 is permanent.
 
-**Status:** [ ] TODO
+#### B. Checkpoints Unindexed
+
+**Status:** [x] DONE 2026-04-25 — both April 18 checkpoints promoted and pushed.
 
 ---
 
-### P4 — Implementation-Spec (Score: N/A)
+### P4 — Implementation-Spec (OI-5) — BLOCKED
 
-`implementation-spec` chunk type dirancang untuk feed implementer models (qwen2.5-coder). Belum pernah dipakai. Aktifkan ketika ada feature baru yang membutuhkan code generation.
+> **BLOCKED: Do not activate until P2.2-B reranker (TEI + BGE-reranker container) is deployed on VM B1.**
 
-**Status:** [ ] DEFERRED — aktifkan saat P2.2-B reranker selesai
+`implementation-spec` chunk type dirancang untuk feed implementer models (qwen2.5-coder, Ollama). Belum pernah dipakai. Reranker diperlukan untuk prioritisasi hasil sebelum di-feed ke implementer model.
+
+**Unblock checklist:**
+- [ ] TEI (Text Embeddings Inference) container deployed on VM B1
+- [ ] BGE-reranker model loaded in TEI
+- [ ] qdrant-mcp-server.js updated to call reranker before returning results
+- [ ] `implementation-spec` template added to CLAUDE.md auto-capture rules
+
+**Status:** [ ] DEFERRED — see [memory/project_p22b_reranker_deferred.md] for full context
 
 ---
 
@@ -182,14 +191,17 @@ ssh figulazmi@192.168.18.199 'curl -s -X POST \
 |---|---|---|---|
 | A | Promote 2 checkpoints April 18 | P0 | [x] Done 2026-04-25 |
 | B | Fix rag_config.json URL `.169` | P0 | [x] Done 2026-04-25 → localhost:6333 |
-| 1 | Aktif capture pattern chunks | P1 | [x] Done 2026-04-25 → 1→4 pattern chunks |
-| 2 | Capture reference chunks (VM B1 topology) | P1 | [x] Done 2026-04-25 → 3→5 reference chunks |
+| 1 | Capture pattern chunks (OI-1) | P1 | [x] Done 2026-04-25 → 1→20 pattern chunks (3 batches) |
+| 2 | Capture reference chunks (OI-1 aux) | P1 | [x] Done 2026-04-25 → 3→5 reference chunks |
 | 3 | Migrate old `knowledge` collection | P1 | [x] Already done prior session (145/147 exist) |
-| X | Fix push-to-qdrant.sh per-chunk metadata bug | P1 | [x] Done 2026-04-25 — pipeline bug fixed |
-| 4 | Auto-retry expansion project-aware | P2 | [ ] TODO |
-| 5 | Tune SCORE_THRESHOLD ke 0.35 | P2 | [ ] TODO — evaluate impact first |
-| 6 | Force-index 56 unindexed points | P3 | [ ] TODO |
-| 7 | Aktifkan implementation-spec capture | P4 | [ ] DEFERRED |
+| X | Fix push-to-qdrant.sh per-chunk metadata bug | P1 | [x] Done 2026-04-25 — off-by-one metadata fix |
+| OI-2 | Capture +5 feature chunks | P1 | [x] Done 2026-04-25 batch 4 → feature 24→29 |
+| OI-3 | Capture +5 decision chunks (ADR) | P1 | [x] Done 2026-04-25 batch 4 → decision 14→19 |
+| OI-4 | Force-index unindexed points | P3 | [x] Done 2026-04-25 → indexing_threshold=0 patched |
+| 4 | Auto-retry expansion project-aware | P2 | [x] Done 2026-04-25 session 5 → expansions map per project |
+| 5 | Tune SCORE_THRESHOLD ke 0.35 | P2 | [x] Done 2026-04-25 session 5 → 0.5→0.35, RETRY 0.6→0.50 |
+| 6 | Push-queue audit | P2 | [ ] OPEN — next after query quality |
+| OI-5 | Aktifkan implementation-spec capture | P4 | [ ] **BLOCKED** — waiting P2.2-B reranker (TEI+BGE on VM B1) |
 
-**Coverage knowledge after 2026-04-25 session:** pattern 1→4, reference 3→5, total 255→262.
+**Coverage knowledge after all sessions:** 255→296 points, pattern 1→20, feature 24→29, decision 10→19.
 Full before/after detail with score projections → [COVERAGE_KNOWLEDGE_TRACKER.md](COVERAGE_KNOWLEDGE_TRACKER.md)
