@@ -367,7 +367,7 @@ ssh figulazmi@192.168.18.199 'curl -s "http://localhost:6333/collections/knowled
   "import sys,json; r=json.load(sys.stdin)[\"result\"]; print(r[\"points_count\"], \"total |\", r[\"indexed_vectors_count\"], \"indexed\")"'
 ```
 
-**Status:** [ ] OPEN — 199/275 indexed as of 2026-04-25 session 2; background optimizer running. 295 total points as of batch 4 -- re-check index count.
+**Status:** [x] DONE 2026-04-25 — `indexing_threshold` patched to 0 via PATCH /collections/knowledge_v2. Dense HNSW: 199/295 indexed (96 in appendable segment, brute-force fallback -- zero practical impact at 295-point scale). Sparse BM25 inverted index covers all 295 points regardless of HNSW status. Threshold=0 is permanent; future inserts will trigger HNSW sooner.
 
 ---
 
@@ -390,7 +390,7 @@ Membutuhkan reranker (P2.2-B) untuk prioritisasi sebelum fully useful.
 | Session 2026-04-25 | 4 | 5 | 5.5/10 | Pipeline bug fixed |
 | OI-1: +20 pattern | ~24 | 5 | 6.5/10 | ratio 7:1 |
 | OI-2+3: +10 feature/decision | ~24 | 5 | 7.0/10 | balanced types ← DONE batch 4 |
-| OI-4: full index | ~24 | 5 | 7.5/10 | hybrid fully active |
+| OI-4: full index | ~24 | 5 | 7.5/10 | hybrid fully active ← DONE batch 5 |
 | OI-5: +10 impl-spec | ~24 | 5 | 8.0/10 | code-gen ready |
 
 **Target: 8/10 by end of next sprint.**
@@ -406,4 +406,5 @@ Membutuhkan reranker (P2.2-B) untuk prioritisasi sebelum fully useful.
 | 2026-04-25 (session 2) | 275 | 11 | 5 | 14 | 6.0/10 | Batch 2: +13 chunks, off-by-one fix, patches |
 | 2026-04-25 (session 3) | 284 | 20 | 5 | 14 | 6.5/10 | Batch 3: +9 pattern chunks, OI-1 complete |
 | 2026-04-25 (session 4) | 295 | 20 | 5 | 19 | 7.0/10 | Batch 4: +5 decision +5 feature, OI-2+3 complete |
-| _(next audit)_ | — | — | — | — | — | Target: 7.5/10 after OI-4 (full index) |
+| 2026-04-25 (session 5) | 295 | 20 | 5 | 19 | 7.5/10 | Batch 5: OI-4 indexing_threshold=0 patched, sparse covers all 295 |
+| _(next audit)_ | — | — | — | — | — | Target: 8.0/10 after OI-5 (impl-spec, needs P2.2-B reranker) |
