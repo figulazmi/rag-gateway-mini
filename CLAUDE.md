@@ -88,6 +88,7 @@ Emit a chunk when ANY of these is true:
 3. Architectural decision made with clear reasoning
 4. Step-by-step runbook completed
 5. User says "chunk this" / "save this" / "rag capture" / "simpan ke qdrant"
+6. Writing substantial new code from scratch intended as a template or spec for future code-gen → use `implementation-spec` type (NOT `feature`). Signals: "implement X", "write Y from scratch", output has Target Files + Interfaces + Contract sections.
 
 **Skip** if: still debugging, clarifying questions, small talk, no confirmed solution.
 
