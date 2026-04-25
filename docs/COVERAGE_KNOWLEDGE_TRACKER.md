@@ -188,6 +188,58 @@ debug:pattern ratio = 15:1  [was 43:1] ← continued improvement
 
 ---
 
+### Session 2026-04-25 — Batch 3 (OI-1 completion)
+
+**Goal:** Capture 9 more pattern chunks extracted from existing debug knowledge to hit OI-1 target of 20 total.
+
+#### Fixes Applied
+
+| Fix | Before | After | Method |
+|---|---|---|---|
+| n8n expression prefix pattern | pattern: 11 | pattern: 12 | `rag add -t pattern` |
+| Qdrant named vector prefetch `using` field | pattern: 12 | pattern: 13 | `rag add -t pattern` |
+| Secrets env var fail-fast guard | pattern: 13 | pattern: 14 | `rag add -t pattern` |
+| n8n Code node sandbox / HTTP Request node | pattern: 14 | pattern: 15 | `rag add -t pattern` |
+| git pull before docker compose up | pattern: 15 | pattern: 16 | `rag add -t pattern` |
+| Qdrant empty vector name = malformed body | pattern: 16 | pattern: 17 | `rag add -t pattern` |
+| ASP.NET MapHealthChecks explicit registration | pattern: 17 | pattern: 18 | `rag add -t pattern` |
+| Production secrets outside repo volume mount | pattern: 18 | pattern: 19 | `rag add -t pattern` |
+| n8n data volume backup before upgrade | pattern: 19 | pattern: 20 | `rag add -t pattern` |
+
+#### State After Session 2026-04-25 Batch 3
+
+```
+knowledge_v2:  284 points total
+
+chunk_type distribution:
+  debug:            170  (60%)
+  feature:           24   (8%)
+  runbook:           21   (7%)
+  pattern:           20   (7%)   [was 11 → +9]  ← OI-1 TARGET REACHED
+  decision:          14   (5%)
+  checkpoint:        11   (4%)
+  unknown:           14   (5%)   ← pre-existing
+  reference:          5   (2%)
+  (empty):            5   (2%)   ← pre-existing
+
+debug:pattern ratio = 8.5:1  [was 15:1] ← significant improvement
+```
+
+**Patterns captured this batch:**
+- Pattern: n8n raw body expression prefix must be exactly ={{ no leading equals or spaces
+- Pattern: Qdrant named vector collection requires using field in every prefetch leg
+- Pattern: never hardcode secrets in tracked files use env var with fail-fast guard
+- Pattern: n8n Code node sandbox blocks fetch and axios use HTTP Request node for outbound calls
+- Pattern: always git pull on VM before docker compose up build compose file on disk drives the build
+- Pattern: Qdrant error Not existing vector name empty string indicates malformed request body not missing vector
+- Pattern: ASP.NET Core health endpoint requires explicit MapHealthChecks call in Program.cs not auto registered
+- Pattern: keep production secrets outside repo in dedicated path and volume mount read-only into container
+- Pattern: always backup n8n data volume before major version upgrade workflow export alone is insufficient
+
+**Coverage score after:** 6.0/10 → **6.5/10** (OI-1 complete, debug:pattern ratio 8.5:1)
+
+---
+
 ## Open Items (ordered by impact)
 
 ### OI-1: Capture Pattern Chunks dari Existing Debug Knowledge
@@ -221,9 +273,9 @@ cat <<'EOF' | rag add -p homelab -t pattern --topic "Pattern: [rule name]" --tag
 EOF
 ```
 
-**Status:** [ ] OPEN — ongoing (+7 captured in session 2: pattern count 4→11, ratio 43:1→15:1)
+**Status:** [x] DONE 2026-04-25 — 20 pattern chunks reached (batch 1: +3, batch 2: +7, batch 3: +9). debug:pattern ratio 43:1 → 8.5:1.
 
-**Target:** 20 pattern chunks by next audit (11 captured so far)
+**Target:** 20 pattern chunks by next audit (20 captured -- OI-1 complete)
 
 ---
 
@@ -309,4 +361,5 @@ Membutuhkan reranker (P2.2-B) untuk prioritisasi sebelum fully useful.
 | 2026-04-25 (baseline) | 255 | 1 | 3 | 10 | 5.0/10 | Initial audit |
 | 2026-04-25 (session 1) | 262 | 4 | 5 | 10 | 5.5/10 | P0/P1 fixes + pipeline bug |
 | 2026-04-25 (session 2) | 275 | 11 | 5 | 14 | 6.0/10 | Batch 2: +13 chunks, off-by-one fix, patches |
-| _(next audit)_ | — | — | — | — | — | Target: 6.5/10 after OI-1 |
+| 2026-04-25 (session 3) | 284 | 20 | 5 | 14 | 6.5/10 | Batch 3: +9 pattern chunks, OI-1 complete |
+| _(next audit)_ | — | — | — | — | — | Target: 7.0/10 after OI-2+3 |
