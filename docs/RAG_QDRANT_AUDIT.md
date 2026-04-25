@@ -200,7 +200,7 @@ const RETRY_THRESHOLD = 0.50;  // was 0.6 — lowered to compensate for wider SC
 | OI-4 | Force-index unindexed points | P3 | [x] Done 2026-04-25 → indexing_threshold=0 patched |
 | 4 | Auto-retry expansion project-aware | P2 | [x] Done 2026-04-25 session 5 → expansions map per project |
 | 5 | Tune SCORE_THRESHOLD ke 0.35 | P2 | [x] Done 2026-04-25 session 5 → 0.5→0.35, RETRY 0.6→0.50 |
-| 6 | Push-queue audit | P2 | [ ] OPEN — next after query quality |
+| 6 | Push-queue audit | P2 | [x] Done 2026-04-25 session 5 — qdrant_url fixed (.169→.199), auto_push exceptions logged, cmd_push_pending TimeoutExpired now continues instead of breaks |
 | OI-5 | Aktifkan implementation-spec capture | P4 | [ ] **BLOCKED** — waiting P2.2-B reranker (TEI+BGE on VM B1) |
 
 **Coverage knowledge after all sessions:** 255→296 points, pattern 1→20, feature 24→29, decision 10→19.
