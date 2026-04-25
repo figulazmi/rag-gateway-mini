@@ -178,7 +178,7 @@ Only relevant if/when hybrid is re-enabled (Fix #2). No action needed while
 
 ---
 
-## #6 — n8n Webhook Shadow Risk (Ingest Reliability) `[ ] OPEN`
+## #6 — n8n Webhook Shadow Risk (Ingest Reliability) `[x] FIXED`
 
 **Severity**: Low  
 **Scope**: n8n workflow + `push-to-qdrant.sh`  
@@ -252,7 +252,7 @@ tapi tidak menghilangkan root cause.
 | 1 | #1 Embedding asymmetry | Done | `[x] FIXED` |
 | 2 | #2 Sparse noise (Opsi A+B) | Done | `[x] FIXED` |
 | 3 | #4 Remove QueryNormalizer padding | Done | `[x] FIXED` |
-| 4 | #6 Cosine gate in push-to-qdrant.sh | Small | `[ ] OPEN` |
+| 4 | #6 Cosine gate in push-to-qdrant.sh | Done | `[x] FIXED` |
 | 5 | #3 Cross-chunk feature_slug linking | Medium | `[ ] OPEN` |
 | 6 | #5 Widen RRF funnel | Trivial | `[ ] OPEN` |
 | 7 | #7 Sparse TF-IDF (Opsi C) | 3-4 jam | `[ ] OPEN` — eksekusi saat KB > 300 docs |
