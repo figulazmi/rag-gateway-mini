@@ -26,22 +26,25 @@ public sealed class QdrantVectorSearchClient : IVectorSearchClient
         string queryText,
         string? project = null,
         string? chunkType = null,
+        string? featureSlug = null,
         CancellationToken cancellationToken = default)
-        => ExecuteQueryAsync(vector, queryText, project, chunkType, applyFilter: true, cancellationToken);
+        => ExecuteQueryAsync(vector, queryText, project, chunkType, featureSlug, applyFilter: true, cancellationToken);
 
     public Task<List<RagResultItem>> SearchRawAsync(
         float[] vector,
         string queryText,
         string? project = null,
         string? chunkType = null,
+        string? featureSlug = null,
         CancellationToken cancellationToken = default)
-        => ExecuteQueryAsync(vector, queryText, project, chunkType, applyFilter: false, cancellationToken);
+        => ExecuteQueryAsync(vector, queryText, project, chunkType, featureSlug, applyFilter: false, cancellationToken);
 
     private async Task<List<RagResultItem>> ExecuteQueryAsync(
         float[] vector,
         string queryText,
         string? project,
         string? chunkType,
+        string? featureSlug,
         bool applyFilter,
         CancellationToken cancellationToken)
     {
@@ -85,6 +88,8 @@ public sealed class QdrantVectorSearchClient : IVectorSearchClient
                 must.Add(new { key = "project", match = new { value = project } });
             if (!string.IsNullOrWhiteSpace(chunkType))
                 must.Add(new { key = "chunk_type", match = new { value = chunkType } });
+            if (!string.IsNullOrWhiteSpace(featureSlug))
+                must.Add(new { key = "doc_id", match = new { value = featureSlug } });
 
             if (must.Count > 0)
                 requestBody["filter"] = new { must };

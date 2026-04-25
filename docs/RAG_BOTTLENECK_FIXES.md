@@ -100,7 +100,7 @@ Ketika KB > 300 docs, eksekusi **#7 (Opsi C)** untuk fix permanen.
 
 ---
 
-## #3 — No Cross-Chunk Linking for Full Feature Flow `[ ] OPEN`
+## #3 — No Cross-Chunk Linking for Full Feature Flow `[x] FIXED`
 
 **Severity**: Medium  
 **Files**: ingest pipeline (n8n payload), `src/Infrastructure/AI/QdrantVectorSearchClient.cs`,
@@ -253,6 +253,6 @@ tapi tidak menghilangkan root cause.
 | 2 | #2 Sparse noise (Opsi A+B) | Done | `[x] FIXED` |
 | 3 | #4 Remove QueryNormalizer padding | Done | `[x] FIXED` |
 | 4 | #6 Cosine gate in push-to-qdrant.sh | Done | `[x] FIXED` |
-| 5 | #3 Cross-chunk feature_slug linking | Medium | `[ ] OPEN` |
+| 5 | #3 Cross-chunk feature_slug linking | Done | `[x] FIXED` |
 | 6 | #5 Widen RRF funnel | Trivial | `[ ] OPEN` |
 | 7 | #7 Sparse TF-IDF (Opsi C) | 3-4 jam | `[ ] OPEN` — eksekusi saat KB > 300 docs |

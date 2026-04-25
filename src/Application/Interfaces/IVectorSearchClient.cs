@@ -9,6 +9,7 @@ public interface IVectorSearchClient
         string queryText,
         string? project = null,
         string? chunkType = null,
+        string? featureSlug = null,
         CancellationToken cancellationToken = default);
 
     Task<List<RagResultItem>> SearchRawAsync(
@@ -16,5 +17,6 @@ public interface IVectorSearchClient
         string queryText,
         string? project = null,
         string? chunkType = null,
+        string? featureSlug = null,
         CancellationToken cancellationToken = default);
 }

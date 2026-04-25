@@ -12,4 +12,7 @@ public sealed class RagSearchRequest
 
     [JsonPropertyName("chunk_type")]
     public string? ChunkType { get; set; }
+
+    [JsonPropertyName("feature_slug")]
+    public string? FeatureSlug { get; set; }
 }

@@ -15,6 +15,10 @@ public sealed class RagDebugResponse
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? ChunkTypeFilter { get; set; }
 
+    [JsonPropertyName("feature_slug_filter")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? FeatureSlugFilter { get; set; }
+
     [JsonPropertyName("search_mode")]
     public string SearchMode { get; set; } = "hybrid";
 
