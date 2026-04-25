@@ -16,6 +16,8 @@ public sealed class RagGatewayOptions
     public string SparseVectorName { get; set; } = "sparse";
     public bool EnableHybridSearch { get; set; } = true;
     public int HybridPrefetchLimit { get; set; } = 20;
+    public int SparsePrefetchLimit { get; set; } = 5;
+    public float SparseScoreThreshold { get; set; } = 0.01f;
     public string FusionMethod { get; set; } = "rrf";
     public string SparseInferenceModel { get; set; } = "Qdrant/bm25";
 }

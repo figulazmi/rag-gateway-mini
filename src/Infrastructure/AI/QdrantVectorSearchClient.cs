@@ -64,7 +64,8 @@ public sealed class QdrantVectorSearchClient : IVectorSearchClient
                 {
                     query = new { indices = sparse.Indices, values = sparse.Values },
                     @using = _options.SparseVectorName,
-                    limit = _options.HybridPrefetchLimit
+                    limit = _options.SparsePrefetchLimit,
+                    score_threshold = _options.SparseScoreThreshold
                 });
             }
         }
