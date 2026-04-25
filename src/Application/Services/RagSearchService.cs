@@ -34,7 +34,12 @@ public sealed class RagSearchService : IRagSearchService
             "RAG SEARCH | original={Query} | normalized={Normalized} | project={Project} | chunk_type={ChunkType}",
             request.Query, normalized, request.Project ?? "all", request.ChunkType ?? "all");
 
-        var embedding = await _embedding.GenerateEmbeddingAsync(normalized, cancellationToken);
+        // Mirror ingest embed_content prefix so query vectors align with stored document vectors.
+        var queryEmbedContent = request.Project is { Length: > 0 } p
+            ? $"This chunk is from project {p}. Content: {normalized}"
+            : normalized;
+
+        var embedding = await _embedding.GenerateEmbeddingAsync(queryEmbedContent, cancellationToken);
         var results = await _vector.SearchAsync(embedding, normalized, request.Project, request.ChunkType, cancellationToken);
 
         var threshold = _options.ScoreThreshold;
@@ -73,7 +78,12 @@ public sealed class RagSearchService : IRagSearchService
             "RAG DEBUG | original={Query} | normalized={Normalized} | project={Project} | chunk_type={ChunkType}",
             request.Query, normalized, request.Project ?? "all", request.ChunkType ?? "all");
 
-        var embedding = await _embedding.GenerateEmbeddingAsync(normalized, cancellationToken);
+        // Mirror ingest embed_content prefix so query vectors align with stored document vectors.
+        var queryEmbedContent = request.Project is { Length: > 0 } p
+            ? $"This chunk is from project {p}. Content: {normalized}"
+            : normalized;
+
+        var embedding = await _embedding.GenerateEmbeddingAsync(queryEmbedContent, cancellationToken);
         var results = await _vector.SearchRawAsync(embedding, normalized, request.Project, request.ChunkType, cancellationToken);
 
         var threshold = _options.ScoreThreshold;
