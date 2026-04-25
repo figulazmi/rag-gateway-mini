@@ -1,5 +1,8 @@
 # RAG Qdrant Intelligence Audit
 
+> **Navigation:** [docs/README.md](README.md) — full index of all RAG docs.
+> Coverage knowledge detail & improvement history → [COVERAGE_KNOWLEDGE_TRACKER.md](COVERAGE_KNOWLEDGE_TRACKER.md)
+
 **Date:** 2026-04-25  
 **Overall Score: 6.8/10**
 
@@ -91,54 +94,24 @@ ssh figulazmi@192.168.18.199 \
 
 ---
 
-### P1 — Coverage Knowledge (Score: 5/10)
+### P1 — Coverage Knowledge (Score: 5/10 → 5.5/10)
 
-Ini dimensi dengan skor paling rendah. Tiga akar masalah:
+> Full improvement history, open items, and score projection:
+> **[COVERAGE_KNOWLEDGE_TRACKER.md](COVERAGE_KNOWLEDGE_TRACKER.md)**
 
-#### 1. Pattern chunks: hanya 1
+Summary of fixes applied 2026-04-25:
+- Captured 3 `pattern` chunks → pattern: 1 → 4
+- Captured 2 `reference` chunks → reference: 3 → 5
+- Fixed pipeline bug: per-chunk metadata (type + topic) now correctly embedded by `rag merge` and parsed by `push-to-qdrant.sh`
+- Old `knowledge` collection already migrated in prior session (145/147 overlap)
 
-Pattern adalah chunk type paling berguna untuk menghindari rework — "rule of thumb ke depan". Saat ini hampir tidak ada.
-
-**Fix**: Setiap kali debug selesai, extract prinsip sebagai 1 `pattern` chunk terpisah:
-```bash
-cat <<'EOF' | rag add -p homelab -t pattern --topic "Pattern: ..." --tags "homelab,..."
-### Context
-[Sistem / domain]
-### Pattern
-[Rule of thumb yang bisa dipakai ulang]
-### When to Apply
-[Kapan pattern ini relevan]
-### Anti-Pattern
-[Apa yang jangan dilakukan]
-### Key Facts
-- fact 1
-- fact 2
-- fact 3
-EOF
-```
-
-**Status:** [x] DONE 2026-04-25 — captured 3 pattern chunks (RRF threshold, djb2 alignment, chunk_type ratio)
-
-**Pipeline bug fixed:** `push-to-qdrant.sh` dulu kirim DOC_TOPIC dan DOC_CHUNK_TYPE yang sama ke semua chunk.
-Fix: `rag_capture.py merge` sekarang embed `<!-- rag_chunk_meta chunk_type=XXX tags=[...] -->` per chunk;
-`push-to-qdrant.sh` extract per-chunk topic dari `## CHUNK N: [title]` dan per-chunk type dari comment.
+Remaining: OI-1 (capture ~20 pattern chunks from existing debug knowledge) is the highest-ROI next step.
 
 ---
 
-#### 2. Reference chunks: hanya 3
+#### Old `knowledge` collection: 147 points
 
-Config maps, environment topology, port assignments, secret locations — semuanya harus ada di reference chunks agar bisa diquery tanpa baca file.
-
-**Status:** [x] DONE 2026-04-25 — captured 2 reference chunks (VM B1 topology, pipeline file locations)
-
----
-
-#### 3. Old `knowledge` collection: 147 points tidak termigrate
-
-147 point dense-only tidak pernah diquery lagi. Kemungkinan berisi knowledge unik yang hilang.
-
-**Status:** [x] DONE 2026-04-25 — dry-run shows 145/147 already exist in knowledge_v2 (same IDs).
-Migration was done in a prior session. Old `knowledge` collection is a dead backup — safe to ignore.
+**Status:** [x] DONE prior session — 145/147 already exist in knowledge_v2 (same IDs).
 `migrate-to-hybrid.py` script created at `~/scripts/migrate-to-hybrid.py` on VM B1 for future use.
 
 ---
@@ -218,14 +191,5 @@ ssh figulazmi@192.168.18.199 'curl -s -X POST \
 | 6 | Force-index 56 unindexed points | P3 | [ ] TODO |
 | 7 | Aktifkan implementation-spec capture | P4 | [ ] DEFERRED |
 
-**Coverage knowledge setelah fix (2026-04-25):**
-```
-debug:            170  (65%)
-feature:           22   (8%)
-runbook:           21   (8%)
-pattern:            4   (2%)   ← was 1 (0.4%)
-decision:          10   (4%)
-reference:          5   (2%)   ← was 3 (1%)
-checkpoint:        11   (4%)
-total:            262
-```
+**Coverage knowledge after 2026-04-25 session:** pattern 1→4, reference 3→5, total 255→262.
+Full before/after detail with score projections → [COVERAGE_KNOWLEDGE_TRACKER.md](COVERAGE_KNOWLEDGE_TRACKER.md)
