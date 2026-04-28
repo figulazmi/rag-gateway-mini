@@ -74,6 +74,17 @@ The prepend lives in the n8n workflow's `Validate & Clean` node, not in `push-to
 **Re-embedding existing chunks:**
 Dense vector space has shifted (old chunks embedded on raw content, new ones on prepended content). Hybrid search still works during transition because the sparse vector is unchanged — but for consistent dense retrieval, re-ingest the full corpus:
 
+> **Migration note (2026-04-29):** Full corpus was migrated from `knowledge` to `knowledge_v2` via
+> `migrate-to-hybrid.py` (direct Qdrant upsert, not via n8n). Dense vectors are old-style (raw
+> content, no contextual prepend). Sparse vectors are new-style (djb2 BM25). Hybrid RRF compensates
+> for the dense drift — retrieval is functional but not at peak quality.
+>
+> **WARNING for future sessions:** If `eval-retrieval-quality.py` shows NDCG@5 or Hit@1 regression,
+> or if retrieval feels off on homelab queries, consider triggering **Opsi 2** (re-embed via n8n):
+> re-ingest all `.claude/summaries/*.md` through `push-to-qdrant.sh` so n8n recomputes contextual
+> prepend embeddings. Upserts are idempotent — safe to run anytime. Expected gain: +35-49%
+> retrieval failure reduction per Anthropic contextual retrieval benchmark.
+
 ```bash
 for f in .claude/summaries/*.md; do
   rtk bash ~/scripts/push-to-qdrant.sh "$f"
