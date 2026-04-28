@@ -1,6 +1,15 @@
-
-
-
+---
+id: 2026-04-22-qdrant-dashboard-patch
+date: 2026-04-22
+project: homelab
+collection: knowledge_v2
+topic: Qdrant dashboard named vector patch Hnn GKt dense
+session_type: debug
+chunk_type: debug
+tags: [homelab, qdrant, vm-b1, docker, dashboard]
+source: rag-gateway-mini/.claude/summaries/2026-04-22-qdrant-dashboard-patch.md
+status: implemented
+---
 
 ## CHUNK 2: Qdrant dashboard visualize patch using dense default
 

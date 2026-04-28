@@ -91,7 +91,7 @@
 | **2b** | SCP `rag_capture.py` ke VM | `[x] DONE` | |
 | **2c** | SCP `qdrant-mcp-server-v2.js` ke VM (post-fix) | `[x] DONE` | |
 | **2d** | SCP `ingest-knowledge-v2.json` ke VM | `[x] DONE` | |
-| **2e** | SCP `eval-retrieval-quality.py` ke VM | `[x] DONE` | |
+| **2e** | SCP `eval-retrieval-quality.py` ke VM | `[!] BLOCKED` | File not found locally — skip or create later |
 | **2f** | Setup `~/.rag_config.json` di VM | `[x] DONE` | URL = localhost:6333 |
 | **3** | Update n8n workflow — import + aktifkan contextual retrieval | `[ ] PENDING` | **Manual via n8n UI** |
 | **4** | Deploy MCP server v2 ke `/opt/mcp-servers/` + restart | `[x] DONE` | |
