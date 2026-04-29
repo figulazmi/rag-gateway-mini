@@ -3,9 +3,31 @@
     "qdrant-knowledge": {
       "command": "powershell",
       "args": [
-        "-ExecutionPolicy", "Bypass",
-        "-File", "C:\\Users\\Clandesitine\\.claude\\claude-mcp-connect.ps1"
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "C:\\Users\\Clandesitine\\.claude\\claude-mcp-connect.ps1"
       ]
     }
+  },
+  "permissions": {
+    "deny": [
+      "Bash(git *)",
+      "Bash(find *)",
+      "Bash(ls *)",
+      "Bash(grep *)",
+      "Bash(xargs *)",
+      "Bash(dir *)",
+      "Bash(dotnet *)",
+      "Bash(curl http*)",
+      "Bash(curl https*)",
+      "Bash(gh *)",
+      "Bash(docker *)",
+      "Bash(npm *)",
+      "Bash(pnpm *)",
+      "Bash(npx *)",
+      "Bash(kubectl *)",
+      "Bash(wget *)"
+    ]
   }
 }
