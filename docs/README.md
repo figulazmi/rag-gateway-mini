@@ -1,51 +1,90 @@
 # docs/ — Navigation Index
 
-All documents in this folder cover the RAG knowledge pipeline for `rag-gateway-mini`
-(homelab + petrochina-eproc projects). Organized by purpose below.
+All documents cover the RAG knowledge pipeline for `rag-gateway-mini`
+(stack: Qdrant `knowledge_v2` · nomic-embed-text · Ollama · n8n · ASP.NET Core 9 · VM B1).
 
 ---
 
-## Active Work (read these first)
+## Folder Structure
+
+```
+docs/
+  pipeline/    — ingestion & retrieval pipeline: fixes, gaps, session continuity
+  quality/     — retrieval evaluation, Qdrant health audit, coverage tracking
+  security/    — security posture hardening & threat model tracker
+  planning/    — roadmaps, strategic plans, restoration plans
+  reference/   — manual book & runbooks
+```
+
+---
+
+## pipeline/ — Ingestion & Retrieval
 
 | Document | Purpose | Status |
 |---|---|---|
-| [RAG_V2_ROADMAP.md](RAG_V2_ROADMAP.md) | Active feature roadmap for `knowledge_v2` — P1/P2/P3 items, strategic goal, success criteria | **Active** |
-| [RAG_QDRANT_AUDIT.md](RAG_QDRANT_AUDIT.md) | Intelligence audit: 5-dimension health score + fix tracker | **Active** |
-| [COVERAGE_KNOWLEDGE_TRACKER.md](COVERAGE_KNOWLEDGE_TRACKER.md) | Dedicated tracker: before/after history for every Coverage knowledge improvement | **Active** |
+| [RAG_BOTTLENECK_FIXES.md](pipeline/RAG_BOTTLENECK_FIXES.md) | Pipeline A (write/ingest) and Pipeline B (read/retrieve) bottleneck fixes with test evidence | Active |
+| [RAG_CAPTURE_PIPELINE_GAPS.md](pipeline/RAG_CAPTURE_PIPELINE_GAPS.md) | Gap analysis: `rag add` → `rag merge` → `push-to-qdrant.sh` → n8n → Qdrant | Active |
+| [RAG_CHECKPOINT_SYSTEM.md](pipeline/RAG_CHECKPOINT_SYSTEM.md) | Session continuity: `rag checkpoint`, `rag resume`, `rag promote` commands | Reference |
 
 ---
 
-## Fix Trackers
+## quality/ — Retrieval Quality
 
-| Document | Covers | Use When |
+| Document | Purpose | Status |
 |---|---|---|
-| [RAG_BOTTLENECK_FIXES.md](RAG_BOTTLENECK_FIXES.md) | Pipeline A (write/ingest) and Pipeline B (read/retrieve) bottleneck fixes with test evidence | Diagnosing slow/wrong retrieval, checking fix history |
-| [RAG_CAPTURE_PIPELINE_GAPS.md](RAG_CAPTURE_PIPELINE_GAPS.md) | Gaps in the chunk capture pipeline (`rag add` → `rag merge` → `push-to-qdrant.sh` → n8n → Qdrant) | Debugging why chunks land incorrectly or get lost |
+| [RAG_EVAL_HARNESS.md](quality/RAG_EVAL_HARNESS.md) | Benchmark metrics (MRR@5, faithfulness), labeled query set, score tracking | Active |
+| [RAG_QDRANT_AUDIT.md](quality/RAG_QDRANT_AUDIT.md) | 5-dimension health audit: score 6.8/10 → 8.1/10 + fix tracker | Active |
+| [COVERAGE_KNOWLEDGE_TRACKER.md](quality/COVERAGE_KNOWLEDGE_TRACKER.md) | Before/after history for every coverage improvement | Active |
 
 ---
 
-## System Design & Reference
+## security/ — Security Posture
 
-| Document | Covers | Use When |
+| Document | Purpose | Status |
 |---|---|---|
-| [RAG_CHECKPOINT_SYSTEM.md](RAG_CHECKPOINT_SYSTEM.md) | Session continuity: `rag checkpoint`, `rag resume`, `rag promote` commands and 3-collection architecture | Understanding checkpoint workflow, adding new checkpoint fields |
-| [RAG_EXTERNAL_BRAIN_PLAN.md](RAG_EXTERNAL_BRAIN_PLAN.md) | Strategic improvement plan: Phase 1 reliability → Phase 2 quality → Phase 3 implementer-grade chunks | Planning multi-session improvement sprints |
+| [RAG_POWER_SECURITY_INDEX.md](security/RAG_POWER_SECURITY_INDEX.md) | **Entry point** — priority board P0/P1/P2 with quick nav to all items | Active |
+| [RAG_SECURITY_POSTURE.md](security/RAG_SECURITY_POSTURE.md) | Phase 1–3 hardening tracker: threat model, fix steps, verification commands | Active |
 
 ---
 
-## Reading Order for New Contributors
+## planning/ — Roadmaps & Plans
 
-1. `RAG_V2_ROADMAP.md` — understand the strategic goal and current state
-2. `RAG_QDRANT_AUDIT.md` — understand current health and open issues
-3. `RAG_BOTTLENECK_FIXES.md` — understand what's already been fixed in retrieval
-4. `RAG_CAPTURE_PIPELINE_GAPS.md` — understand what's been fixed in capture
-5. `RAG_CHECKPOINT_SYSTEM.md` — understand session continuity mechanics
+| Document | Purpose | Status |
+|---|---|---|
+| [RAG_V2_ROADMAP.md](planning/RAG_V2_ROADMAP.md) | Active feature roadmap for `knowledge_v2` — P1/P2/P3 priorities, strategic goal | **Active — read before any pipeline change** |
+| [RAG_EXTERNAL_BRAIN_PLAN.md](planning/RAG_EXTERNAL_BRAIN_PLAN.md) | Strategic improvement plan: reliability → quality → implementer-grade chunks | Reference |
+| [VM105_RESTORATION_PLAN.md](planning/VM105_RESTORATION_PLAN.md) | VM B1 script restoration + full `knowledge_v2` re-ingest plan | Active |
 
 ---
 
-## Document Ownership
+## reference/ — Manual & Runbooks
 
-All docs are written and maintained by Claude Code sessions.
-Update a document's status when a fix is deployed — stale status is worse than no status.
+| Document | Purpose | Status |
+|---|---|---|
+| [RAG_MANUAL_BOOK.md](reference/RAG_MANUAL_BOOK.md) | Complete operational manual: commands, config, troubleshooting, architecture | Reference |
 
-Last index update: 2026-04-25
+---
+
+## Reading Order (new contributor / new session)
+
+1. [`planning/RAG_V2_ROADMAP.md`](planning/RAG_V2_ROADMAP.md) — strategic goal and current priorities
+2. [`quality/RAG_QDRANT_AUDIT.md`](quality/RAG_QDRANT_AUDIT.md) — current health score and open issues
+3. [`pipeline/RAG_BOTTLENECK_FIXES.md`](pipeline/RAG_BOTTLENECK_FIXES.md) — what's already been fixed in retrieval
+4. [`pipeline/RAG_CAPTURE_PIPELINE_GAPS.md`](pipeline/RAG_CAPTURE_PIPELINE_GAPS.md) — what's been fixed in capture
+5. [`security/RAG_POWER_SECURITY_INDEX.md`](security/RAG_POWER_SECURITY_INDEX.md) — security hardening status
+
+---
+
+## Quick Status: Open Priorities
+
+| Area | Highest open item | Doc |
+|---|---|---|
+| Security | P0-1: Rotate Qdrant API key (CRITICAL) | [security/RAG_SECURITY_POSTURE.md](security/RAG_SECURITY_POSTURE.md#p0-1--rotate-qdrant-api-key) |
+| Quality | Run first MRR@5 baseline measurement | [quality/RAG_EVAL_HARNESS.md](quality/RAG_EVAL_HARNESS.md#5-baseline-vs-current-comparison) |
+| Pipeline | IDF weighting (Opsi C) — deferred | [pipeline/RAG_BOTTLENECK_FIXES.md](pipeline/RAG_BOTTLENECK_FIXES.md) |
+| Planning | VM105 scripts restoration | [planning/VM105_RESTORATION_PLAN.md](planning/VM105_RESTORATION_PLAN.md) |
+
+---
+
+*Last updated: 2026-04-29 · Owner: Figur Ulul Azmi*  
+*Update this index when adding new docs or changing subfolder structure.*
