@@ -33,7 +33,7 @@ knowledge_v2:  255 points total
 
   By project:
     homelab:          146
-    petrochina-eproc: 100
+    project-alpha: 100
     checkpoint:         9
 
   By chunk_type:
@@ -57,7 +57,7 @@ knowledge (old): 147 points — dense-only, not queried by any current pipeline
 2. **NOT_FOUND gate** — top score < 0.50 → explicit "NOT FOUND IN RAG" response.
 3. **Status filter** — `implemented` only by default; drafts/planned excluded.
 4. **Auto-retry** — avgScore < 0.60 triggers query rewrite + retry automatically.
-5. **Project isolation** — homelab / petrochina-eproc never mixed.
+5. **Project isolation** — homelab / project-alpha never mixed.
 6. **Query normalization** — queries < 8 words auto-expanded.
 
 ---
@@ -132,7 +132,7 @@ Fixed in `/opt/mcp-servers/qdrant-knowledge/qdrant-mcp-server.js`:
 ```js
 const expansions = {
   homelab: "deployment configuration setup steps homelab VM B1 Docker infrastructure",
-  "petrochina-eproc": "Blazor .NET 9 EF Core CQRS MediatR implementation pattern C#",
+  "project-alpha": "Blazor .NET 9 EF Core CQRS MediatR implementation pattern C#",
 };
 const expansion = expansions[project] || "implementation architecture system behavior";
 const rewrittenQuery = effectiveQuery + " " + expansion;

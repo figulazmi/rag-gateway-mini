@@ -33,7 +33,7 @@
 ╔══════════════════════════════════════════════════════════════════╗
 ║  DRAFT STORE  (per-project isolated)                             ║
 ║  ~/scripts/.rag_drafts/homelab/chunk_001.md                     ║
-║  ~/scripts/.rag_drafts/petrochina-eproc/chunk_001.md            ║
+║  ~/scripts/.rag_drafts/project-alpha/chunk_001.md            ║
 ║  Each project gets its own subdirectory — no cross-project mix   ║
 ║  Persists across sessions until rag merge or rag clear           ║
 ╚═══════════════════════════════╦══════════════════════════════════╝
@@ -291,7 +291,7 @@ Also verify the shebang or Python invocation doesn't override stdin encoding via
 **Status:** `[x] FIXED (2026-04-25)`
 
 **What happened:** All projects wrote draft chunks to the same `~/.rag_drafts/chunk_NNN.md`
-flat directory. In a multi-project session (e.g., homelab + petrochina-eproc), chunks from
+flat directory. In a multi-project session (e.g., homelab + project-alpha), chunks from
 both projects would be numbered sequentially in the same folder. `rag merge` without a project
 filter would concatenate all of them into a single file — mixing homelab and .NET chunks.
 
@@ -302,29 +302,29 @@ def get_project_draft_dir(project: str) -> Path:
 ```
 Each project now has its own isolated subdirectory:
 - `~/.rag_drafts/homelab/chunk_NNN.md`
-- `~/.rag_drafts/petrochina-eproc/chunk_NNN.md`
+- `~/.rag_drafts/project-alpha/chunk_NNN.md`
 
 ### Test Evidence (2026-04-25)
 
 ```bash
 # Test: add chunks for two different projects in same session
 echo "homelab content..." | rag add -p homelab -t debug --topic "G3c homelab test"
-echo "petrochina content..." | rag add -p petrochina-eproc -t debug --topic "G3c petrochina test"
+echo "project-alpha content..." | rag add -p project-alpha -t debug --topic "G3c project-alpha test"
 
 # Resulting draft directory structure:
 ~\scripts\.rag_drafts\
   homelab\
     chunk_001.md    ← homelab chunk ISOLATED
     chunk_002.md    ← homelab chunk ISOLATED
-  petrochina-eproc\
-    chunk_001.md    ← petrochina chunk ISOLATED (not mixed with homelab)
+  project-alpha\
+    chunk_001.md    ← project-alpha chunk ISOLATED (not mixed with homelab)
 ```
 
 **Before:** Same commands → all chunks in `~/.rag_drafts/chunk_001.md`, `chunk_002.md`, `chunk_003.md`
 → `rag merge` would produce a file mixing homelab infra knowledge with .NET Blazor knowledge
 → both chunks indexed in both projects' searches.
 
-**Regression check:** After `rag add -p homelab` and `rag add -p petrochina-eproc` in the same
+**Regression check:** After `rag add -p homelab` and `rag add -p project-alpha` in the same
 session, verify that `ls ~/.rag_drafts/` shows two subdirectories, not flat chunk files.
 If chunks appear in the root `.rag_drafts/`, `get_project_draft_dir()` has been reverted.
 
@@ -364,7 +364,7 @@ All fixes verified against live system:
 |-----|-------------|-----------------|----------------|--------|
 | SPOF-7 | Code inspection — grep `cmd_pipe`, `RAG_META` | Dead code present, confusing | Not found in codebase | ✓ PASS |
 | G3(b) | `rag add` with em dash `—` in content | `UnicodeDecodeError` → crash | Saved successfully | ✓ PASS |
-| G3(c) | `rag add` for homelab + petrochina-eproc | Flat `~/.rag_drafts/chunk_NNN.md` | Isolated `homelab/` and `petrochina-eproc/` subdirs | ✓ PASS |
+| G3(c) | `rag add` for homelab + project-alpha | Flat `~/.rag_drafts/chunk_NNN.md` | Isolated `homelab/` and `project-alpha/` subdirs | ✓ PASS |
 | SPOF-3 | `rag merge` auto-push | Manual push required | `auto_push()` ran, `✅ Done 1/1 pushed` | ✓ PASS |
 | G6 | Push output delta | No verification | `Points: 251 → 252 (+1 new)` logged | ✓ PASS |
 

@@ -46,7 +46,7 @@ Baseline defined 2026-04-29. Re-run after any significant pipeline change.
 | **Latency p50** | End-to-end query time, VM B1 CPU | ≤ 1.5s | — | `[?]` |
 | **Latency p95** | End-to-end query time, VM B1 CPU | ≤ 4.0s | — | `[?]` |
 | **Hallucination Rate** | Claims with zero chunk grounding | ≤ 5% | — | `[?]` |
-| **Cross-project contamination** | homelab result in petrochina query (or vice versa) | 0% | — | `[?]` |
+| **Cross-project contamination** | homelab result in project-alpha query (or vice versa) | 0% | — | `[?]` |
 
 **How to update Current column:**  
 Run `eval-retrieval-quality.py` against VM B1, copy scores here, update Status.
@@ -118,7 +118,7 @@ Run `eval-retrieval-quality.py` against VM B1, copy scores here, update Status.
 
 | # | Query | Project filter | Expected result |
 |---|---|---|---|
-| N-01 | "What is the PetroChina Blazor login flow?" | `project=homelab` | No results or score < 0.35 |
+| N-01 | "What is the project-alpha Blazor login flow?" | `project=homelab` | No results or score < 0.35 |
 | N-02 | "How does EF Core migration work in eproc?" | `project=homelab` | No results or score < 0.35 |
 | N-03 | "What is the weather in Jakarta today?" | `project=homelab` | No results |
 

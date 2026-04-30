@@ -107,7 +107,7 @@ flowchart TD
 ```
 
 **Kunci ingest flow:**
-- `rag add` saves draft ke per-project subdirectory (`~/.rag_drafts/homelab/` tidak tercampur dengan `petrochina-eproc/`)
+- `rag add` saves draft ke per-project subdirectory (`~/.rag_drafts/homelab/` tidak tercampur dengan `project-alpha/`)
 - `rag merge` langsung trigger `auto_push()` -- tidak perlu manual push
 - `push-to-qdrant.sh` auto-detect network: localhost kalau di VM B1, LAN kalau di rumah, Tailscale kalau remote
 - n8n builds `embed_content` = prepend context + raw content -- dense vector embed-nya ini, bukan raw content (P1.2 contextual retrieval)
@@ -147,7 +147,7 @@ flowchart TD
 
 **Kunci retrieval flow:**
 - MCP server spawn fresh per-connection via `claude-mcp-connect.ps1` -- tidak perlu restart manual
-- Query expansion untuk queries < 8 kata adalah project-aware (homelab vs petrochina-eproc berbeda)
+- Query expansion untuk queries < 8 kata adalah project-aware (homelab vs project-alpha berbeda)
 - NOT_FOUND gate: topScore < 0.50 = genuinely not found, bukan threshold artifact
 - SCORE_THRESHOLD = 0.35: per-result inclusion threshold (RRF scores range lower dari cosine)
 - Auto-retry: avgScore < 0.50 triggers query rewrite + retry satu kali
@@ -237,15 +237,15 @@ Expansion strings per project:
 ```javascript
 const expansions = {
   "homelab": "deployment configuration setup steps homelab VM B1 Docker infrastructure",
-  "petrochina-eproc": "Blazor .NET 9 EF Core CQRS MediatR implementation pattern C#",
+  "project-alpha": "Blazor .NET 9 EF Core CQRS MediatR implementation pattern C#",
 };
 ```
 
 ### 3.5 Project Isolation
 
-`project="homelab"` dan `project="petrochina-eproc"` tidak pernah tercampur. Filter payload di setiap Qdrant query.
+`project="homelab"` dan `project="project-alpha"` tidak pernah tercampur. Filter payload di setiap Qdrant query.
 
-Draft files juga isolated per-project: `~/.rag_drafts/homelab/` vs `~/.rag_drafts/petrochina-eproc/`.
+Draft files juga isolated per-project: `~/.rag_drafts/homelab/` vs `~/.rag_drafts/project-alpha/`.
 
 ### 3.6 Query Normalization
 
@@ -592,7 +592,7 @@ Apa yang baru terjadi?
 
 ```bash
 # Wajib untuk semua chunk types:
--p PROJECT     # homelab atau petrochina-eproc
+-p PROJECT     # homelab atau project-alpha
 -t TYPE        # lihat tabel di atas
 --topic        # max 60 chars, plain ASCII, no em dash
 --tags         # first tag HARUS: dotnet | python | homelab
@@ -708,7 +708,7 @@ rag checkpoint -p homelab \
 
 | Flag | Required | Deskripsi |
 |---|---|---|
-| `-p PROJECT` | Ya | `homelab` atau `petrochina-eproc` |
+| `-p PROJECT` | Ya | `homelab` atau `project-alpha` |
 | `--topic` | Ya | Max 60 chars ASCII |
 | `--next-step` | Ya | Harus spesifik: `file.cs:line` |
 | `--hypothesis` | Tidak | Current working theory |
@@ -972,13 +972,13 @@ var queryEmbedContent = request.Project is { Length: > 0 } p
 
 ### T-13: Draft chunks dari dua projects tercampur
 
-**Gejala:** `rag merge` untuk homelab include chunks dari petrochina-eproc.
+**Gejala:** `rag merge` untuk homelab include chunks dari project-alpha.
 
 **Root cause:** Versi lama `rag_capture.py` simpan semua drafts ke `~/.rag_drafts/chunk_NNN.md` flat, tidak per-project.
 
 **Fix (sudah diapply):** Per-project subdirectories:
 - `~/.rag_drafts/homelab/chunk_NNN.md`
-- `~/.rag_drafts/petrochina-eproc/chunk_NNN.md`
+- `~/.rag_drafts/project-alpha/chunk_NNN.md`
 
 Kalau masih terjadi: pastikan `rag_capture.py` di `~/.local/bin/rag` sudah di-sync dari repo (tidak otomatis karena bukan symlink).
 

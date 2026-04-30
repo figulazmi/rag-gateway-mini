@@ -245,7 +245,7 @@ and pushed to Qdrant, creating incomplete records that degrade retrieval and are
 
 | Field | Type | Validation rule |
 |---|---|---|
-| `project` | string | Must be in `{homelab, petrochina-eproc}` |
+| `project` | string | Must be in `{homelab, project-alpha}` |
 | `chunk_type` | string | Must be in `{debug, feature, runbook, pattern, decision, reference, implementation-spec}` |
 | `topic` | string | Non-empty, max 60 chars, ASCII only |
 | `tags` | list[str] | Min 1, max 8, first tag must be in `{dotnet, python, homelab}` |

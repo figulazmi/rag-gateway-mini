@@ -44,7 +44,7 @@
 | `SCORE_THRESHOLD` | `0.35` | `0.5` (line 16) | `0.35` | ✅ FIXED (0a) |
 | `RETRY_THRESHOLD` | `0.50` | `0.6` (line 17) | `0.55` | ✅ FIXED (0a→0.50, 7c→0.55) |
 | `NOT_FOUND_THRESHOLD` | `0.50` | `0.50` (line 18) | `0.35` | ✅ Improved (7c) — beyond Apr27 target |
-| Retry expansion | Project-aware (homelab vs petrochina-eproc) | Generic string | Intent-aware 3 rules (homelab) | ✅ FIXED (0a→project-aware, 7b→intent-aware) |
+| Retry expansion | Project-aware (homelab vs project-alpha) | Generic string | Intent-aware 3 rules (homelab) | ✅ FIXED (0a→project-aware, 7b→intent-aware) |
 | Hybrid search (dense+sparse+RRF) | Ada | Ada (line 165) | Ada | ✅ OK |
 | djb2 BM25 sparse vector | Ada, match n8n + C# | Ada (line 57) | Ada | ✅ OK |
 | `using: "dense"` / `using: "sparse"` named vectors | Ada | Ada | Ada | ✅ OK |
@@ -67,12 +67,12 @@
 
 | Lokasi | Files | Date Range | Notes |
 |---|---|---|---|
-| `D:\Backup\qdrant-backup\summaries\PetroChina.Eproc\` | 32 | Apr 07–16 | Older backup, `collection: knowledge` lama → override di step 0b |
+| `D:\Backup\qdrant-backup\summaries\project-alpha\` | 32 | Apr 07–16 | Older backup, `collection: knowledge` lama → override di step 0b |
 | `D:\Backup\qdrant-backup\summaries\rag-gateway-mini\` | 26 | Apr 11–15 | Older backup, `collection: knowledge` lama → override di step 0b |
 | `homelab-hardening\.claude\summaries\` | 3 | Apr 27 | |
 | `ai-agent-stack\.claude\summaries\` | 11 | Apr 07, 25–27 | |
 | `openclaw-setup\.claude\summaries\` | 1 | Apr 21 | |
-| `PetroChina.Eproc\.claude\summaries\` | 15 | Apr 16–24 | |
+| `project-alpha\.claude\summaries\` | 15 | Apr 16–24 | |
 | `rag-gateway-mini\.claude\summaries\` | 25 | Apr 19–25 | |
 | `token-monitor\.claude\summaries\` | 7 | Apr 12–21 | |
 
@@ -235,7 +235,7 @@ function buildRetryExpansion(query, project) {
   // fallback: project-aware generic expansion
   const expansions = {
     homelab: "deployment configuration setup steps homelab VM B1 Docker infrastructure",
-    "petrochina-eproc": "Blazor .NET 9 EF Core CQRS MediatR implementation pattern C#",
+    "project-alpha": "Blazor .NET 9 EF Core CQRS MediatR implementation pattern C#",
   };
   return expansions[project] || "implementation architecture system behavior";
 }
@@ -287,7 +287,7 @@ for f in \
   /c/Users/Clandesitine/source/repos/homelab-hardening/.claude/summaries/*.md \
   /c/Users/Clandesitine/source/repos/ai-agent-stack/.claude/summaries/*.md \
   /c/Users/Clandesitine/source/repos/openclaw-setup/.claude/summaries/*.md \
-  /c/Users/Clandesitine/source/repos/PetroChina.Eproc/.claude/summaries/*.md \
+  /c/Users/Clandesitine/source/repos/project-alpha/.claude/summaries/*.md \
   /c/Users/Clandesitine/source/repos/rag-gateway-mini/.claude/summaries/*.md \
   /c/Users/Clandesitine/source/repos/token-monitor/.claude/summaries/*.md; do
   bash ~/scripts/push-to-qdrant.sh "$f"
@@ -296,7 +296,7 @@ done
 
 # Push D:\Backup summaries (58 files, format lama — collection override sudah di-fix step 0b)
 for f in \
-  "/d/Backup/qdrant-backup/summaries/PetroChina.Eproc/"*.md \
+  "/d/Backup/qdrant-backup/summaries/project-alpha/"*.md \
   "/d/Backup/qdrant-backup/summaries/rag-gateway-mini/"*.md; do
   bash ~/scripts/push-to-qdrant.sh "$f"
   sleep 1

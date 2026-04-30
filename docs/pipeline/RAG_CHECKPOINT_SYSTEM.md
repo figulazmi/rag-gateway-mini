@@ -102,7 +102,7 @@ rag checkpoint -p PROJECT --topic "..." \
 
 | Flag | Required | Description |
 |------|----------|-------------|
-| `-p PROJECT` | Yes | homelab / petrochina-eproc / etc |
+| `-p PROJECT` | Yes | homelab / project-alpha / etc |
 | `--topic` | Yes | Max 60 chars ASCII |
 | `--next-step` | Yes | **Must be specific**: `file.cs:line` if possible |
 | `--hypothesis` | No | Current working theory |
