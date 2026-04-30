@@ -1,12 +1,15 @@
 # RAG Manual Book
 
 **Sistem:** `knowledge_v2` on VM B1 (192.168.18.199)
-**Last updated:** 2026-04-25
+**Last updated:** 2026-04-30
 **Author:** Figur Ulul Azmi
 
 > Dokumen ini adalah referensi pribadi jangka panjang untuk sistem RAG yang saya bangun sendiri.
 > Ditulis berdasarkan ground truth dari RAG knowledge base + docs aktif di repo ini.
 > Bukan marketing copy -- ini untuk saya yang sudah tahu konteksnya.
+>
+> Quick companion: `README.md` untuk quickstart, setup, dan ringkasan API/config.
+> Manual ini adalah operasional deep-dive (session protocol, chunk taxonomy, troubleshooting, eval).
 
 ---
 

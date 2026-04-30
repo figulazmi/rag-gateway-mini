@@ -3,6 +3,10 @@
 A lightweight ASP.NET Core 9 API that bridges your LLM tools and a Qdrant vector database.
 It embeds queries via Ollama and returns the most relevant knowledge chunks — no generation, pure deterministic retrieval.
 
+Terminology:
+- **Deterministic retrieval core**: gateway search engine that returns retrieved chunks only (no text generation).
+- **Adapter outputs**: CLI/MCP output modes (`RAG_CONTEXT`, `--claude`, `--strict`, `--raw`) that package retrieval results for downstream tools.
+
 The repo also ships a **RAG CLI pipeline**: a set of Bash scripts that let any developer on any device capture knowledge, search it, and feed it into Claude or GitHub Copilot — with zero hallucination.
 
 ---
@@ -77,6 +81,26 @@ cd ~/rag-tools && git pull
 ```
 
 ---
+
+## Mandatory Session Start Protocol
+
+Run this sequence at the beginning of every session:
+
+```bash
+# 1. Resume checkpoint first
+rag resume
+
+# 2. Load deferred schema
+ToolSearch select:mcp__qdrant-knowledge__search_knowledge
+
+# 3. Query RAG before reading source files
+search_knowledge("descriptive query with project context", project="homelab")
+
+# 4. Only then do targeted reads for files indicated by RAG
+rtk read src/Infrastructure/AI/QdrantVectorSearchClient.cs
+```
+
+If step 1 returns FOUND, skip broad exploration and continue from checkpoint `next_step`.
 
 ## RAG CLI Usage
 
@@ -163,7 +187,7 @@ EOF
 rag merge --output 2026-01-01-topic.md
 ```
 
-Chunk types: `debug` | `feature` | `runbook` | `pattern` | `decision` | `reference`
+Chunk types: `debug` | `feature` | `runbook` | `pattern` | `decision` | `reference` | `implementation-spec` (**BLOCKED** until P2.2-B reranker is deployed).
 
 ---
 
@@ -205,6 +229,8 @@ The MCP server `qdrant-knowledge` lets Claude query Qdrant directly — no CLI n
 MCP setup is handled automatically by `rag-setup.sh` (cross-platform: Windows + Mac/Linux).
 No manual configuration needed — the script generates the connect script and patches
 `~/.claude/settings.json` for you.
+
+Operational deep-dive manual: `docs/reference/RAG_MANUAL_BOOK.md` (session-start protocol, threshold semantics, chunk taxonomy, troubleshooting).
 
 To set up or re-run:
 
@@ -260,7 +286,9 @@ source ~/.bashrc                          # reload
 
 ```bash
 rag "your query" -p homelab --debug   # shows raw scores and threshold
-# Score < 0.55 = knowledge not yet captured -> do the work, then rag add
+# Distinguish thresholds:
+# - ScoreThreshold (default 0.35): per-result inclusion threshold
+# - NOT_FOUND gate (topScore < 0.50): return explicit NOT FOUND IN RAG
 ```
 
 ---
@@ -303,7 +331,7 @@ Returns all raw Qdrant results before threshold filtering. Use to tune `ScoreThr
 ```json
 {
   "normalized_query": "...",
-  "threshold": 0.55,
+  "threshold": 0.35,
   "total_raw_results": 5,
   "results_above_threshold": 2,
   "results": [...]
@@ -320,18 +348,28 @@ curl http://localhost:5200/health
 
 ## Configuration
 
-Edit `appsettings.json` (dev) or `/opt/rag-gateway/appsettings.Production.json` (prod):
+Update both config files together to avoid drift:
+- `src/appsettings.json` (dev)
+- `/opt/homelab/ai-stack/rag-gateway-mini/appsettings.Production.json` (VM B1 runtime mount)
 
 ```json
 {
   "RagGateway": {
-    "OllamaBaseUrl": "http://localhost:11434",
-    "QdrantBaseUrl": "http://localhost:6333",
+    "OllamaBaseUrl": "http://192.168.18.199:11434",
+    "QdrantBaseUrl": "http://192.168.18.199:6333",
     "OllamaModel": "nomic-embed-text",
     "QdrantCollection": "knowledge_v2",
     "QdrantApiKey": "",
-    "ScoreThreshold": 0.55,
-    "ResultLimit": 5
+    "ScoreThreshold": 0.35,
+    "ResultLimit": 8,
+    "DenseVectorName": "dense",
+    "SparseVectorName": "sparse",
+    "EnableHybridSearch": true,
+    "HybridPrefetchLimit": 30,
+    "SparsePrefetchLimit": 5,
+    "SparseScoreThreshold": 0.01,
+    "FusionMethod": "rrf",
+    "SparseInferenceModel": "Qdrant/bm25"
   }
 }
 ```

@@ -63,7 +63,7 @@ ssh figulazmi@192.168.18.199 'cd /opt/homelab/ai-stack/rag-gateway-mini && git p
 curl http://192.168.18.199:5200/health
 ```
 
-Secrets live outside repo at `/opt/rag-gateway/appsettings.Production.json` (template: `src/appsettings.Production.json.template`). Build context is repo root so `Directory.Packages.props` is included.
+Secrets live outside repo at `/opt/homelab/ai-stack/rag-gateway-mini/appsettings.Production.json` (template: `src/appsettings.Production.json.template`). Build context is repo root so `Directory.Packages.props` is included.
 
 ## Critical Rules
 
