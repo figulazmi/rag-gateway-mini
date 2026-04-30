@@ -38,9 +38,9 @@ Baseline defined 2026-04-29. Re-run after any significant pipeline change.
 
 | Metric | Definition | Target | Current | Status |
 |---|---|---|---|---|
-| **MRR@5** | Mean Reciprocal Rank in top-5 | ≥ 0.80 | 0.90 | `[x] MET` |
-| **Hit Rate @3** | Correct chunk in top-3 | ≥ 0.85 | 1.00 | `[x] MET` |
-| **NDCG@10** | Graded relevance, top-10 | ≥ 0.75 | 0.905 (NDCG@5 proxy) | `[x] MET` |
+| **MRR@5** | Mean Reciprocal Rank in top-5 | ≥ 0.80 | 0.8167 (2026-04-30 baseline) | `[x] MET` |
+| **Hit Rate @3** | Correct chunk in top-3 | ≥ 0.85 | 0.8333 (2026-04-30 baseline) | `[ ] NOT MET` |
+| **NDCG@10** | Graded relevance, top-10 | ≥ 0.75 | 0.8658 NDCG@5 proxy (2026-04-30 baseline) | `[x] MET` |
 | **Faithfulness** | LLM output consistent with retrieved chunks | ≥ 0.85 | — | `[?] UNMEASURED` |
 | **Answer Relevance** | Output on-topic for the query | ≥ 0.80 | — | `[?] UNMEASURED` |
 | **Context Precision** | Fraction of retrieved chunks actually used | ≥ 0.60 | — | `[?] UNMEASURED` |
@@ -51,6 +51,8 @@ Baseline defined 2026-04-29. Re-run after any significant pipeline change.
 
 **How to update Current column:**  
 Run `eval-retrieval-quality.py` against VM B1, copy scores here, update Status.
+
+**Latest baseline (2026-04-30):** `python scripts/eval-retrieval-quality.py --project homelab --limit 5 --qdrant-url http://192.168.18.199:6333 --ollama-url http://192.168.18.199:11434 --output .claude/reports/eval-baseline-2026-04-30.json` completed successfully on 18 queries. Hybrid summary: Hit@1 0.7778, Hit@3 0.8333, Hit@5 0.8889, MRR 0.8167, NDCG@5 0.8658, avg latency 1067.5ms. Regression analysis identified sparse-noise on 3 queries; next improvement should test sparse text restricted to topic + Key Facts or query-type-aware sparse disabling.
 
 ---
 

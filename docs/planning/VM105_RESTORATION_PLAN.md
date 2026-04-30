@@ -23,7 +23,7 @@
 | Qdrant collection | `knowledge_v2` with named dense+sparse vectors and IDF sparse modifier | Live Qdrant: `points_count=368`, dense=`dense`, sparse=`sparse`, `sparse.modifier=idf` | None if restoring onto this VM; if rebuilding from Apr 13 backup, recreate collection before re-push |
 | MCP server | v2 server deployed and used by Claude Code | `/opt/mcp-servers/qdrant-knowledge/qdrant-mcp-server-v2.js` exists; `~/.qdrant-mcp.env` exists | Ensure PS1/startup command points to v2, not v1 |
 | Ingest scripts | April 27 `push-to-qdrant.sh` and `rag_capture.py` | `~/scripts/push-to-qdrant.sh` and `~/scripts/rag-capture-v2/rag_capture.py` exist on VM; source of truth is rag-tools installed per device under `~/scripts` / `C:\Users\Clandesitine\scripts` | Copy from rag-tools/current laptop `~/scripts/...` to VM105 when rebuilding |
-| n8n workflow source | `knowledge_v2` workflow with contextual `embed_content` | `~/scripts/n8n-workflows/ingest-knowledge-v2.json` exists; source of truth is rag-tools/local scripts, not this repo | Import workflow from rag-tools/current laptop and toggle Active off/on after restore |
+| n8n workflow source | `knowledge_v2` workflow with contextual `embed_content` and protected ingest endpoint | `~/scripts/n8n-workflows/ingest-knowledge-v2.json` exists; source of truth is rag-tools/local scripts, not this repo. Live 2026-04-30: old public path returns 404; secret-path smoke push returns `status: ok` | Import workflow from rag-tools/current laptop, generate the VM-specific secret path, set `N8N_BLOCK_ENV_ACCESS_IN_NODE=false`, and activate after restore |
 | Eval and verifier scripts | Eval harness plus cosine verifier available | `~/scripts/eval-retrieval-quality.py` and `~/scripts/verify_embed_cosine.py` exist on VM | Copy scripts, then rerun eval and cosine checks after restore |
 | Corpus re-ingest | 120 summary files re-pushed after Apr 13 backup restore | Historical restore pushed 120 summaries; live count is now 368 | For a fresh VM105 rebuild, repeat steps 5b-5d and verify live count after push |
 
@@ -91,7 +91,7 @@ Use this list only when restoring from the **2026-04-13 backup** or rebuilding a
 |---|---|---|---|---|
 | Ollama reads `embed_content` | `{{ $json.embed_content }}` | `$json.content` raw | `{{ $json.embed_content }}` | ✅ FIXED (Step 3) |
 | `embed_content` build | `"This chunk from project X..."` prepend | Tidak ada | Ada di node Validate & Clean | ✅ FIXED (Step 3) |
-| Webhook path | `/webhook/knowledge-ingest` | Ada tapi pre-contextual-retrieval | Active, POST=200 | ✅ FIXED (Step 3) |
+| Webhook path | Protected `knowledge_v2` ingest webhook | Public `/webhook/knowledge-ingest` existed before hardening | Secret-bearing path active; old public path returns 404; smoke push returns `status: ok` | ✅ FIXED (Step 3 + P0-4 hardening) |
 
 ---
 
@@ -348,7 +348,7 @@ ssh figulazmi@192.168.18.199 'curl -s "http://localhost:6333/collections/knowled
 - **Upsert idempotent** — semua push aman diulang, tidak akan duplicate
 - **Step 3 adalah blocker** untuk step 5 — n8n harus pakai `embed_content` sebelum push data
 - **MCP server v2** sudah deploy. QDRANT_API_KEY di VM B1 ada di `/opt/homelab/ai-stack/qdrant/.env` (bukan `~/.config/qdrant-knowledge.env` — file itu tidak ada di VM B1)
-- **knowledge_v2** fully populated — historical Apr 29 snapshots were 350 points after initial restoration and 359/359 in step 5d; live 2026-04-30 verification shows 368 points with dense=`dense`, sparse=`sparse`, and `sparse.modifier=idf`
+- **knowledge_v2** fully populated — historical Apr 29 snapshots were 350 points after initial restoration and 359/359 in step 5d; live 2026-04-30 verification showed 368 points before P0-4 smoke test and 369 points after authenticated VM105 smoke push, with dense=`dense`, sparse=`sparse`, and `sparse.modifier=idf`
 - **PS1 wiring is the critical link** — `claude-mcp-connect.ps1` `$MCP_CMD` harus menunjuk ke binary yang benar. Patching JS file saja tidak cukup; kalau PS1 masih spawn v1, semua patch di v2 tidak efektif
 - **`~/.qdrant-mcp.env` wajib ada** di VM B1 sebelum v2 bisa start. v2 tidak punya API key hardcoded; exit on startup jika file tidak ada
 - **Restart Claude Code wajib** setiap kali PS1 atau MCP binary berubah — process di-spawn saat session start, bukan hot-reload
@@ -356,5 +356,5 @@ ssh figulazmi@192.168.18.199 'curl -s "http://localhost:6333/collections/knowled
 
 ---
 
-*Created: 2026-04-28 | Last updated: 2026-04-29 (full audit: S1–S6 stale values, M1–M3 misleading sections, B1 webhook clarification, Step 3 command corrected to POST)*
+*Created: 2026-04-28 | Last updated: 2026-04-30 (VM105 P0-4 webhook auth live-verified: old public path 404, secret-path smoke push OK, audit log and cosine gate verified)*
 *Based on: pipeline audit vs docs April 27 state*

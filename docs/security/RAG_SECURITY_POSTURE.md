@@ -23,9 +23,9 @@ Tracks hardening tasks across three phases. Update status as each item is implem
 | Entry Point | Severity | Current State |
 |---|---|---|
 | Qdrant API key in public git history | CRITICAL | Key `0aa9f…` — rotation status unconfirmed |
-| n8n HTTP webhook — auth unknown | HIGH | Auth status unconfirmed |
-| push-to-qdrant.sh — cosine gate is warning-only | HIGH | `\|\| true` — does not abort on fail |
-| No audit log for upserts | MEDIUM | No logging in place |
+| n8n HTTP webhook — auth unknown | HIGH | Fixed 2026-04-30 on VM105: old public path returns 404; secret-bearing path accepts authenticated `push-to-qdrant.sh` payloads |
+| push-to-qdrant.sh — cosine gate is warning-only | HIGH | Fixed 2026-04-30: cosine gate now hard-aborts unless `COSINE_GATE_BYPASS=1` |
+| No audit log for upserts | MEDIUM | Fixed 2026-04-30: `~/.rag_audit.log` records host/user/doc/chunk/hash/file after successful upsert |
 | No content/schema validation at ingestion | MEDIUM | Any payload accepted |
 | No chunk provenance fields | MEDIUM | `ingested_by`, `payload_sha256` absent |
 
@@ -99,10 +99,10 @@ git log -p | grep "0aa9f" | wc -l
 
 ### P0-3 — Harden Cosine Gate (Hard Abort)
 
-**Status:** `[ ] OPEN`  
+**Status:** `[x] DONE`  
 **Effort:** ~20 min  
-**Completed on:** —  
-**Verified by:** —
+**Completed on:** 2026-04-30  
+**Verified by:** Claude Code static verification (`bash -n`, removed `|| true`, hard-abort path present)
 
 **Problem:** `push-to-qdrant.sh` runs `verify_embed_cosine.py` with `|| true`, meaning a failed
 cosine check (cos < 0.95) only prints a warning but push proceeds. An adversarial chunk that
@@ -134,43 +134,41 @@ fi
 
 ### P0-4 — n8n Webhook Authentication
 
-**Status:** `[ ] OPEN`  
+**Status:** `[x] DONE`  
 **Effort:** ~30 min  
-**Completed on:** —  
-**Verified by:** —
+**Completed on:** 2026-04-30  
+**Verified by:** Claude Code live VM105 verification: old public path returned 404, authenticated `push-to-qdrant.sh` smoke push returned HTTP 200 with `status: ok`, Qdrant `points_count` increased 368 → 369, `~/.rag_audit.log` increased 2 → 3, and cosine gate passed.
 
 **Problem:** n8n v2.15.0 HTTP trigger has no auth by default. Webhook URL discovery = open write path to Qdrant.
 
-**Fix steps:**
-1. Open n8n → Edit the RAG ingestion webhook trigger node
-2. Set **Authentication**: `Header Auth`
-3. Header name: `X-Webhook-Secret`
-4. Value: generate with `openssl rand -hex 32`
-5. Store value in n8n credential vault (not in workflow JSON)
-6. Update any scripts that call the webhook to pass the header
+**Implemented fix:**
+1. Generated `N8N_WEBHOOK_SECRET` in `/opt/homelab/ai-stack/qdrant/.env` and copied it to `~/.config/qdrant-knowledge.env` on VM105.
+2. Changed `push-to-qdrant.sh` to require `N8N_WEBHOOK_SECRET`, send `X-Webhook-Secret`, and call `/webhook/knowledge-ingest-${N8N_WEBHOOK_SECRET}`.
+3. Imported the n8n `knowledge_v2` workflow with a secret-bearing webhook path generated from rag-tools source.
+4. Recreated the VM105 n8n container with `N8N_BLOCK_ENV_ACCESS_IN_NODE=false` so workflow HTTP nodes can read `QDRANT_API_KEY` from container env.
+5. Switched the workflow webhook response mode to return the `Build Response` node output, so callers receive JSON `status: ok` instead of an empty HTTP 200.
 
 **Verification:**
 ```bash
-# Without header — should reject
-curl -X POST "http://192.168.18.199:5678/webhook/YOUR_ID" \
-  -H "Content-Type: application/json" -d '{"test": true}'
-# Expected: 401 Unauthorized
+# Old public path is closed
+curl -s -o /tmp/old_path_final.json -w "%{http_code}" \
+  -X POST http://localhost:5678/webhook/knowledge-ingest \
+  -H "Content-Type: application/json" -d "{}"
+# Observed on VM105: 404
 
-# With correct header — should accept
-curl -X POST "http://192.168.18.199:5678/webhook/YOUR_ID" \
-  -H "X-Webhook-Secret: YOUR_SECRET" \
-  -H "Content-Type: application/json" -d '{"test": true}'
-# Expected: 200 OK
+# Authenticated smoke push through secret path
+bash ~/scripts/push-to-qdrant.sh /tmp/vm105-auth-test.md
+# Observed on VM105: ✅ OK (200), points 368 → 369, audit_lines 2 → 3, cosine gate PASS
 ```
 
 ---
 
 ### P0-5 — Audit Log for Qdrant Upserts
 
-**Status:** `[ ] OPEN`  
+**Status:** `[x] DONE`  
 **Effort:** ~1 hour  
-**Completed on:** —  
-**Verified by:** —
+**Completed on:** 2026-04-30  
+**Verified by:** Claude Code static verification (`log_upsert`, payload SHA-256, host/user/doc/chunk metadata present in `push-to-qdrant.sh`)
 
 **Problem:** No record of who pushed what to `knowledge_v2`. Cannot detect unauthorized upserts
 or trace the origin of a poisoned chunk after the fact.
@@ -435,11 +433,11 @@ against retrieved chunk IDs. Uncited claims get `[UNVERIFIED]` tag.
 | Perplexity Detection | Too many false positives | NOT RECOMMENDED | Skipped |
 | Duplicate Filtering | No effect | PARTIAL (sparse threshold) | Already in place |
 | Knowledge Expansion | 41–43% remain | YES — implement | `[ ] OPEN` (P1-4) |
-| Embedding Consistency Gate | N/A | YES — high value | `[ ] OPEN` (P0-3) |
+| Embedding Consistency Gate | N/A | YES — high value | `[x] DONE (2026-04-30)` (P0-3) |
 | Payload Schema Validation | N/A | YES — low effort | `[ ] OPEN` (P1-2) |
 | LLM Citation Verification | N/A | YES — medium effort | `[ ] OPEN` (P2-2) |
 
 ---
 
-*Last updated: 2026-04-29 · Author: Figur Ulul Azmi*  
+*Last updated: 2026-04-30 · Author: Figur Ulul Azmi*  
 *Cross-reference: [`RAG_EVAL_HARNESS.md`](../quality/RAG_EVAL_HARNESS.md) (retrieval quality) · [`RAG_BOTTLENECK_FIXES.md`](../pipeline/RAG_BOTTLENECK_FIXES.md) (pipeline fixes)*

@@ -19,7 +19,8 @@
       "WebFetch(domain:localhost)",
       "WebSearch",
       "mcp__qdrant-knowledge__search_knowledge",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "Bash(~/scripts/rag-capture-v2/rag_capture.py push-pending *)"
     ],
     "deny": [
       "Bash(git *)",

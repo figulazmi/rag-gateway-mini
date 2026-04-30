@@ -20,11 +20,11 @@ Quick-access index for the RAG hardening + quality initiative (started 2026-04-2
 
 | # | Task | Doc | Status |
 |---|---|---|---|
-| P0-1 | Rotate Qdrant API key | [Security](RAG_SECURITY_POSTURE.md#p0-1--rotate-qdrant-api-key) | `[ ] OPEN` |
-| P0-2 | Scrub git history (filter-repo + force push) | [Security](RAG_SECURITY_POSTURE.md#p0-2--scrub-git-history) | `[ ] OPEN` |
-| P0-3 | Harden cosine gate to hard-abort | [Security](RAG_SECURITY_POSTURE.md#p0-3--harden-cosine-gate-hard-abort) | `[ ] OPEN` |
-| P0-4 | n8n webhook — add HMAC/API key auth | [Security](RAG_SECURITY_POSTURE.md#p0-4--n8n-webhook-authentication) | `[ ] OPEN` |
-| P0-5 | Audit log for all Qdrant upserts | [Security](RAG_SECURITY_POSTURE.md#p0-5--audit-log-for-qdrant-upserts) | `[ ] OPEN` |
+| P0-1 | Rotate Qdrant API key | [Security](RAG_SECURITY_POSTURE.md#p0-1--rotate-qdrant-api-key) | `[x] DONE (2026-04-30)` |
+| P0-2 | Scrub git history (filter-repo + force push) | [Security](RAG_SECURITY_POSTURE.md#p0-2--scrub-git-history) | `[x] DONE (2026-04-30)` |
+| P0-3 | Harden cosine gate to hard-abort | [Security](RAG_SECURITY_POSTURE.md#p0-3--harden-cosine-gate-hard-abort) | `[x] DONE (2026-04-30)` |
+| P0-4 | n8n webhook — add secret-path auth | [Security](RAG_SECURITY_POSTURE.md#p0-4--n8n-webhook-authentication) | `[x] DONE (2026-04-30)` |
+| P0-5 | Audit log for all Qdrant upserts | [Security](RAG_SECURITY_POSTURE.md#p0-5--audit-log-for-qdrant-upserts) | `[x] DONE (2026-04-30)` |
 
 ### P1 — 2–4 Weeks
 
@@ -66,7 +66,7 @@ Allowed status values: `[ ] OPEN`, `[~] IN PROGRESS`, `[x] DONE (YYYY-MM-DD)`, `
 ## Open Questions (NEEDS VALIDATION)
 
 - [x] Has Qdrant API key `0aa9f…` been rotated since the scrub commit? Yes — see `RAG_SECURITY_POSTURE.md` P0-1 evidence.
-- [ ] Does the n8n HTTP webhook currently require any authentication header?
+- [x] Does the n8n HTTP webhook currently require a non-public write path? Yes — VM105 `knowledge_v2` workflow uses a secret-bearing path; old `/webhook/knowledge-ingest` returned 404 and authenticated smoke push returned `status: ok` on 2026-04-30.
 - [ ] Has `verify_embed_cosine.py` been run against live `knowledge_v2` corpus?
 - [x] What is the current chunk count in `knowledge_v2`? Live VM verification on 2026-04-30: `points_count=368`, `indexed_vectors_count=371`, dense=`dense`, sparse=`sparse`, `sparse.modifier=idf`.
 
