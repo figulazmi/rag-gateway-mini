@@ -242,6 +242,22 @@ hilang, cek n8n Validate & Clean node dan `push-to-qdrant.sh` payload builder.
 
 ---
 
+## #2C — IDF Weighting Mismatch Between C# and Qdrant BM25 `[ ] DEFERRED`
+
+**Severity**: Medium  
+**Status**: Deferred intentionally until corpus diversity increases and baseline metrics are fully measured.
+
+**Why deferred:** Current hybrid setup (`SparsePrefetchLimit=5`, `SparseScoreThreshold=0.01`, RRF fusion) is stable for present corpus size and avoids immediate regression risk. Opsi C requires coordinated changes across C# sparse vector construction and Qdrant-side behavior calibration.
+
+**Revisit trigger:**
+1. Baseline metrics in `docs/quality/RAG_EVAL_HARNESS.md` are populated with real measurements.
+2. Corpus grows with more topically diverse chunks.
+3. Retrieval eval shows persistent sparse false positives not mitigated by current A+B controls.
+
+**Owner note:** Treat as optimization track, not hotfix track.
+
+---
+
 ## #4 — QueryNormalizer Padding Adds Semantic Noise `[x] FIXED`
 
 **Severity**: Medium

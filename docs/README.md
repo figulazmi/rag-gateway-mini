@@ -79,12 +79,12 @@ docs/
 
 | Area | Highest open item | Doc |
 |---|---|---|
-| Security | P0-1: Rotate Qdrant API key (CRITICAL) | [security/RAG_SECURITY_POSTURE.md](security/RAG_SECURITY_POSTURE.md#p0-1--rotate-qdrant-api-key) |
+| Security | P0-2: Scrub git history for exposed legacy key (depends on completed rotation) | [security/RAG_SECURITY_POSTURE.md](security/RAG_SECURITY_POSTURE.md#p0-2--scrub-git-history) |
 | Quality | Run first MRR@5 baseline measurement | [quality/RAG_EVAL_HARNESS.md](quality/RAG_EVAL_HARNESS.md#5-baseline-vs-current-comparison) |
-| Pipeline | IDF weighting (Opsi C) — deferred | [pipeline/RAG_BOTTLENECK_FIXES.md](pipeline/RAG_BOTTLENECK_FIXES.md) |
-| Planning | VM105 scripts restoration | [planning/VM105_RESTORATION_PLAN.md](planning/VM105_RESTORATION_PLAN.md) |
+| Pipeline | IDF weighting (Opsi C) — deferred (revisit after corpus diversity and post-baseline metrics) | [pipeline/RAG_BOTTLENECK_FIXES.md](pipeline/RAG_BOTTLENECK_FIXES.md#7--idf-weighting-mismatch-between-c-and-qdrant-bm25-) |
+| Planning | VM105 scripts restoration is complete; keep as reference runbook only | [planning/VM105_RESTORATION_PLAN.md](planning/VM105_RESTORATION_PLAN.md) |
 
 ---
 
-*Last updated: 2026-04-29 · Owner: Figur Ulul Azmi*  
+*Last updated: 2026-04-30 · Owner: Figur Ulul Azmi*  
 *Update this index when adding new docs or changing subfolder structure.*

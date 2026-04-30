@@ -35,10 +35,10 @@ Tracks hardening tasks across three phases. Update status as each item is implem
 
 ### P0-1 — Rotate Qdrant API Key
 
-**Status:** `[ ] OPEN`  
+**Status:** `[x] DONE`  
 **Effort:** ~30 min  
-**Completed on:** —  
-**Verified by:** —
+**Completed on:** 2026-04-30  
+**Verified by:** Claude Code + runtime HTTP verification (`new key => 200`, `old key => 401`)
 
 **Problem:** API key `0aa9f…` is present in public GitHub history (`figulazmi/rag-gateway-mini`).
 Any past clone has the key. Key bypasses ALL ingestion controls — attacker can directly upsert to `knowledge_v2`.
@@ -46,7 +46,7 @@ Any past clone has the key. Key bypasses ALL ingestion controls — attacker can
 **Fix steps:**
 1. SSH to VM B1, update Qdrant container config with new key
 2. Update `~/.config/qdrant-knowledge.env` on laptop
-3. Update `/opt/rag-gateway/appsettings.Production.json` on VM B1
+3. Update `/opt/homelab/ai-stack/rag-gateway-mini/appsettings.Production.json` on VM B1
 4. Update n8n Qdrant credential in vault
 5. Restart Qdrant container + verify `curl -H "api-key: NEW_KEY" http://192.168.18.199:6333/collections` returns 200
 
