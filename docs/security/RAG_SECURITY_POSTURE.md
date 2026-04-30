@@ -61,11 +61,12 @@ curl -H "api-key: 0aa9f..." http://192.168.18.199:6333/collections
 
 ### P0-2 — Scrub Git History
 
-**Status:** `[ ] OPEN`  
+**Status:** `[x] DONE`  
 **Effort:** ~45 min  
-**Completed on:** —  
-**Verified by:** —  
-**Depends on:** P0-1 (rotate first, then scrub)
+**Completed on:** 2026-04-30  
+**Verified by:** Claude Code (`git_filter_repo --replace-text --force`, `git push --force-with-lease origin main`)  
+**Depends on:** P0-1 (rotate first, then scrub)  
+**Execution note:** push retried once after lease refresh (`git fetch origin main`), then succeeded.
 
 **Problem:** Even after replacing literals with env-var reads (commit `[scrub commit]`),
 the literal key remains in git history of the public repo. Anyone can `git log -p` to find it.
