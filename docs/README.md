@@ -62,6 +62,7 @@ docs/
 | Document | Purpose | Status |
 |---|---|---|
 | [RAG_MANUAL_BOOK.md](reference/RAG_MANUAL_BOOK.md) | Complete operational manual: commands, config, troubleshooting, architecture | Reference |
+| [RAG_BOOTSTRAP_NEW_DEVICE_AND_SERVER.md](reference/RAG_BOOTSTRAP_NEW_DEVICE_AND_SERVER.md) | Bootstrap/disaster-recovery checklist for new local device or server rebuild | Active |
 
 ---
 
@@ -82,6 +83,7 @@ docs/
 | Security | P0-3: Harden cosine gate (hard abort on verification failure) | [security/RAG_SECURITY_POSTURE.md](security/RAG_SECURITY_POSTURE.md#p0-3--harden-cosine-gate-hard-abort) |
 | Quality | Expand measured baseline beyond retrieval-only metrics (faithfulness, latency, relevance) | [quality/RAG_EVAL_HARNESS.md](quality/RAG_EVAL_HARNESS.md#5-baseline-vs-current-comparison) |
 | Pipeline | IDF weighting (Opsi C) — deferred (revisit after corpus diversity and post-baseline metrics) | [pipeline/RAG_BOTTLENECK_FIXES.md](pipeline/RAG_BOTTLENECK_FIXES.md#7--idf-weighting-mismatch-between-c-and-qdrant-bm25-) |
+| Reference | New device/server bootstrap checklist is available for future migration/rebuilds | [reference/RAG_BOOTSTRAP_NEW_DEVICE_AND_SERVER.md](reference/RAG_BOOTSTRAP_NEW_DEVICE_AND_SERVER.md) |
 | Planning | VM105 scripts restoration is complete; keep as reference runbook only | [planning/VM105_RESTORATION_PLAN.md](planning/VM105_RESTORATION_PLAN.md) |
 
 ---
