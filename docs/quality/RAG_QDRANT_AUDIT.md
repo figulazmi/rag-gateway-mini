@@ -1,6 +1,7 @@
 # RAG Qdrant Intelligence Audit
 
 > **Navigation:** [docs/README.md](../README.md) — full index of all RAG docs.
+> Status tracking standard → [`../reference/TRACKING_STATUS_STANDARD.md`](../reference/TRACKING_STATUS_STANDARD.md)
 > Coverage knowledge detail & improvement history → [COVERAGE_KNOWLEDGE_TRACKER.md](COVERAGE_KNOWLEDGE_TRACKER.md)
 
 **Date:** 2026-04-25 (last updated: 2026-04-25 session 5)

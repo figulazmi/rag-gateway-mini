@@ -4,7 +4,7 @@ Based on threat model analysis dated 2026-04-29 (PoisonedRAG arXiv:2402.07867).
 Tracks hardening tasks across three phases. Update status as each item is implemented and verified.
 
 > **How to use this document:** Each item has Problem → Fix → Verification steps.
-> Update status tag and fill in "Completed on" + "Verified by" when done.
+> Follow [`../reference/TRACKING_STATUS_STANDARD.md`](../reference/TRACKING_STATUS_STANDARD.md): update the canonical task section with status, completed date, verified by, and evidence.
 > Cross-reference `RAG_EVAL_HARNESS.md` for retrieval quality metrics.
 
 ---

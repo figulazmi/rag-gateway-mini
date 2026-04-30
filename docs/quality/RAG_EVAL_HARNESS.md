@@ -5,6 +5,7 @@ Baseline defined 2026-04-29. Re-run after any significant pipeline change.
 
 > **How to use:** Run the test queries in Section 3 against the live system.
 > Record scores in the Baseline vs Current table. Target thresholds defined in Section 2.
+> For task/status tracking, follow [`../reference/TRACKING_STATUS_STANDARD.md`](../reference/TRACKING_STATUS_STANDARD.md).
 > Green = at/above target. Red = below target. Cross-reference `RAG_SECURITY_POSTURE.md` for hardening tasks.
 
 ---

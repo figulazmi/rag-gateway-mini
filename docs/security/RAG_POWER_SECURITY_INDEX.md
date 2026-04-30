@@ -52,11 +52,14 @@ Quick-access index for the RAG hardening + quality initiative (started 2026-04-2
 
 ## Quick Status Update — How To
 
-When an item is completed, update **both** places:
-1. The `Status` column in the table above (this file)
-2. The `Status:` field in the relevant section header in `RAG_SECURITY_POSTURE.md` or `RAG_EVAL_HARNESS.md`
+Follow [`../reference/TRACKING_STATUS_STANDARD.md`](../reference/TRACKING_STATUS_STANDARD.md).
 
-Status values: `[ ] OPEN` → `[~] IN PROGRESS` → `[x] DONE`
+Status source of truth:
+- Security hardening tasks: update the canonical section in `RAG_SECURITY_POSTURE.md`.
+- Eval tasks: update the canonical metric/task row in `../quality/RAG_EVAL_HARNESS.md`.
+- This file is an index. When status changes, refresh this board from the canonical source instead of treating it as a second source of truth.
+
+Allowed status values: `[ ] OPEN`, `[~] IN PROGRESS`, `[x] DONE (YYYY-MM-DD)`, `[!] BLOCKED`, `[ ] DEFERRED`, `[x] OBSOLETE (YYYY-MM-DD)`.
 
 ---
 

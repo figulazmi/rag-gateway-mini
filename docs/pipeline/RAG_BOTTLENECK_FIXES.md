@@ -3,6 +3,9 @@
 Analysis of Pipeline A (Write/Ingest) and Pipeline B (Read/Retrieve) bottlenecks.
 Sorted by severity. Status updated as fixes land.
 
+> Status tracking standard: [`../reference/TRACKING_STATUS_STANDARD.md`](../reference/TRACKING_STATUS_STANDARD.md).
+> This legacy tracker uses `FIXED`; for new edits, prefer `[x] DONE (YYYY-MM-DD)` with evidence and next action.
+
 > **How to use this document:** Each fix contains Problem → Fix Applied → Test Evidence.
 > "Before" metrics are from the original diagnosis. "After" metrics are from live tests
 > run on 2026-04-25 against VM B1 (`192.168.18.199:5200`, collection `knowledge_v2`, 252 points).

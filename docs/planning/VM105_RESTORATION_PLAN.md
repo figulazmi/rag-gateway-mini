@@ -5,6 +5,9 @@
 **SSH:** `figulazmi@192.168.18.199`
 **Goal:** Restore VM 105 to match full state of VM B1 as of 2026-04-27
 
+> Status tracking standard: [`../reference/TRACKING_STATUS_STANDARD.md`](../reference/TRACKING_STATUS_STANDARD.md).
+> This legacy restoration tracker is historical; for new edits, keep one canonical table row per task with evidence.
+>
 > Backup yang tersedia di VM 105: **2026-04-13** (gap = 14 hari updates hilang).
 > User memiliki 120 summary `.md` files tersebar di 8 lokasi lokal Windows.
 > Sebelum push, scripts harus sesuai konfigurasi April 27.

@@ -1,6 +1,7 @@
 # RAG Capture Pipeline — Gap Analysis
 
-> **How to track progress:** When a gap is fixed, edit `[ ] OPEN` to `[x] FIXED (YYYY-MM-DD)`.
+> **How to track progress:** Follow [`../reference/TRACKING_STATUS_STANDARD.md`](../reference/TRACKING_STATUS_STANDARD.md).
+> This legacy tracker still uses `FIXED`; for new edits, prefer `[x] DONE (YYYY-MM-DD)` with evidence and next action.
 > Claude will check this file before suggesting fixes — OPEN items are next priority.
 >
 > **Test results** from 2026-04-25 live session are embedded in each section.

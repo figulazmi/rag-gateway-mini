@@ -2,6 +2,10 @@
 
 **Dimension score (from [RAG_QDRANT_AUDIT.md](RAG_QDRANT_AUDIT.md)):** 5/10 → target 8/10
 
+> Status tracking standard: [`../reference/TRACKING_STATUS_STANDARD.md`](../reference/TRACKING_STATUS_STANDARD.md).
+> Legacy sections may contain historical status text. Current source of truth is [Canonical Task Tracker](#canonical-task-tracker).
+> Metric and score tables in this file are measurements, not task status trackers.
+
 Coverage knowledge mengukur seberapa *beragam* dan *seimbang* isi knowledge base.
 Retrieval yang bagus butuh campuran chunk type yang tepat — terlalu banyak `debug`
 dan retriever hanya bisa menemukan bug fixes, bukan patterns atau runbooks.
@@ -316,7 +320,7 @@ cat <<'EOF' | rag add -p homelab -t pattern --topic "Pattern: [rule name]" --tag
 EOF
 ```
 
-**Status:** [x] DONE 2026-04-25 — 20 pattern chunks reached (batch 1: +3, batch 2: +7, batch 3: +9). debug:pattern ratio 43:1 → 8.5:1.
+Status source: [Canonical Task Tracker](#canonical-task-tracker), task `OI-1`.
 
 **Target:** 20 pattern chunks by next audit (20 captured -- OI-1 complete)
 
@@ -329,7 +333,7 @@ EOF
 Setiap fitur yang selesai di-implement harus punya 1 `feature` chunk yang dokumen:
 architecture decision, files modified, key implementation choices.
 
-**Status:** [x] DONE 2026-04-25 — +5 feature chunks captured in batch 4 (rag-gateway architecture, knowledge_v2 collection, toolchain, MCP server, Pipeline A/B). Total feature: 29 (10%).
+Status source: [Canonical Task Tracker](#canonical-task-tracker), task `OI-2`.
 
 **Target:** +5 feature chunks / bulan
 
@@ -342,7 +346,7 @@ architecture decision, files modified, key implementation choices.
 ADR (Architecture Decision Records): why hybrid RRF, why djb2 not server BM25, why ASP.NET not FastAPI, etc.
 Session 2 captured 3 decision chunks (djb2 BM25, secrets mount, ASP.NET Core choice).
 
-**Status:** [x] DONE 2026-04-25 — +5 decision chunks captured in batch 4 (hybrid RRF rationale, Qdrant choice, Ollama choice, nomic-embed-text choice, n8n orchestrator choice). Total decision: 19 (6%).
+Status source: [Canonical Task Tracker](#canonical-task-tracker), task `OI-3`.
 
 **Target:** +5 more decision chunks untuk choices yang belum terdokumentasi
 
@@ -367,7 +371,7 @@ ssh figulazmi@192.168.18.199 'curl -s "http://localhost:6333/collections/knowled
   "import sys,json; r=json.load(sys.stdin)[\"result\"]; print(r[\"points_count\"], \"total |\", r[\"indexed_vectors_count\"], \"indexed\")"'
 ```
 
-**Status:** [x] DONE 2026-04-25 — `indexing_threshold` patched to 0 via PATCH /collections/knowledge_v2. Dense HNSW: 199/295 indexed (96 in appendable segment, brute-force fallback -- zero practical impact at 295-point scale). Sparse BM25 inverted index covers all 295 points regardless of HNSW status. Threshold=0 is permanent; future inserts will trigger HNSW sooner.
+Status source: [Canonical Task Tracker](#canonical-task-tracker), task `OI-4`.
 
 ---
 
@@ -378,7 +382,7 @@ ssh figulazmi@192.168.18.199 'curl -s "http://localhost:6333/collections/knowled
 `implementation-spec` dirancang untuk feed implementer model (qwen2.5-coder, Ollama).
 Membutuhkan reranker (P2.2-B) untuk prioritisasi sebelum fully useful.
 
-**Status:** [ ] DEFERRED — aktifkan setelah P2.2-B reranker selesai
+Status source: [Canonical Task Tracker](#canonical-task-tracker), task `OI-5`.
 
 ---
 
@@ -408,3 +412,15 @@ Membutuhkan reranker (P2.2-B) untuk prioritisasi sebelum fully useful.
 | 2026-04-25 (session 4) | 295 | 20 | 5 | 19 | 7.0/10 | Batch 4: +5 decision +5 feature, OI-2+3 complete |
 | 2026-04-25 (session 5) | 295 | 20 | 5 | 19 | 7.5/10 | Batch 5: OI-4 indexing_threshold=0 patched, sparse covers all 295 |
 | _(next audit)_ | — | — | — | — | — | Target: 8.0/10 after OI-5 (impl-spec, needs P2.2-B reranker) |
+
+---
+
+## Canonical Task Tracker
+
+| Order | ID | Task | Status | Evidence | Next action |
+|---:|---|---|---|---|---|
+| 1 | OI-1 | Capture pattern chunks from existing debug knowledge | `[x] DONE (2026-04-25)` | 20 pattern chunks reached across batches 1-3; debug:pattern ratio improved from 43:1 to 8.5:1 | None |
+| 2 | OI-2 | Capture feature chunks for shipped features | `[x] DONE (2026-04-25)` | +5 feature chunks captured in batch 4; total feature chunks reached 29, about 10% | Continue monthly feature capture habit |
+| 3 | OI-3 | Capture decision chunks for major choices | `[x] DONE (2026-04-25)` | +5 decision chunks captured in batch 4; total decision chunks reached 19, about 6% | Capture +5 more major decisions when identified |
+| 4 | OI-4 | Force-index unindexed points | `[x] DONE (2026-04-25)` | `indexing_threshold` patched to 0; sparse BM25 inverted index covers all 295 points | None |
+| 5 | OI-5 | Activate implementation-spec capture | `[ ] DEFERRED` | Requires P2.2-B TEI plus BGE reranker before implementer-model use is reliable | Revisit after reranker is deployed and eval shows benefit |

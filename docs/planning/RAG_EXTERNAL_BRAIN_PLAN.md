@@ -2,7 +2,9 @@
 
 # For: .NET & Python Software Engineer daily work
 
-> **How to track progress:** When a task is done, change `[ ] OPEN` to `[x] DONE (YYYY-MM-DD)`.
+> **How to track progress:** Follow [`../reference/TRACKING_STATUS_STANDARD.md`](../reference/TRACKING_STATUS_STANDARD.md).
+> Update the canonical task table row only. Each row must include Status, Evidence, and Next action.
+> Avoid duplicate status checklists outside the canonical table; summaries should reference task IDs only.
 > Work top-to-bottom — each phase unblocks the next.
 
 ---
@@ -112,32 +114,80 @@ done
 
 ## Quick Status Overview
 
-```
-Phase 1 — Reliability        [x] P1-A  [x] P1-B  [x] P1-C  [x] P1-D
-Phase 2 — Eval Expansion     [x] P2-A  [x] P2-B
-Phase 3 — Supersede          [x] P3-A  [x] P3-B
-Phase 4 — Coverage/Deploy    [x] P4-A  [x] P4-B  [ ] P4-C
-Phase 5 — TEI Reranker       [BLOCKED] [BLOCKED] [BLOCKED]
+```text
+Done: P1-A, P1-B, P1-C, P1-D, P2-A, P2-B, P3-A, P3-B, P4-A, P4-B
+Open: P4-C
+Blocked: P5
+Next: P4-C — re-push `.claude/summaries/*.md`, run eval before/after, then mark done
 ```
 
 ---
 
-## Recommended Execution Order
+## Canonical Task Tracker
 
+This table is the canonical execution tracker and recommended execution order. Do not maintain a separate checklist with different status values.
+
+| Order | ID | Task | Status | Evidence | Next action |
+|---:|---|---|---|---|---|
+| 1 | P4-B | Deploy contextual retrieval to n8n | `[x] DONE (2026-04-19)` | `embed_content` verified in n8n workflow; pipeline verified 200 to 201 Qdrant points | None |
+| 2 | P1-A | Fix heredoc terminator | `[x] DONE (2026-04-19)` | `rag add` examples use `RAGBODY_EOF` terminator | None |
+| 3 | P1-B | Auto-push in `cmd_merge()` | `[x] DONE (2026-04-19)` | `rag merge` writes summary and immediately calls `push-to-qdrant.sh` | None |
+| 4 | P1-C | Push queue and retry | `[x] DONE (2026-04-19)` | `rag push-pending` exists and retries queued failed pushes | None |
+| 5 | P1-D | Verify point count after push | `[x] DONE (2026-04-19)` | `push-to-qdrant.sh` logs Qdrant point count before and after push | None |
+| 6 | P2-A | Expand eval set to 30 queries | `[x] DONE (2026-04-19)` | `eval-retrieval-quality.py` supports expanded fixtures and debug run | None |
+| 7 | P2-B | Add end-to-end hallucination test | `[x] DONE (2026-04-19)` | `--end-to-end` mode retrieves chunks, calls qwen2.5-coder, and reports hallucination metric | None |
+| 8 | P3-A | Add supersede frontmatter | `[x] DONE (2026-04-19)` | `rag_capture.py` supports `supersedes` metadata validation | None |
+| 9 | P3-B | Deprecate old chunk on push | `[x] DONE (2026-04-19)` | `push-to-qdrant.sh` patches superseded chunk status to `deprecated` | None |
+| 10 | P4-A | Add tag conventions to CLAUDE.md | `[x] DONE (2026-04-19)` | First tag convention requires `dotnet`, `python`, or `homelab` | None |
+| 11 | P4-C | Re-embed corpus after n8n deploy | `[ ] OPEN` | Local summaries now exist; original blocker `no local summaries yet` is stale | Re-push `.claude/summaries/*.md`, run eval before/after, then mark done |
+| 12 | P5 | TEI plus BGE reranker | `[ ] BLOCKED` | Reranker scaffold is deferred; TEI container not deployed | Revisit only after eval shows measurable reranker gap |
+
+---
+
+## Status Tracking Standard
+
+Use this standard for future planning docs to prevent drift between phase tables, quick summaries, and execution order lists.
+
+### Canonical table format
+
+Every plan should have exactly one canonical task table:
+
+| Order | ID | Task | Status | Evidence | Next action |
+|---:|---|---|---|---|---|
+| 1 | P1-A | Short imperative task name | `[ ] OPEN` | Observable proof required to mark done | Immediate next command or decision |
+
+### Allowed status values
+
+| Status | Meaning | Required evidence |
+|---|---|---|
+| `[ ] OPEN` | Not started | None |
+| `[~] IN PROGRESS` | Started but not verified | Link to branch, file, command, or blocker |
+| `[x] DONE (YYYY-MM-DD)` | Implemented and verified | Command output, test result, deployed service, or doc link |
+| `[!] BLOCKED` | Cannot proceed until dependency changes | Name the dependency and owner/system |
+| `[ ] DEFERRED` | Valid task but intentionally postponed | State the revisit condition |
+| `[x] OBSOLETE (YYYY-MM-DD)` | No longer needed | State what replaced it |
+
+### Rules
+
+1. Keep status in one place only: the canonical table.
+2. Quick Status sections must summarize IDs only, not duplicate per-task status text.
+3. A task cannot be marked DONE without evidence.
+4. If evidence is external, write the verification command or the exact observed result.
+5. When implementation and verification are separate, keep the task IN PROGRESS until verification passes.
+6. If a blocker becomes stale, update the Evidence and Next action immediately.
+7. After every completed implementation session, update docs in the same commit or same working set as the code/script change.
+8. Prefer task IDs that never change, even if the title changes.
+
+### Recommended quick summary format
+
+```text
+Done: P1-A, P1-B, P1-C
+Open: P4-C
+Blocked: P5
+Next: P4-C — re-push summaries and rerun eval
 ```
-1. [x] P4-B  Deploy contextual retrieval to n8n  — DONE 2026-04-19
-2. [x] P1-A  Fix heredoc terminator         — DONE 2026-04-19
-3. P1-B  Auto-push in cmd_merge             (~1h, eliminates biggest SPOF)
-4. P1-C  Push queue + retry                 (~1h, robustness)
-5. P1-D  Verify step                        (~30 min, observability)
-6. P2-A  Expand eval set to 30 queries      (~1.5h, unblocks everything downstream)
-7. P2-B  End-to-end hallucination test      (~1h)
-8. P3-A  Supersede frontmatter              (~30 min)
-9. P3-B  Deprecate on push                  (~30 min)
-10. P4-A Tag conventions in CLAUDE.md       (~10 min)
-11. P4-C Re-embed corpus after n8n deploy   (~20 min, batch job)
-12. P5   TEI reranker                       (after P2 confirms gap exists)
-```
+
+Do not repeat detailed status in the quick summary. The canonical table remains the source of truth.
 
 ---
 

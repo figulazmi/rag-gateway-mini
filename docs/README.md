@@ -3,6 +3,8 @@
 All documents cover the RAG knowledge pipeline for `rag-gateway-mini`
 (stack: Qdrant `knowledge_v2` · nomic-embed-text · Ollama · n8n · ASP.NET Core 9 · VM B1).
 
+> All tracking docs should follow [`reference/TRACKING_STATUS_STANDARD.md`](reference/TRACKING_STATUS_STANDARD.md) to avoid stale duplicate status checklists.
+
 ---
 
 ## Folder Structure
@@ -63,6 +65,7 @@ docs/
 |---|---|---|
 | [RAG_MANUAL_BOOK.md](reference/RAG_MANUAL_BOOK.md) | Complete operational manual: commands, config, troubleshooting, architecture | Reference |
 | [RAG_BOOTSTRAP_NEW_DEVICE_AND_SERVER.md](reference/RAG_BOOTSTRAP_NEW_DEVICE_AND_SERVER.md) | Bootstrap/disaster-recovery checklist for new local device or server rebuild | Active |
+| [TRACKING_STATUS_STANDARD.md](reference/TRACKING_STATUS_STANDARD.md) | Canonical status table standard for all docs trackers | Active |
 
 ---
 

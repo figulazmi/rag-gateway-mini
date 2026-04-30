@@ -1,6 +1,7 @@
 # RAG `knowledge_v2` Roadmap
 
 > **Status:** Active roadmap. Future Claude sessions: **read this file before proposing changes to the RAG pipeline** (`rag_capture.py`, `push-to-qdrant.sh`, `qdrant-mcp-server-v2.js`, `eval-retrieval-quality.py`). Do not deviate from the priorities below without explicit user approval.
+> Status tracking standard: [`../reference/TRACKING_STATUS_STANDARD.md`](../reference/TRACKING_STATUS_STANDARD.md). Current source of truth is [Canonical Task Tracker](#canonical-task-tracker).
 
 ## Strategic Goal
 
@@ -178,16 +179,18 @@ When eval flags NDCG < 0.6 for query X, append the chunk_id that should have ran
 - TTL-based auto-deprecate for chunks older than 6 months with zero retrieval hits
 - Semantic eval (replace substring match with LLM-judge for gold signals)
 
-## Recommended Execution Order
+## Canonical Task Tracker
 
-1. ~~P1.1 chunk schema enrichment~~ — SHIPPED
-2. ~~P2.1 hard-reject validation~~ — SHIPPED
-3. ~~P1.2 contextual retrieval~~ — SHIPPED (Hit@1 0.60→1.00, MRR 0.80→1.00)
-4. ~~P2.2 LLM-as-reranker~~ — SCAFFOLDED, blocked on infra (see P2.2 note above)
-5. **P3.2 eval expansion (now priority)** — current suite saturates at Hit@1=1.0; cannot measure reranker or further tuning without harder queries
-6. P3.1 supersede (~1 h)
-7. P2.2-B TEI + BGE-reranker deployment (~2-3 h once P3.2 shows reranker is needed)
-8. P3.3 feedback loop
+| Order | ID | Task | Status | Evidence | Next action |
+|---:|---|---|---|---|---|
+| 1 | P1.1 | Enrich chunk schema for implementer models | `[x] DONE (2026-04-19)` | Shipped schema guidance for target files, interfaces, dependencies, contract, anti-patterns, verification, and key facts | None |
+| 2 | P2.1 | Add hard-reject validation | `[x] DONE (2026-04-19)` | Validation shipped for required implementation-spec sections and content quality constraints | None |
+| 3 | P1.2 | Deploy contextual retrieval prepend | `[x] DONE (2026-04-19)` | Hit@1 improved from 0.60 to 1.00 and MRR from 0.80 to 1.00 after contextual retrieval | None |
+| 4 | P2.2 | Scaffold LLM-as-reranker | `[ ] DEFERRED` | Scaffolding exists, but reranker remains blocked on infra and disabled by default | Revisit after TEI plus BGE reranker is available |
+| 5 | P3.2 | Expand eval set and implementation correctness test | `[x] DONE (2026-04-19)` | External brain plan marks P2-A and P2-B done for expanded eval plus end-to-end mode | None |
+| 6 | P3.1 | Add supersede and deprecate semantics | `[x] DONE (2026-04-19)` | External brain plan marks P3-A and P3-B done for supersede frontmatter and deprecate-on-push | None |
+| 7 | P2.2-B | Deploy TEI plus BGE reranker | `[!] BLOCKED` | TEI container not deployed; current eval suite saturates, so reranker benefit is not proven | Revisit after harder eval shows measurable reranker gap |
+| 8 | P3.3 | Add eval to chunk revision queue feedback loop | `[ ] OPEN` | No canonical evidence yet that `~/scripts/.rag_revision_queue.md` integration is implemented | Implement after P4-C re-embed and post-baseline eval |
 
 ## Critical Files Reference
 
