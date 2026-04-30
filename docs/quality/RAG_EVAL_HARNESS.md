@@ -37,16 +37,16 @@ Baseline defined 2026-04-29. Re-run after any significant pipeline change.
 
 | Metric | Definition | Target | Current | Status |
 |---|---|---|---|---|
-| **MRR@5** | Mean Reciprocal Rank in top-5 | ≥ 0.80 | — | `[?]` |
-| **Hit Rate @3** | Correct chunk in top-3 | ≥ 0.85 | — | `[?]` |
-| **NDCG@10** | Graded relevance, top-10 | ≥ 0.75 | — | `[?]` |
-| **Faithfulness** | LLM output consistent with retrieved chunks | ≥ 0.85 | — | `[?]` |
-| **Answer Relevance** | Output on-topic for the query | ≥ 0.80 | — | `[?]` |
-| **Context Precision** | Fraction of retrieved chunks actually used | ≥ 0.60 | — | `[?]` |
-| **Latency p50** | End-to-end query time, VM B1 CPU | ≤ 1.5s | — | `[?]` |
-| **Latency p95** | End-to-end query time, VM B1 CPU | ≤ 4.0s | — | `[?]` |
-| **Hallucination Rate** | Claims with zero chunk grounding | ≤ 5% | — | `[?]` |
-| **Cross-project contamination** | homelab result in project-alpha query (or vice versa) | 0% | — | `[?]` |
+| **MRR@5** | Mean Reciprocal Rank in top-5 | ≥ 0.80 | 0.90 | `[x] MET` |
+| **Hit Rate @3** | Correct chunk in top-3 | ≥ 0.85 | 1.00 | `[x] MET` |
+| **NDCG@10** | Graded relevance, top-10 | ≥ 0.75 | 0.905 (NDCG@5 proxy) | `[x] MET` |
+| **Faithfulness** | LLM output consistent with retrieved chunks | ≥ 0.85 | — | `[?] UNMEASURED` |
+| **Answer Relevance** | Output on-topic for the query | ≥ 0.80 | — | `[?] UNMEASURED` |
+| **Context Precision** | Fraction of retrieved chunks actually used | ≥ 0.60 | — | `[?] UNMEASURED` |
+| **Latency p50** | End-to-end query time, VM B1 CPU | ≤ 1.5s | — | `[?] UNMEASURED` |
+| **Latency p95** | End-to-end query time, VM B1 CPU | ≤ 4.0s | — | `[?] UNMEASURED` |
+| **Hallucination Rate** | Claims with zero chunk grounding | ≤ 5% | — | `[?] UNMEASURED` |
+| **Cross-project contamination** | homelab result in project-alpha query (or vice versa) | 0% | 0% (no contamination observed in latest smoke/eval checks) | `[x] MET` |
 
 **How to update Current column:**  
 Run `eval-retrieval-quality.py` against VM B1, copy scores here, update Status.
@@ -151,8 +151,8 @@ Fill in after first eval run. Update "Current" column with each subsequent run.
 
 | Metric | Baseline (pre-fixes) | After embed prefix fix | After sparse fix | Current | Target |
 |---|---|---|---|---|---|
-| MRR@5 | ~0.45 (estimated) | ~0.65 (estimated) | — | — | ≥ 0.80 |
-| Hit Rate @3 | — | — | — | — | ≥ 0.85 |
+| MRR@5 | ~0.45 (estimated) | ~0.65 (estimated) | 0.90 | 0.90 | ≥ 0.80 |
+| Hit Rate @3 | — | — | 1.00 | 1.00 | ≥ 0.85 |
 | p95 Latency | — | — | — | — | ≤ 4.0s |
 | Faithfulness | — | — | — | — | ≥ 0.85 |
 
@@ -191,10 +191,10 @@ python scripts/eval-retrieval-quality.py \
 # {"query": "...", "expected_doc_id": "...", "expected_rank": 1, "category": "factual"}
 ```
 
-> **TODO:** `eval_queries.jsonl` needs to be created from the Section 3 table.
-> Start with F-01 through F-05 and R-01 through R-03 as the first 8-query smoke set.
+> **Status update:** Initial retrieval baseline has been measured (MRR@5, Hit@3, NDCG proxy).
+> **Remaining TODO:** expand to end-to-end metrics (faithfulness, answer relevance, context precision, latency p50/p95) and keep `eval_queries.jsonl` as the canonical reproducible set.
 
 ---
 
-*Last updated: 2026-04-29 · Author: Figur Ulul Azmi*  
+*Last updated: 2026-04-30 · Author: Figur Ulul Azmi*  
 *Cross-reference: [`RAG_SECURITY_POSTURE.md`](../security/RAG_SECURITY_POSTURE.md) (hardening tasks) · [`RAG_BOTTLENECK_FIXES.md`](../pipeline/RAG_BOTTLENECK_FIXES.md) (pipeline history)*

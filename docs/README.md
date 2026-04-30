@@ -79,8 +79,8 @@ docs/
 
 | Area | Highest open item | Doc |
 |---|---|---|
-| Security | P0-2: Scrub git history for exposed legacy key (depends on completed rotation) | [security/RAG_SECURITY_POSTURE.md](security/RAG_SECURITY_POSTURE.md#p0-2--scrub-git-history) |
-| Quality | Run first MRR@5 baseline measurement | [quality/RAG_EVAL_HARNESS.md](quality/RAG_EVAL_HARNESS.md#5-baseline-vs-current-comparison) |
+| Security | P0-3: Harden cosine gate (hard abort on verification failure) | [security/RAG_SECURITY_POSTURE.md](security/RAG_SECURITY_POSTURE.md#p0-3--harden-cosine-gate-hard-abort) |
+| Quality | Expand measured baseline beyond retrieval-only metrics (faithfulness, latency, relevance) | [quality/RAG_EVAL_HARNESS.md](quality/RAG_EVAL_HARNESS.md#5-baseline-vs-current-comparison) |
 | Pipeline | IDF weighting (Opsi C) — deferred (revisit after corpus diversity and post-baseline metrics) | [pipeline/RAG_BOTTLENECK_FIXES.md](pipeline/RAG_BOTTLENECK_FIXES.md#7--idf-weighting-mismatch-between-c-and-qdrant-bm25-) |
 | Planning | VM105 scripts restoration is complete; keep as reference runbook only | [planning/VM105_RESTORATION_PLAN.md](planning/VM105_RESTORATION_PLAN.md) |
 
