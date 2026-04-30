@@ -29,7 +29,7 @@ Baseline defined 2026-04-29. Re-run after any significant pipeline change.
 | Hybrid search | Dense prefetch=30, Sparse prefetch=5, score_thresh=0.01, RRF fusion, top-8 | `RagGatewayOptions` |
 | LLM (generation) | `llama3.2:3b` | Local Ollama |
 | LLM (code) | `qwen2.5-coder:7b` | Local Ollama |
-| Chunk count | ~252 | As of 2026-04-25 |
+| Chunk count | 368 | Live VM verification on 2026-04-30; older docs may show historical 252/296/350/359 checkpoints |
 | Gateway endpoint | `http://192.168.18.199:5200` | VM B1 Docker |
 
 ---

@@ -4,7 +4,7 @@
 > Status tracking standard → [`../reference/TRACKING_STATUS_STANDARD.md`](../reference/TRACKING_STATUS_STANDARD.md)
 > Coverage knowledge detail & improvement history → [COVERAGE_KNOWLEDGE_TRACKER.md](COVERAGE_KNOWLEDGE_TRACKER.md)
 
-**Date:** 2026-04-25 (last updated: 2026-04-25 session 5)
+**Date:** 2026-04-25 (last updated: 2026-04-30 live state refresh)
 **Overall Score: 6.8/10 → 8.1/10**
 
 ---
@@ -25,9 +25,12 @@
 
 ---
 
-## Collection State (2026-04-25)
+## Collection State
+
+> 2026-04-25 values below are the original audit baseline. Live verification on 2026-04-30 shows `knowledge_v2` reachable with `points_count=368`, `indexed_vectors_count=371`, dense vector `dense`, sparse vector `sparse`, and `sparse.modifier=idf`.
 
 ```
+Baseline 2026-04-25:
 knowledge_v2:  255 points total
                199 indexed  (56 unindexed = 22% gap)
                Status: green
@@ -204,5 +207,6 @@ const RETRY_THRESHOLD = 0.50;  // was 0.6 — lowered to compensate for wider SC
 | 6 | Push-queue audit | P2 | [x] Done 2026-04-25 session 5 — qdrant_url fixed (.169→.199), auto_push exceptions logged, cmd_push_pending TimeoutExpired now continues instead of breaks |
 | OI-5 | Aktifkan implementation-spec capture | P4 | [ ] **BLOCKED** — waiting P2.2-B reranker (TEI+BGE on VM B1) |
 
-**Coverage knowledge after all sessions:** 255→296 points, pattern 1→20, feature 24→29, decision 10→19.
+**Coverage knowledge after 2026-04-25 sessions:** 255→296 points, pattern 1→20, feature 24→29, decision 10→19.
+**Live VM verification 2026-04-30:** `knowledge_v2` now has 368 points; use [VM105_RESTORATION_PLAN.md](../planning/VM105_RESTORATION_PLAN.md) for restore gap checks against the April 27 target state.
 Full before/after detail with score projections → [COVERAGE_KNOWLEDGE_TRACKER.md](COVERAGE_KNOWLEDGE_TRACKER.md)

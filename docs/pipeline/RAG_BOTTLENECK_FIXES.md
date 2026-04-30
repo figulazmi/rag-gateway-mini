@@ -8,7 +8,7 @@ Sorted by severity. Status updated as fixes land.
 
 > **How to use this document:** Each fix contains Problem → Fix Applied → Test Evidence.
 > "Before" metrics are from the original diagnosis. "After" metrics are from live tests
-> run on 2026-04-25 against VM B1 (`192.168.18.199:5200`, collection `knowledge_v2`, 252 points).
+> run on 2026-04-25 against VM B1 (`192.168.18.199:5200`, collection `knowledge_v2`, historical 252-point corpus). Live verification on 2026-04-30 shows 368 points; keep the 252 values below as test evidence snapshots, not current corpus size.
 > Re-run the test queries in each section to verify regressions after future changes.
 
 ---
@@ -472,7 +472,7 @@ Response (config.params):
     "dense": { "size": 768, "distance": "Cosine" }
   }
 }
-Points count: 252
+Points count: 252  (historical 2026-04-25 test snapshot; live 2026-04-30 count is 368)
 ```
 
 **WARNING — jangan implementasi client-side IDF**:

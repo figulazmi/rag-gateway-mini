@@ -236,8 +236,8 @@ Step 5: Session end (knowledge chunks)
 
 | File | Change |
 |------|--------|
-| `scripts/rag-capture-v2/rag_capture.py` | Added `cmd_checkpoint`, `cmd_resume`, `cmd_promote`, `save_checkpoint`, `auto_detect_files_modified`, `auto_detect_decisions`, `validate_checkpoint_content`; extended `build_frontmatter` with checkpoint fields; extended `VALID_TYPES`, `VALID_STATUSES`; added `checkpoints_subdir` to `DEFAULT_CONFIG` |
-| `scripts/push-to-qdrant.sh` | `DOC_COLLECTION=$(extract_field "collection")`; replaced hardcoded `"knowledge_v2"` with `$collection` in jq payload and summary output |
+| `~/scripts/rag-capture-v2/rag_capture.py` (rag-tools) | Added `cmd_checkpoint`, `cmd_resume`, `cmd_promote`, `save_checkpoint`, `auto_detect_files_modified`, `auto_detect_decisions`, `validate_checkpoint_content`; extended `build_frontmatter` with checkpoint fields; extended `VALID_TYPES`, `VALID_STATUSES`; added `checkpoints_subdir` to `DEFAULT_CONFIG` |
+| `~/scripts/push-to-qdrant.sh` (rag-tools) | `DOC_COLLECTION=$(extract_field "collection")`; replaced hardcoded `"knowledge_v2"` with `$collection` in jq payload and summary output |
 | `CLAUDE.md` | Added Session Start Protocol section and Checkpoint Trigger Rules section |
 | `docs/RAG_CAPTURE_PIPELINE_GAPS.md` | Gap tracker (G1, G2, G4, SPOF-1, SPOF-2 addressable) |
 

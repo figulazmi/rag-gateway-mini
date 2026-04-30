@@ -13,13 +13,13 @@ Claude AI is used as a **reasoning + capture specialist only** for `knowledge_v2
 
 ## Current State (do not rebuild)
 
-- Deterministic chunk ID (`{DOC_ID}-chunk-{N}`) → upsert-idempotent — `scripts/push-to-qdrant.sh:285`
-- Hybrid search: dense (nomic-embed-text 768d COSINE) + sparse (djb2 BM25) + RRF fusion — `scripts/qdrant-mcp-server-v2/qdrant-mcp-server-v2.js:99`
+- Deterministic chunk ID (`{DOC_ID}-chunk-{N}`) → upsert-idempotent — `~/scripts/push-to-qdrant.sh:285` (rag-tools)
+- Hybrid search: dense (nomic-embed-text 768d COSINE) + sparse (djb2 BM25) + RRF fusion — `~/scripts/qdrant-mcp-server-v2/qdrant-mcp-server-v2.js:99` (rag-tools)
 - Query expansion for short queries (<8 words) — `qdrant-mcp-server-v2.js:20`
 - Retry with rewrite when `avgScore < 0.6` — `qdrant-mcp-server-v2.js:227`
 - Structured query logs (`rag_search`, `rag_retry`, `rag_not_found`) to stderr
 - Eval framework with Hit@1/3/5, MRR, NDCG@5, 3 strategies, 7 test cases, regression detection — `scripts/eval-retrieval-quality.py`
-- Warn-only validation (word count, em dash, Indonesian detection, Key Facts presence) — `scripts/rag-capture-v2/rag_capture.py:181`
+- Warn-only validation (word count, em dash, Indonesian detection, Key Facts presence) — `~/scripts/rag-capture-v2/rag_capture.py:181` (rag-tools)
 - Frontmatter validation at n8n ingest node
 - Status filtering (`implemented` default, `include_planned` toggle)
 
@@ -50,8 +50,8 @@ Introduce chunk_type `implementation-spec` (or enrich `feature`/`pattern` templa
 
 **Files to modify:**
 
-- `scripts/rag-capture-v2/rag_capture.py:80` — add `"implementation-spec"` to `VALID_TYPES`
-- `scripts/rag-capture-v2/rag_capture.py:181` `validate_content()` — enforce required sections for type `implementation-spec`/`feature`/`pattern`
+- `~/scripts/rag-capture-v2/rag_capture.py:80` (rag-tools) — add `"implementation-spec"` to `VALID_TYPES`
+- `~/scripts/rag-capture-v2/rag_capture.py:181` (rag-tools) `validate_content()` — enforce required sections for type `implementation-spec`/`feature`/`pattern`
 - `.claude/skills/rag-knowledge-capture-cli/SKILL.md` — add body template for the new chunk_type
 - `CLAUDE.md` field & content rules section — update to reflect new type and required sections
 
@@ -63,12 +63,12 @@ The prepend lives in the n8n workflow's `Validate & Clean` node, not in `push-to
 
 **Files changed:**
 
-- `scripts/n8n-workflows/ingest-knowledge-v2.json` — `Validate & Clean` node adds `embed_content` field; `Ollama: nomic-embed-text` node now reads `{{ $json.embed_content }}` instead of `{{ $json.content }}`
+- `~/scripts/n8n-workflows/ingest-knowledge-v2.json` (rag-tools) — `Validate & Clean` node adds `embed_content` field; `Ollama: nomic-embed-text` node now reads `{{ $json.embed_content }}` instead of `{{ $json.content }}`
 
 **Deployment steps (manual, one-time):**
 
 1. In n8n UI at `http://192.168.18.199:5678`, open workflow `knowledge_v2`
-2. Import the updated JSON (Workflow → Import from File → pick `scripts/n8n-workflows/ingest-knowledge-v2.json`) or paste the two changed nodes
+2. Import the updated JSON (Workflow → Import from File → pick `~/scripts/n8n-workflows/ingest-knowledge-v2.json` from rag-tools/current laptop) or paste the two changed nodes
 3. Activate the workflow (toggle top-right)
 4. Smoke test: `rag add` a sample chunk → `rag merge` → `bash ~/scripts/push-to-qdrant.sh .claude/summaries/<file>.md` → check n8n execution log shows `embed_content` populated and HTTP 200 back from Qdrant
 
@@ -118,7 +118,7 @@ Hard-reject rules in effect:
 
 Soft warnings retained: possible Bahasa Indonesia detection, `feature`/`pattern` missing recommended Interfaces/Contract/Verification.
 
-**Files changed:** `scripts/rag-capture-v2/rag_capture.py` — `validate_content` (line 194), `cmd_add` (line 324), `cmd_pipe` (line 383).
+**Files changed:** `~/scripts/rag-capture-v2/rag_capture.py` (rag-tools) — `validate_content` (line 194), `cmd_add` (line 324), `cmd_pipe` (line 383).
 
 **Verification (smoke tested):**
 
@@ -142,7 +142,7 @@ Decision: code shipped as scaffolding, but the default is **off** (`RERANK_ENABL
 
 **Files changed (scaffolding):**
 
-- `scripts/qdrant-mcp-server-v2/qdrant-mcp-server-v2.js` — `rerankWithLLM` helper, wired into both primary and retry search paths; gated on `RERANK_ENABLED` env var; emits `rag_rerank` and `rag_rerank_parse_error` stderr events.
+- `~/scripts/qdrant-mcp-server-v2/qdrant-mcp-server-v2.js` (rag-tools) — `rerankWithLLM` helper, wired into both primary and retry search paths; gated on `RERANK_ENABLED` env var; emits `rag_rerank` and `rag_rerank_parse_error` stderr events.
 - `scripts/eval-retrieval-quality.py` — `rerank_with_llm` helper, `--rerank / --rerank-model / --rerank-candidates` CLI flags.
 
 **Real fix — promoted from P4 to active (P2.2-B):**
@@ -158,8 +158,8 @@ Add frontmatter fields `supersedes: <old_chunk_id>` and `superseded_by`. When `p
 
 **Files:**
 
-- `scripts/rag-capture-v2/rag_capture.py:222-236` — add `supersedes`/`superseded_by` to frontmatter output
-- `scripts/push-to-qdrant.sh` — add deprecate-on-supersede logic during ingest
+- `~/scripts/rag-capture-v2/rag_capture.py:222-236` (rag-tools) — add `supersedes`/`superseded_by` to frontmatter output
+- `~/scripts/push-to-qdrant.sh` (rag-tools) — add deprecate-on-supersede logic during ingest
 
 **P3.2. Expand eval set + implementation correctness test**
 
@@ -171,7 +171,7 @@ Add frontmatter fields `supersedes: <old_chunk_id>` and `superseded_by`. When `p
 **P3.3. Feedback loop: eval → chunk revision queue**
 When eval flags NDCG < 0.6 for query X, append the chunk_id that should have ranked 1 to `~/scripts/.rag_revision_queue.md`. Surface the backlog in `rag status`.
 
-**Files:** `scripts/eval-retrieval-quality.py`, `scripts/rag-capture-v2/rag_capture.py:438` `cmd_status`.
+**Files:** `scripts/eval-retrieval-quality.py`, `~/scripts/rag-capture-v2/rag_capture.py:438` (rag-tools) `cmd_status`.
 
 ### P4 — Nice to have (skip until P1-P3 are done)
 
@@ -183,12 +183,12 @@ When eval flags NDCG < 0.6 for query X, append the chunk_id that should have ran
 
 | Order | ID | Task | Status | Evidence | Next action |
 |---:|---|---|---|---|---|
-| 1 | P1.1 | Enrich chunk schema for implementer models | `[x] DONE (2026-04-19)` | Shipped schema guidance for target files, interfaces, dependencies, contract, anti-patterns, verification, and key facts | None |
-| 2 | P2.1 | Add hard-reject validation | `[x] DONE (2026-04-19)` | Validation shipped for required implementation-spec sections and content quality constraints | None |
-| 3 | P1.2 | Deploy contextual retrieval prepend | `[x] DONE (2026-04-19)` | Hit@1 improved from 0.60 to 1.00 and MRR from 0.80 to 1.00 after contextual retrieval | None |
+| 1 | P1.1 | Enrich chunk schema for implementer models | `[x] DONE (2026-04-19)` | `rag_capture.py` accepts `implementation-spec`; CLI positive test saved a valid spec with all required sections | None |
+| 2 | P2.1 | Add hard-reject validation | `[x] DONE (2026-04-19)` | CLI negative tests rejected short content, feature without `### Target Files`, and implementation-spec missing `### Contract`; no drafts were saved | None |
+| 3 | P1.2 | Deploy contextual retrieval prepend | `[x] DONE (2026-04-19)` | `~/scripts/n8n-workflows/ingest-knowledge-v2.json` (rag-tools) stores `content` unchanged and sends `embed_content` to Ollama; Hit@1 improved from 0.60 to 1.00 after deployment | None |
 | 4 | P2.2 | Scaffold LLM-as-reranker | `[ ] DEFERRED` | Scaffolding exists, but reranker remains blocked on infra and disabled by default | Revisit after TEI plus BGE reranker is available |
 | 5 | P3.2 | Expand eval set and implementation correctness test | `[x] DONE (2026-04-19)` | External brain plan marks P2-A and P2-B done for expanded eval plus end-to-end mode | None |
-| 6 | P3.1 | Add supersede and deprecate semantics | `[x] DONE (2026-04-19)` | External brain plan marks P3-A and P3-B done for supersede frontmatter and deprecate-on-push | None |
+| 6 | P3.1 | Add supersede and deprecate semantics | `[x] DONE (2026-04-19)` | `rag_capture.py` writes supersede frontmatter and `push-to-qdrant.sh` patches superseded chunks to `status: deprecated` | None |
 | 7 | P2.2-B | Deploy TEI plus BGE reranker | `[!] BLOCKED` | TEI container not deployed; current eval suite saturates, so reranker benefit is not proven | Revisit after harder eval shows measurable reranker gap |
 | 8 | P3.3 | Add eval to chunk revision queue feedback loop | `[ ] OPEN` | No canonical evidence yet that `~/scripts/.rag_revision_queue.md` integration is implemented | Implement after P4-C re-embed and post-baseline eval |
 
@@ -196,9 +196,9 @@ When eval flags NDCG < 0.6 for query X, append the chunk_id that should have ran
 
 | File                                                   | Role                                                     |
 | ------------------------------------------------------ | -------------------------------------------------------- |
-| `scripts/rag-capture-v2/rag_capture.py`                | Markdown drafting CLI: schema, validation, frontmatter   |
-| `scripts/push-to-qdrant.sh`                            | Ingestion: embedding, upsert, supersede logic            |
-| `scripts/qdrant-mcp-server-v2/qdrant-mcp-server-v2.js` | Retrieval: hybrid search, reranker stage                 |
+| `~/scripts/rag-capture-v2/rag_capture.py` (rag-tools)  | Markdown drafting CLI: schema, validation, frontmatter   |
+| `~/scripts/push-to-qdrant.sh` (rag-tools)              | Ingestion: embedding, upsert, supersede logic            |
+| `~/scripts/qdrant-mcp-server-v2/qdrant-mcp-server-v2.js` (rag-tools) | Retrieval: hybrid search, reranker stage                 |
 | `scripts/eval-retrieval-quality.py`                    | Eval framework; end-to-end hallucination test lives here |
 | `.claude/skills/rag-knowledge-capture-cli/SKILL.md`    | Chunk body templates Claude uses when capturing          |
 | `CLAUDE.md`                                            | Field and content rules visible to every session         |

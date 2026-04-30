@@ -11,6 +11,35 @@
 > Backup yang tersedia di VM 105: **2026-04-13** (gap = 14 hari updates hilang).
 > User memiliki 120 summary `.md` files tersebar di 8 lokasi lokal Windows.
 > Sebelum push, scripts harus sesuai konfigurasi April 27.
+>
+> **Live verification 2026-04-30:** VM target `192.168.18.199` currently has MCP v2, Qdrant env, `push-to-qdrant.sh`, `rag_capture.py`, n8n workflow source, eval script, and cosine verifier present. Qdrant `knowledge_v2` is reachable with `points_count=368`, dense vector `dense`, sparse vector `sparse`, and `sparse.modifier=idf`. Treat older 350/359 counts below as historical restoration checkpoints, not current counts.
+
+---
+
+## Current Verified State vs April 27 Target (2026-04-30)
+
+| Area | April 27 target | Verified existing state | VM105 action |
+|---|---|---|---|
+| Qdrant collection | `knowledge_v2` with named dense+sparse vectors and IDF sparse modifier | Live Qdrant: `points_count=368`, dense=`dense`, sparse=`sparse`, `sparse.modifier=idf` | None if restoring onto this VM; if rebuilding from Apr 13 backup, recreate collection before re-push |
+| MCP server | v2 server deployed and used by Claude Code | `/opt/mcp-servers/qdrant-knowledge/qdrant-mcp-server-v2.js` exists; `~/.qdrant-mcp.env` exists | Ensure PS1/startup command points to v2, not v1 |
+| Ingest scripts | April 27 `push-to-qdrant.sh` and `rag_capture.py` | `~/scripts/push-to-qdrant.sh` and `~/scripts/rag-capture-v2/rag_capture.py` exist on VM; source of truth is rag-tools installed per device under `~/scripts` / `C:\Users\Clandesitine\scripts` | Copy from rag-tools/current laptop `~/scripts/...` to VM105 when rebuilding |
+| n8n workflow source | `knowledge_v2` workflow with contextual `embed_content` | `~/scripts/n8n-workflows/ingest-knowledge-v2.json` exists; source of truth is rag-tools/local scripts, not this repo | Import workflow from rag-tools/current laptop and toggle Active off/on after restore |
+| Eval and verifier scripts | Eval harness plus cosine verifier available | `~/scripts/eval-retrieval-quality.py` and `~/scripts/verify_embed_cosine.py` exist on VM | Copy scripts, then rerun eval and cosine checks after restore |
+| Corpus re-ingest | 120 summary files re-pushed after Apr 13 backup restore | Historical restore pushed 120 summaries; live count is now 368 | For a fresh VM105 rebuild, repeat steps 5b-5d and verify live count after push |
+
+## VM105 Remaining Fix List
+
+Use this list only when restoring from the **2026-04-13 backup** or rebuilding a new server. The currently verified VM already has these items present.
+
+| Priority | Fix needed on restored VM105 | Evidence to collect before marking done |
+|---:|---|---|
+| 1 | Copy `~/scripts/push-to-qdrant.sh` and `~/scripts/rag-capture-v2/rag_capture.py` from rag-tools/current laptop to `~/scripts/` on VM105 | `test -f ~/scripts/push-to-qdrant.sh` and `test -f ~/scripts/rag-capture-v2/rag_capture.py` |
+| 2 | Copy/deploy `qdrant-mcp-server-v2.js` from rag-tools/current laptop to `/opt/mcp-servers/qdrant-knowledge/` and ensure Claude startup uses v2 | `test -f /opt/mcp-servers/qdrant-knowledge/qdrant-mcp-server-v2.js`; smoke query through Claude MCP returns FOUND |
+| 3 | Create `~/.qdrant-mcp.env` and local Qdrant env files with the active API key | Qdrant `/collections/knowledge_v2` returns HTTP 200 with api-key header |
+| 4 | Import `~/scripts/n8n-workflows/ingest-knowledge-v2.json` from rag-tools/current laptop into n8n and activate webhook | n8n execution log shows `embed_content` populated and Qdrant upsert success |
+| 5 | Recreate `knowledge_v2` with dense vector `dense`, sparse vector `sparse`, and `modifier=idf` if restoring from old backup | Qdrant collection config shows dense and sparse names plus `sparse.modifier=idf` |
+| 6 | Re-push the 120 summary files from the listed inventory paths | Push logs show HTTP 2xx and point-count checks; final count recorded in this file |
+| 7 | Run eval and MCP smoke tests after restore | Eval metrics recorded; Claude MCP smoke test returns expected FOUND results |
 
 ---
 
@@ -91,18 +120,18 @@
 | **0b** | Fix `push-to-qdrant.sh`: add `collection="knowledge"` ke override condition | `[x] DONE` | 1 edit, local file |
 | **0c** | Setup `~/.config/qdrant-knowledge.env` dengan QDRANT_API_KEY | `[x] DONE` | Prerequisite push-to-qdrant.sh |
 | **1** | Recreate `knowledge_v2` collection (named dense+sparse+idf) | `[x] DONE` | Delete + PUT + PATCH, verify sparse.modifier=idf |
-| **2a** | SCP `push-to-qdrant.sh` ke VM | `[x] DONE` | |
-| **2b** | SCP `rag_capture.py` ke VM | `[x] DONE` | |
-| **2c** | SCP `qdrant-mcp-server-v2.js` ke VM (post-fix) | `[x] DONE` | |
-| **2d** | SCP `ingest-knowledge-v2.json` ke VM | `[x] DONE` | |
-| **2e** | SCP `eval-retrieval-quality.py` ke VM | `[x] DONE` | SCPed from local scripts/ — BLOCKED resolved |
+| **2a** | SCP `push-to-qdrant.sh` ke VM | `[x] DONE` | Verified 2026-04-30: `~/scripts/push-to-qdrant.sh` exists on VM; source of truth is rag-tools/current laptop under `~/scripts` |
+| **2b** | SCP `rag_capture.py` ke VM | `[x] DONE` | Verified 2026-04-30: `~/scripts/rag-capture-v2/rag_capture.py` exists on VM; source of truth is rag-tools/current laptop under `~/scripts` |
+| **2c** | SCP `qdrant-mcp-server-v2.js` ke VM (post-fix) | `[x] DONE` | Verified 2026-04-30: `/opt/mcp-servers/qdrant-knowledge/qdrant-mcp-server-v2.js` exists; source of truth is rag-tools/current laptop under `~/scripts/qdrant-mcp-server-v2/` |
+| **2d** | SCP `ingest-knowledge-v2.json` ke VM | `[x] DONE` | Verified 2026-04-30: `~/scripts/n8n-workflows/ingest-knowledge-v2.json` exists; source of truth is rag-tools/current laptop under `~/scripts/n8n-workflows/` |
+| **2e** | SCP `eval-retrieval-quality.py` ke VM | `[x] DONE` | Verified 2026-04-30: `~/scripts/eval-retrieval-quality.py` exists on VM; keep this aligned with the project eval harness when copied |
 | **2f** | Setup `~/.rag_config.json` di VM | `[x] DONE` | URL = localhost:6333 |
 | **3** | Update n8n workflow — import + aktifkan contextual retrieval | `[x] DONE` | Manual via n8n UI |
 | **4** | Deploy MCP server v2 ke `/opt/mcp-servers/` + restart | `[x] DONE` | |
 | **5a** | Verify D:\Backup frontmatter collection field | `[x] DONE` | collection field missing → override catches it; 3 file project fix done |
 | **5b** | Push 62 repo-based summaries (homelab-hardening s/d token-monitor) | `[x] DONE` | All 200 OK, 0 errors |
 | **5c** | Push 58 D:\Backup summaries | `[x] DONE` | All 200 OK, 0 errors |
-| **5d** | Verify point count di Qdrant | `[x] DONE` | **359 points, 359 indexed** (live 2026-04-29; was 350 post-initial-push, +9 dari rag add sesi berikutnya) |
+| **5d** | Verify point count di Qdrant | `[x] DONE` | Historical snapshot: **359 points, 359 indexed** on 2026-04-29; live verification on 2026-04-30 shows `points_count=368`, `indexed_vectors_count=371` |
 | **6a** | Run eval framework | `[x] DONE` | NDCG@5=0.905, Hit@1=0.80, MRR=0.90 — below target; no regressions, hybrid beneficial |
 | **6b** | MCP query test via Claude Code | `[x] DONE` | 1/3 FOUND (push-to-qdrant.sh score=0.708); 2/3 NOT FOUND |
 | **7a** | Audit gap outcome — prefetch-mult=8 experiment | `[x] DONE` | Metric tidak berubah; Hit@1 tetap 0.80 — prefetch bukan akar masalah |
@@ -114,7 +143,7 @@
 | **7g** | Final smoke test 3/3 post-PS1-fix (sesi 2026-04-29) | `[x] DONE` | Q1=0.750, Q2=0.611, Q3=1.000 — true end-to-end verification via v2 |
 
 > **Semua steps SELESAI: 0a–7g DONE**
-> knowledge_v2: 350 points indexed. MCP v2 end-to-end verified 3/3 FOUND. Eval 2026-04-29.
+> Historical snapshot: knowledge_v2 had 350 points indexed after the initial Apr 29 restoration, later verified at 359/359 in step 5d, and live-checked at 368 points on 2026-04-30. MCP v2 end-to-end verified 3/3 FOUND. Eval 2026-04-29.
 
 ---
 
@@ -319,7 +348,7 @@ ssh figulazmi@192.168.18.199 'curl -s "http://localhost:6333/collections/knowled
 - **Upsert idempotent** — semua push aman diulang, tidak akan duplicate
 - **Step 3 adalah blocker** untuk step 5 — n8n harus pakai `embed_content` sebelum push data
 - **MCP server v2** sudah deploy. QDRANT_API_KEY di VM B1 ada di `/opt/homelab/ai-stack/qdrant/.env` (bukan `~/.config/qdrant-knowledge.env` — file itu tidak ada di VM B1)
-- **knowledge_v2** fully populated — 350 points indexed (Apr 29 2026)
+- **knowledge_v2** fully populated — historical Apr 29 snapshots were 350 points after initial restoration and 359/359 in step 5d; live 2026-04-30 verification shows 368 points with dense=`dense`, sparse=`sparse`, and `sparse.modifier=idf`
 - **PS1 wiring is the critical link** — `claude-mcp-connect.ps1` `$MCP_CMD` harus menunjuk ke binary yang benar. Patching JS file saja tidak cukup; kalau PS1 masih spawn v1, semua patch di v2 tidak efektif
 - **`~/.qdrant-mcp.env` wajib ada** di VM B1 sebelum v2 bisa start. v2 tidak punya API key hardcoded; exit on startup jika file tidak ada
 - **Restart Claude Code wajib** setiap kali PS1 atau MCP binary berubah — process di-spawn saat session start, bukan hot-reload

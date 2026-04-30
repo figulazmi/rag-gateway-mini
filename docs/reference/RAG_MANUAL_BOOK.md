@@ -814,7 +814,7 @@ if hasattr(sys.stdin, 'reconfigure'):
     sys.stdin.reconfigure(encoding='utf-8', errors='replace')
 ```
 
-**Jika muncul lagi:** Cek apakah baris ini masih ada di `rag_capture.py`. Perlu sync manual ke `~/.local/bin/rag` karena bukan symlink.
+**Jika muncul lagi:** Cek apakah baris ini masih ada di `rag_capture.py`. `~/.local/bin/rag` saat ini adalah wrapper yang mengeksekusi `~/scripts/rag-capture-v2/rag_capture.py`, jadi update source script saja sudah cukup.
 
 **Preventif:** Jangan pakai em dash (`--`) di chunk body -- pakai dua hyphen (`--`) sebagai gantinya.
 
@@ -1045,10 +1045,10 @@ Kalau eval menunjukkan sparse false positive (dense dan sparse keduanya "benar" 
 
 | File | Lokasi | Role |
 |---|---|---|
-| `rag_capture.py` | `~/scripts/rag-capture-v2/rag_capture.py` (Windows) | CLI source |
-| `rag` (installed) | `~/.local/bin/rag` (Windows) | CLI binary, NOT symlink -- sync manual |
-| `push-to-qdrant.sh` | `~/scripts/push-to-qdrant.sh` (Windows) | Ingest pipeline |
-| `qdrant-mcp-server.js` | VM B1 `/opt/mcp-servers/qdrant-knowledge/` | MCP server |
+| `rag_capture.py` | rag-tools source installed at `~/scripts/rag-capture-v2/rag_capture.py` / `C:\Users\Clandesitine\scripts\rag-capture-v2\rag_capture.py` | CLI source |
+| `rag` (installed) | `~/.local/bin/rag` (Windows) | Wrapper that execs `~/scripts/rag-capture-v2/rag_capture.py` |
+| `push-to-qdrant.sh` | rag-tools source installed at `~/scripts/push-to-qdrant.sh` / `C:\Users\Clandesitine\scripts\push-to-qdrant.sh` | Ingest pipeline |
+| `qdrant-mcp-server-v2.js` | rag-tools source `~/scripts/qdrant-mcp-server-v2/qdrant-mcp-server-v2.js`; deployed on VM B1 at `/opt/mcp-servers/qdrant-knowledge/` | MCP server v2 |
 | Draft files | `~/.rag_drafts/{project}/chunk_NNN.md` | Temporary drafts |
 | Summaries | `.claude/summaries/YYYY-MM-DD-*.md` | Final merged files |
 | Checkpoints | `.claude/checkpoints/YYYY-MM-DD-*-001.md` | In-progress checkpoints |
@@ -1056,7 +1056,7 @@ Kalau eval menunjukkan sparse false positive (dense dan sparse keduanya "benar" 
 | API key | `~/.config/qdrant-knowledge.env` (chmod 600) | Qdrant API key, outside repo |
 | Eval script | `scripts/eval-retrieval-quality.py` | Retrieval quality measurement |
 | Eval fixtures | `scripts/eval-fixtures/implementation-tests.json` | 30 test queries |
-| n8n workflow | `scripts/n8n-workflows/ingest-knowledge-v2.json` | Workflow source (api-key replaced) |
+| n8n workflow | rag-tools source `~/scripts/n8n-workflows/ingest-knowledge-v2.json` / `C:\Users\Clandesitine\scripts\n8n-workflows\ingest-knowledge-v2.json` | Workflow source |
 | Skills | `.claude/skills/rag-knowledge-capture-cli/SKILL.md` | Override global command |
 | Global command | `~/.claude/commands/rag-knowledge-capture-cli.md` | Fallback -- sync with SKILL.md |
 
@@ -1068,7 +1068,7 @@ Kalau eval menunjukkan sparse false positive (dense dan sparse keduanya "benar" 
 | n8n | `192.168.18.199:5678` | `100.120.249.99:5678` | knowledge-ingest webhook |
 | Ollama | `192.168.18.199:11434` | `100.120.249.99:11434` | nomic-embed-text |
 | RAG Gateway | `192.168.18.199:5200` | `100.120.249.99:5200` | /rag/search + /rag/debug |
-| MCP Server | spawned per SSH | -- | qdrant-mcp-server.js |
+| MCP Server | spawned per SSH | -- | qdrant-mcp-server-v2.js |
 
 SSH user: `figulazmi`
 Docker compose path: `/opt/homelab/ai-stack/`

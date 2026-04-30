@@ -55,7 +55,7 @@ docs/
 |---|---|---|
 | [RAG_V2_ROADMAP.md](planning/RAG_V2_ROADMAP.md) | Active feature roadmap for `knowledge_v2` — P1/P2/P3 priorities, strategic goal | **Active — read before any pipeline change** |
 | [RAG_EXTERNAL_BRAIN_PLAN.md](planning/RAG_EXTERNAL_BRAIN_PLAN.md) | Strategic improvement plan: reliability → quality → implementer-grade chunks | Reference |
-| [VM105_RESTORATION_PLAN.md](planning/VM105_RESTORATION_PLAN.md) | VM B1 script restoration + full `knowledge_v2` re-ingest plan | Active |
+| [VM105_RESTORATION_PLAN.md](planning/VM105_RESTORATION_PLAN.md) | VM105 restore gap checklist against VM B1 April 27 target; live verification shows current VM has 368 `knowledge_v2` points | Active |
 
 ---
 
@@ -87,7 +87,7 @@ docs/
 | Quality | Expand measured baseline beyond retrieval-only metrics (faithfulness, latency, relevance) | [quality/RAG_EVAL_HARNESS.md](quality/RAG_EVAL_HARNESS.md#5-baseline-vs-current-comparison) |
 | Pipeline | IDF weighting (Opsi C) — deferred (revisit after corpus diversity and post-baseline metrics) | [pipeline/RAG_BOTTLENECK_FIXES.md](pipeline/RAG_BOTTLENECK_FIXES.md#7--idf-weighting-mismatch-between-c-and-qdrant-bm25-) |
 | Reference | New device/server bootstrap checklist is available for future migration/rebuilds | [reference/RAG_BOOTSTRAP_NEW_DEVICE_AND_SERVER.md](reference/RAG_BOOTSTRAP_NEW_DEVICE_AND_SERVER.md) |
-| Planning | VM105 scripts restoration is complete; keep as reference runbook only | [planning/VM105_RESTORATION_PLAN.md](planning/VM105_RESTORATION_PLAN.md) |
+| Planning | VM105 restore checklist: current VM verified at 368 points; use remaining-fix list only when rebuilding from Apr 13 backup | [planning/VM105_RESTORATION_PLAN.md](planning/VM105_RESTORATION_PLAN.md) |
 
 ---
 

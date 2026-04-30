@@ -359,7 +359,7 @@ If chunks appear in the root `.rag_drafts/`, `get_project_draft_dir()` has been 
 All fixes verified against live system:
 - VM B1: `192.168.18.199`
 - rag_capture.py: `~/scripts/rag-capture-v2/rag_capture.py`
-- Qdrant: `knowledge_v2` collection, 252 points
+- Qdrant: `knowledge_v2` collection, 252 points during the 2026-04-25 test snapshot; live 2026-04-30 verification shows 368 points
 
 | Fix | Test Method | Before Behavior | After Behavior | Result |
 |-----|-------------|-----------------|----------------|--------|
@@ -372,4 +372,4 @@ All fixes verified against live system:
 ---
 
 *Generated: 2026-04-17 | Last tested: 2026-04-25*
-*Source files: `CLAUDE.md`, `scripts/push-to-qdrant.sh`, `~/scripts/rag-capture-v2/rag_capture.py`*
+*Source files: `CLAUDE.md`, `~/scripts/push-to-qdrant.sh` (rag-tools), `~/scripts/rag-capture-v2/rag_capture.py` (rag-tools)*

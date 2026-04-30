@@ -5,6 +5,7 @@
 > Status tracking standard: [`../reference/TRACKING_STATUS_STANDARD.md`](../reference/TRACKING_STATUS_STANDARD.md).
 > Legacy sections may contain historical status text. Current source of truth is [Canonical Task Tracker](#canonical-task-tracker).
 > Metric and score tables in this file are measurements, not task status trackers.
+> Live VM verification on 2026-04-30 shows `knowledge_v2` at 368 points; earlier 255/262/275/284/295/296 values are historical coverage snapshots.
 
 Coverage knowledge mengukur seberapa *beragam* dan *seimbang* isi knowledge base.
 Retrieval yang bagus butuh campuran chunk type yang tepat — terlalu banyak `debug`

@@ -65,11 +65,11 @@ Allowed status values: `[ ] OPEN`, `[~] IN PROGRESS`, `[x] DONE (YYYY-MM-DD)`, `
 
 ## Open Questions (NEEDS VALIDATION)
 
-- [ ] Has Qdrant API key `0aa9f…` been rotated since the scrub commit?
+- [x] Has Qdrant API key `0aa9f…` been rotated since the scrub commit? Yes — see `RAG_SECURITY_POSTURE.md` P0-1 evidence.
 - [ ] Does the n8n HTTP webhook currently require any authentication header?
 - [ ] Has `verify_embed_cosine.py` been run against live `knowledge_v2` corpus?
-- [ ] What is the current chunk count in `knowledge_v2`? (Last known: ~252, 2026-04-25)
+- [x] What is the current chunk count in `knowledge_v2`? Live VM verification on 2026-04-30: `points_count=368`, `indexed_vectors_count=371`, dense=`dense`, sparse=`sparse`, `sparse.modifier=idf`.
 
 ---
 
-*Last updated: 2026-04-29 · Initiative owner: Figur Ulul Azmi*
+*Last updated: 2026-04-30 · Initiative owner: Figur Ulul Azmi*
