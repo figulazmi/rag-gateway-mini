@@ -115,11 +115,10 @@ done
 ## Quick Status Overview
 
 ```text
-Done: P1-A, P1-B, P1-C, P1-D, P2-A, P2-B, P3-A, P3-B, P4-A, P4-B, P4-C
-Done: dense-only A/B and sparse text redesign experiment
-Open: P6-B
-Deferred: P5 reranker
-Next: P6-B
+Done: P1-A, P1-B, P1-C, P1-D, P2-A, P2-B, P3-A, P3-B, P4-A, P4-B, P4-C, P6-A, P6-B
+Open: none
+Deferred: P5
+Next: none
 ```
 
 ---
@@ -143,7 +142,7 @@ This table is the canonical execution tracker and recommended execution order. D
 | 11 | P4-C | Re-embed corpus after n8n deploy | `[x] DONE (2026-05-02)` | Final eval after Python pattern chunks and selective chunk_type filtering: dense-only Hit@1 0.8333, MRR 0.9028, NDCG@5 0.9108; hybrid Hit@1 0.6111, Hit@3 0.9444, Hit@5 0.9444, MRR 0.7685, NDCG@5 0.8629 | Use results to drive dense-only A/B and sparse-text redesign |
 | 12 | P5 | TEI plus BGE reranker | `[ ] DEFERRED` | Reranker scaffold exists, but final eval points to sparse/RRF noise rather than reranker absence | Revisit only after dense-only and sparse-text redesign still leave a top-K ordering gap |
 | 13 | P6-A | Dense-only and sparse-text A/B | `[x] DONE (2026-05-02)` | `knowledge_v2_keyfacts` built from `knowledge_v2` with 373/373 point parity and smoke eval improved hybrid to Hit@1 0.8889, MRR 0.9167, NDCG@5 0.9547 | Promote topic + Key Facts sparse strategy to live collection and ingestion paths |
-| 14 | P6-B | Promote Key Facts sparse strategy live | `[x] DONE (2026-05-02)` | Live gateway switched to `knowledge_v2_keyfacts`; Scalar/OpenAPI and `/rag/search` smoke tests passed for known, argparse, and dataclass queries | Import patched n8n workflow so future chunks keep using topic + Key Facts sparse text |
+| 14 | P6-B | Promote Key Facts sparse strategy live | `[x] DONE (2026-05-02)` | Live gateway targets `knowledge_v2_keyfacts`; separate n8n workflow `knowledge_v2_keyfacts` uses webhook `knowledge-ingest-keyfacts`, writes to `knowledge_v2_keyfacts`, and passed webhook plus gateway search smoke; original `knowledge_v2` workflow stayed active and `push-to-qdrant.sh` smoke passed | None |
 
 ---
 

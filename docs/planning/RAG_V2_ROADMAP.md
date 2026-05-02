@@ -191,7 +191,7 @@ When eval flags NDCG < 0.6 for query X, append the chunk_id that should have ran
 | 8 | P3.3 | Add eval to chunk revision queue feedback loop | `[x] DONE (2026-05-02)` | `eval-retrieval-quality.py` appends low-NDCG queries to `~/scripts/.rag_revision_queue.md`; `rag status` reports open item count; Python argparse/dataclass coverage was fixed with new pattern chunks | Use queue to identify sparse/RRF noise and stale/noisy chunks, then rerun eval |
 
 | 9 | P2.3 | A/B dense-only vs hybrid and sparse text redesign | `[x] DONE (2026-05-02)` | `knowledge_v2_keyfacts` smoke eval: hybrid Hit@1 0.8889, MRR 0.9167, NDCG@5 0.9547; current hybrid was Hit@1 0.6111, MRR 0.7685, NDCG@5 0.8629 | Promote sparse Key Facts strategy into ingest/migration paths and plan safe live collection switch |
-| 10 | P2.4 | Promote sparse Key Facts collection strategy | `[x] DONE (2026-05-02)` | Live gateway now targets `knowledge_v2_keyfacts`; Scalar/OpenAPI and `/rag/search` smoke tests passed for known, argparse, and dataclass queries | Import patched n8n workflow so future chunks keep using topic + Key Facts sparse text |
+| 10 | P2.4 | Promote sparse Key Facts collection strategy | `[x] DONE (2026-05-02)` | Live gateway targets `knowledge_v2_keyfacts`; separate n8n workflow `knowledge_v2_keyfacts` uses `knowledge-ingest-keyfacts`, writes to `knowledge_v2_keyfacts`, and passed webhook plus gateway search smoke; original `knowledge_v2` workflow stayed active and `push-to-qdrant.sh` smoke passed | None |
 
 ## Critical Files Reference
 
