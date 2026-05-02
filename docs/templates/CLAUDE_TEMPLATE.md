@@ -44,12 +44,13 @@ Current repository docs override stale RAG, memory, or external knowledge. If RA
 
 Before changing existing behavior:
 
-1. Read `docs/ONBOARDING.md` for the project workflow.
-2. Check `docs/TASKS.md` for active work.
-3. Check the owning document's `## Canonical Task Tracker`.
-4. Check `docs/architecture/DECISIONS.md` before reversing a documented decision.
-5. Check `docs/config/CONFIGURATION.md` before changing runtime settings or secrets handling.
-6. Check `docs/testing/TEST_STRATEGY.md` before claiming verification.
+1. Read `CONTEXT.md` for constraints, scope, source-of-truth order, and rejected approaches.
+2. Read `docs/ONBOARDING.md` for the project workflow.
+3. Check `docs/TASKS.md` for active work and task boundaries.
+4. Check the owning document's `## Canonical Task Tracker`.
+5. Check `docs/architecture/DECISIONS.md` before reversing a documented decision.
+6. Check `docs/config/CONFIGURATION.md` before changing runtime settings or secrets handling.
+7. Check `docs/testing/TEST_STRATEGY.md` before claiming verification.
 
 ---
 

@@ -8,9 +8,19 @@ Use this file as the compact operating context for humans, Claude Code, and futu
 
 ---
 
-## Project Identity
+## LLM Context Injection Order
 
-Last updated: {{DATE}}
+Before answering any question about this project, read in this order:
+
+1. `CONTEXT.md` - constraints, scope, source-of-truth order, and rejected approaches.
+2. `docs/TASKS.md` - current focus and active task boundaries.
+3. Relevant sub-docs only if the task requires them.
+
+Do not suggest solutions that conflict with `CONTEXT.md` constraints or rejected approaches.
+
+---
+
+## Project Identity
 
 | Field | Value |
 |---|---|
@@ -24,8 +34,6 @@ Last updated: {{DATE}}
 
 ## Purpose
 
-Last updated: {{DATE}}
-
 Describe what this project does, who uses it, and why it exists.
 
 Minimum required detail:
@@ -37,8 +45,6 @@ Minimum required detail:
 ---
 
 ## Scope
-
-Last updated: {{DATE}}
 
 ### In Scope
 
@@ -56,8 +62,6 @@ Last updated: {{DATE}}
 
 ## Constraints
 
-Last updated: {{DATE}}
-
 | Constraint | Reason | Impact |
 |---|---|---|
 | Do not commit secrets | Prevent credential exposure | Use templates, placeholders, and documented secret locations only |
@@ -67,9 +71,17 @@ Last updated: {{DATE}}
 
 ---
 
-## Source of Truth Order
+## Rejected Approaches
 
-Last updated: {{DATE}}
+| Approach | Rejected reason | Date |
+|---|---|---|
+| None yet | No rejected approaches recorded yet | {{DATE}} |
+
+Record approaches that were considered and rejected so future humans and LLMs do not re-suggest them without new evidence.
+
+---
+
+## Source of Truth Order
 
 When sources conflict, use this order:
 
@@ -86,8 +98,6 @@ Current repository docs override stale RAG, memory, or external knowledge. If RA
 
 ## Decision Rules
 
-Last updated: {{DATE}}
-
 - Durable decisions belong in `docs/architecture/DECISIONS.md`.
 - Active task discovery belongs in `docs/TASKS.md`.
 - Detailed task status belongs only in the owning `## Canonical Task Tracker`.
@@ -98,8 +108,6 @@ Last updated: {{DATE}}
 ---
 
 ## Task Scope Boundary Rule
-
-Last updated: {{DATE}}
 
 Every active task entry must make the boundary clear enough that an implementer knows what not to touch.
 
@@ -116,8 +124,6 @@ If the boundary is unclear, do not implement. Clarify or split the task first.
 
 ## Verification Rules
 
-Last updated: {{DATE}}
-
 A task is not done until verification evidence exists.
 
 Valid evidence includes:
@@ -126,16 +132,17 @@ Valid evidence includes:
 - Endpoint, CLI, UI, or deployment smoke test.
 - Linked artifact, report, or generated file.
 - Manual check with exact steps and observed result.
+- Docs updated: `CONTEXT.md` Rejected Approaches and `docs/TASKS.md` reflect current state.
 
 ---
 
 ## Open Questions
 
-Last updated: {{DATE}}
+| Question | Owner | Needed by | Blocks | Status |
+|---|---|---|---|---|
+| None | None | None | None | None |
 
-| Question | Owner | Needed by | Status |
-|---|---|---|---|
-| None | None | None | None |
+If an open question blocks a task and is unresolved by `Needed by`, mark the blocked task `[!] BLOCKED` in its owning canonical tracker.
 
 ---
 
