@@ -18,9 +18,9 @@ Next: TASK-ID - short next action
 
 ## Cross-Area Task Index
 
-| Area | Source of truth | Current focus | Next task ID | Notes |
-|---|---|---|---|---|
-| Planning | [`planning/ROADMAP.md`](../planning/ROADMAP.md) | Current roadmap focus | P1-A | Keep evidence in roadmap tracker |
+| Area | Source of truth | Current focus | Next task ID | Scope boundary | Notes |
+|---|---|---|---|---|---|
+| Planning | [`planning/ROADMAP.md`](../planning/ROADMAP.md) | Current roadmap focus | P1-A | Includes roadmap planning only; excludes implementation work | Keep evidence in roadmap tracker |
 
 ---
 
@@ -29,7 +29,8 @@ Next: TASK-ID - short next action
 1. Update the owning canonical tracker first.
 2. Update this index only when current focus or next task ID changes.
 3. Do not duplicate detailed status or evidence here.
-4. Search for task IDs before reporting completion.
+4. Every active task row must include a scope boundary that states included and excluded work.
+5. Search for task IDs before reporting completion.
 
 ---
 

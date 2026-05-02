@@ -22,9 +22,9 @@ Do not own task status here.
 
 ## Canonical Task Tracker
 
-| Order | ID | Task | Status | Evidence | Next action |
-|---:|---|---|---|---|---|
-| 1 | P1-A | Implement one concrete outcome | `[ ] OPEN` | Required proof before done | Exact next command or decision |
+| Order | ID | Task | Scope boundary | Status | Evidence | Next action |
+|---:|---|---|---|---|---|---|
+| 1 | P1-A | Implement one concrete outcome | Includes the named outcome only; excludes unrelated refactors | `[ ] OPEN` | Required proof before done | Exact next command or decision |
 
 ---
 

@@ -70,9 +70,9 @@ Metric rows may say that a metric was achieved, but task completion status still
 
 Use this table shape for new trackers and when refactoring old trackers:
 
-| Order | ID | Task | Status | Evidence | Next action |
-|---:|---|---|---|---|---|
-| 1 | P1-A | Short imperative task name | `[ ] OPEN` | Observable proof required to mark done | Immediate next command or decision |
+| Order | ID | Task | Scope boundary | Status | Evidence | Next action |
+|---:|---|---|---|---|---|---|
+| 1 | P1-A | Short imperative task name | Includes the named outcome only; excludes unrelated refactors | `[ ] OPEN` | Observable proof required to mark done | Immediate next command or decision |
 
 Column rules:
 
@@ -81,6 +81,7 @@ Column rules:
 | `Order` | Execution order, not priority label. Keep stable unless order truly changes. |
 | `ID` | Stable task ID. Never reuse an ID for a different task. |
 | `Task` | One concrete outcome, written as an imperative phrase. |
+| `Scope boundary` | Explicitly states included work and excluded work. |
 | `Status` | One of the allowed status values below. |
 | `Evidence` | Required for DONE. Use command output, deployed service check, test result, or doc link. |
 | `Next action` | Required for OPEN, IN PROGRESS, BLOCKED, or DEFERRED. Use `None` only when DONE or OBSOLETE. |
@@ -122,7 +123,8 @@ Do not repeat detailed evidence or independent status labels in the quick summar
 1. When code, scripts, infra, or docs complete a tracked task, update the canonical row in the same working set.
 2. A task is not DONE until verification passes.
 3. If implementation is done but verification is pending, use `[~] IN PROGRESS`.
-4. If a blocker becomes stale, update `Evidence` and `Next action` immediately.
+4. Every active task must have a scope boundary that states included and excluded work.
+5. If a blocker becomes stale, update `Evidence` and `Next action` immediately.
 5. If another doc references the task, reference its ID and canonical doc instead of copying the status.
 6. Before reporting a tracked task as complete, run a text search for its ID and update stale references.
 

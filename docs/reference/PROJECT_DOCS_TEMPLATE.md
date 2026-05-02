@@ -10,6 +10,7 @@ The goal is to keep navigation, task status, decisions, runbooks, and history se
 
 ```text
 README.md                           # root project overview and quick start
+CONTEXT.md                          # compact project context for humans and agents
 CLAUDE.md                           # project instructions for Claude Code and agents
 CONTRIBUTING.md                     # contribution workflow and verification checklist
 docs/
@@ -224,6 +225,7 @@ Copy files from `docs/templates/` when bootstrapping another project, then renam
 | Template | Target path |
 |---|---|
 | `ROOT_README_TEMPLATE.md` | `README.md` |
+| `CONTEXT_TEMPLATE.md` | `CONTEXT.md` |
 | `CLAUDE_TEMPLATE.md` | `CLAUDE.md` |
 | `CONTRIBUTING_TEMPLATE.md` | `CONTRIBUTING.md` |
 | `TASKS_TEMPLATE.md` | `docs/TASKS.md` |

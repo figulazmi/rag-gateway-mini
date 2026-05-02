@@ -23,6 +23,7 @@ Short description of what this project does and who it serves.
 
 | Path | Purpose |
 |---|---|
+| `CONTEXT.md` | Compact project context, constraints, and source-of-truth order |
 | `docs/` | Project documentation, task tracking, runbooks, and history |
 | `docs/TASKS.md` | Current work index |
 | `docs/ONBOARDING.md` | Fast-start guide for contributors and future agents |

@@ -25,6 +25,21 @@ Project instructions for Claude Code and future coding agents.
 
 ---
 
+## Source of Truth
+
+When sources conflict, use this order:
+
+1. Current repository files.
+2. Project docs in this repository.
+3. `CONTEXT.md`.
+4. `docs/architecture/DECISIONS.md`.
+5. RAG, memory, or external knowledge base.
+6. General model knowledge.
+
+Current repository docs override stale RAG, memory, or external knowledge. If RAG disagrees with current docs, trust the current docs and flag the RAG entry as potentially stale.
+
+---
+
 ## Documentation Workflow
 
 Before changing existing behavior:

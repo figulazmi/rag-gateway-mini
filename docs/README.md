@@ -142,6 +142,7 @@ docs/
 | Document | Purpose | Status |
 |---|---|---|
 | [ROOT_README_TEMPLATE.md](templates/ROOT_README_TEMPLATE.md) | Blank root project README | Template |
+| [CONTEXT_TEMPLATE.md](templates/CONTEXT_TEMPLATE.md) | Blank compact project context for humans and agents | Template |
 | [CLAUDE_TEMPLATE.md](templates/CLAUDE_TEMPLATE.md) | Blank project instructions for Claude Code and future agents | Template |
 | [CONTRIBUTING_TEMPLATE.md](templates/CONTRIBUTING_TEMPLATE.md) | Blank contribution workflow | Template |
 | [TASKS_TEMPLATE.md](templates/TASKS_TEMPLATE.md) | Blank cross-document task index | Template |
@@ -156,6 +157,7 @@ docs/
 | [INCIDENT_LOG_TEMPLATE.md](templates/INCIDENT_LOG_TEMPLATE.md) | Blank incident log | Template |
 | [SECURITY_BASELINE_TEMPLATE.md](templates/SECURITY_BASELINE_TEMPLATE.md) | Blank security baseline checklist | Template |
 | [AUTOMATION_TEMPLATE.md](templates/AUTOMATION_TEMPLATE.md) | Blank CI/CD, hook, cron, and scheduled automation inventory | Template |
+| [DOCS_VALIDATION_TEMPLATE.md](templates/DOCS_VALIDATION_TEMPLATE.md) | Blank six-prompt documentation validation tracker | Template |
 
 ---
 
