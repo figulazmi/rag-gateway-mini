@@ -147,7 +147,63 @@ Decision: keep reranker scaffolding disabled. Do not deploy TEI/BGE just to mask
 - `scripts/eval-retrieval-quality.py` — `rerank_with_llm` helper, `--rerank / --rerank-model / --rerank-candidates` CLI flags.
 
 **Next retrieval fix before P2.2-B:**
-Promote the successful sparse text redesign. `scripts/build-sparse-keyfacts-experiment-rest.py` created `knowledge_v2_keyfacts` from `knowledge_v2` with point parity 373 -> 373 and 345 points carrying Key Facts sparse text. Next step is to update ingestion/migration paths so sparse vectors are generated from topic + Key Facts by default, then safely switch the live collection or rebuild `knowledge_v2` after backup.
+Promote the successful sparse text redesign. `scripts/build-sparse-keyfacts-experiment-rest.py` created `knowledge_v2_keyfacts` from `knowledge_v2` with point parity 373 -> 373 and 345 points carrying Key Facts sparse text. Next step is to production-harden the separate keyfacts path, prove it stays better than legacy under soak, then choose an explicit cutover path after user approval.
+
+**P2.5. Keyfacts production criteria and history**
+
+The keyfacts path is now a production candidate, not yet the default ingestion path. The long-term criteria are:
+
+- Quality must beat legacy `knowledge_v2` on Hit@1, MRR, and NDCG@5 across repeated evals.
+- Hit@3 must stay at or above 0.9444, matching the current legacy recall floor.
+- Average eval latency should remain close to legacy and below the documented p50 target envelope.
+- Gateway and n8n logs must show no repeated runtime errors during soak.
+- The legacy `push-to-qdrant.sh` path must continue writing to `knowledge_v2` until explicit cutover.
+- Existing and keyfacts n8n workflows must remain isolated: `knowledge_v2` writes only to `knowledge_v2`; `knowledge_v2_keyfacts` writes only to `knowledge_v2_keyfacts`.
+
+Findings so far:
+
+- Full-content sparse text was the bottleneck because common homelab tokens caused sparse/RRF rank noise.
+- Rebuilding sparse vectors from `topic + Key Facts` improved top-rank precision without changing dense vectors or payloads.
+- Initial production soak baseline on 2026-05-02 showed keyfacts hybrid Hit@1 0.9444, MRR 0.9444, NDCG@5 0.9632, and avg latency 1133.4ms.
+- Legacy hybrid in the same soak baseline showed Hit@1 0.6667, MRR 0.7963, NDCG@5 0.8766, and avg latency 1120.9ms.
+- Final production validation on 2026-05-02 still showed 3 query-level sparse/RRF regressions, but keyfacts remained stronger than legacy on Hit@1, MRR, and NDCG@5; this is acceptable for retrieval-only production while full ingest cutover stays separate.
+
+**P2.6. Repeatable keyfacts soak and verification workflow**
+
+Run the candidate path as a separate workflow while the old push path remains live. The verification loop is:
+
+1. Confirm `push-to-qdrant.sh` still targets `knowledge_v2`.
+2. Confirm gateway `/scalar/`, `/openapi/v1.json`, and `/rag/search` smoke pass.
+3. Run `eval-retrieval-quality.py` for both `knowledge_v2` and `knowledge_v2_keyfacts` with timestamped outputs under `.claude/reports/`.
+4. Compare hybrid Hit@1, MRR, NDCG@5, and latency.
+5. Check recent gateway and n8n logs for runtime errors.
+6. Confirm no temporary smoke points remain in either collection.
+
+**P2.7. Safe cutover path for retrieval and ingestion**
+
+Retrieval-only cutover is complete as of 2026-05-02. VM B1 production gateway config at `/opt/homelab/ai-stack/rag-gateway-mini/appsettings.Production.json` targets `knowledge_v2_keyfacts`, so no redeploy or n8n workflow change was required during final validation.
+
+Final retrieval-only production evidence:
+
+- Gateway config collection: `knowledge_v2_keyfacts`.
+- Collection health/count evidence: `knowledge_v2` 379 points, `knowledge_v2_keyfacts` 373 points, both green.
+- Gateway `/scalar/` and `/openapi/v1.json` returned 200.
+- `/rag/search` smoke for `project=homelab` returned HTTP 200, `status=found`, top result `Python argparse subcommand CLI pattern`.
+- Recent gateway and n8n logs showed 0 relevant error lines.
+- Final eval reports: `.claude/reports/final-keyfacts-production-2026-05-02.json` and `.claude/reports/final-legacy-production-2026-05-02.json`.
+- Keyfacts final hybrid: Hit@1 0.9444, Hit@3 0.9444, Hit@5 0.9444, MRR 0.9444, NDCG@5 0.9648, avg latency 1158.6ms.
+- Legacy final hybrid: Hit@1 0.6667, Hit@3 0.9444, Hit@5 0.9444, MRR 0.7963, NDCG@5 0.8786, avg latency 1068.3ms.
+- Legacy `push-to-qdrant.sh` remains unchanged and still defaults to `knowledge_v2`.
+
+Rollback for retrieval-only production is restoring the gateway collection setting to `knowledge_v2` in `/opt/homelab/ai-stack/rag-gateway-mini/appsettings.Production.json`, then restarting/recreating only the gateway container. Do not touch either n8n workflow for retrieval rollback.
+
+Full ingest cutover remains a separate future task. Do not overwrite the existing `knowledge_v2` workflow; export and preserve it before any future full-ingest default change.
+
+**P2.8. Negative-query not-found confidence gate**
+
+Latest retrieval-only validation found one hardening gap: the out-of-domain query `What is the project-alpha Blazor login flow?` with `project=homelab` returned generic `status=found` results around score 0.5. This was not cross-project payload leakage, but the gateway found/not-found gate is too permissive because `/rag/search` currently returns found whenever any result is above the general RRF `ScoreThreshold` of 0.35.
+
+The fix is a separate top-score confidence gate: keep `ScoreThreshold` for result inclusion, add `NotFoundScoreThreshold` for deciding whether `/rag/search` should return `status=found` or `status=not_found`. This avoids dropping useful RRF results while preventing low-confidence generic answers from being treated as authoritative RAG context.
 
 ### P3 — Lifecycle & feedback
 
@@ -179,19 +235,22 @@ When eval flags NDCG < 0.6 for query X, append the chunk_id that should have ran
 
 ## Canonical Task Tracker
 
-| Order | ID | Task | Status | Evidence | Next action |
-|---:|---|---|---|---|---|
-| 1 | P1.1 | Enrich chunk schema for implementer models | `[x] DONE (2026-04-19)` | `rag_capture.py` accepts `implementation-spec`; CLI positive test saved a valid spec with all required sections | None |
-| 2 | P2.1 | Add hard-reject validation | `[x] DONE (2026-04-19)` | CLI negative tests rejected short content, feature without `### Target Files`, and implementation-spec missing `### Contract`; no drafts were saved | None |
-| 3 | P1.2 | Deploy contextual retrieval prepend | `[x] DONE (2026-04-19)` | `~/scripts/n8n-workflows/ingest-knowledge-v2.json` (rag-tools) stores `content` unchanged and sends `embed_content` to Ollama; Hit@1 improved from 0.60 to 1.00 after deployment | None |
-| 4 | P2.2 | Scaffold LLM-as-reranker | `[ ] DEFERRED` | Scaffolding exists, but reranker remains blocked on infra and disabled by default | Revisit after TEI plus BGE reranker is available |
-| 5 | P3.2 | Expand eval set and implementation correctness test | `[x] DONE (2026-04-19)` | External brain plan marks P2-A and P2-B done for expanded eval plus end-to-end mode | None |
-| 6 | P3.1 | Add supersede and deprecate semantics | `[x] DONE (2026-04-19)` | `rag_capture.py` writes supersede frontmatter and `push-to-qdrant.sh` patches superseded chunks to `status: deprecated` | None |
-| 7 | P2.2-B | Deploy TEI plus BGE reranker | `[!] DEFERRED` | Final 2026-05-02 eval shows dense-only beats hybrid on Hit@1/MRR/NDCG@5; problem is sparse/RRF noise, not reranker absence | First A/B dense-only and redesign sparse text; revisit reranker only if top-K has correct chunks but ordering remains poor |
-| 8 | P3.3 | Add eval to chunk revision queue feedback loop | `[x] DONE (2026-05-02)` | `eval-retrieval-quality.py` appends low-NDCG queries to `~/scripts/.rag_revision_queue.md`; `rag status` reports open item count; Python argparse/dataclass coverage was fixed with new pattern chunks | Use queue to identify sparse/RRF noise and stale/noisy chunks, then rerun eval |
-
-| 9 | P2.3 | A/B dense-only vs hybrid and sparse text redesign | `[x] DONE (2026-05-02)` | `knowledge_v2_keyfacts` smoke eval: hybrid Hit@1 0.8889, MRR 0.9167, NDCG@5 0.9547; current hybrid was Hit@1 0.6111, MRR 0.7685, NDCG@5 0.8629 | Promote sparse Key Facts strategy into ingest/migration paths and plan safe live collection switch |
-| 10 | P2.4 | Promote sparse Key Facts collection strategy | `[x] DONE (2026-05-02)` | Live gateway targets `knowledge_v2_keyfacts`; separate n8n workflow `knowledge_v2_keyfacts` uses `knowledge-ingest-keyfacts`, writes to `knowledge_v2_keyfacts`, and passed webhook plus gateway search smoke; original `knowledge_v2` workflow stayed active and `push-to-qdrant.sh` smoke passed | None |
+| Order | ID | Task | Scope boundary | Status | Evidence | Next action |
+|---:|---|---|---|---|---|---|
+| 1 | P1.1 | Enrich chunk schema for implementer models | Includes schema and validation rules; excludes reranker or retrieval tuning | `[x] DONE (2026-04-19)` | `rag_capture.py` accepts `implementation-spec`; CLI positive test saved a valid spec with all required sections | None |
+| 2 | P2.1 | Add hard-reject validation | Includes CLI hard rejects for low-quality chunks; excludes n8n runtime validation changes | `[x] DONE (2026-04-19)` | CLI negative tests rejected short content, feature without `### Target Files`, and implementation-spec missing `### Contract`; no drafts were saved | None |
+| 3 | P1.2 | Deploy contextual retrieval prepend | Includes n8n embed-content prepend; excludes full keyfacts cutover | `[x] DONE (2026-04-19)` | `~/scripts/n8n-workflows/ingest-knowledge-v2.json` (rag-tools) stores `content` unchanged and sends `embed_content` to Ollama; Hit@1 improved from 0.60 to 1.00 after deployment | None |
+| 4 | P2.2 | Scaffold LLM-as-reranker | Includes disabled scaffolding only; excludes TEI/BGE production deployment | `[ ] DEFERRED` | Scaffolding exists, but reranker remains blocked on infra and disabled by default | Revisit after TEI plus BGE reranker is available |
+| 5 | P3.2 | Expand eval set and implementation correctness test | Includes retrieval eval expansion and end-to-end mode; excludes future semantic judge replacement | `[x] DONE (2026-04-19)` | External brain plan marks P2-A and P2-B done for expanded eval plus end-to-end mode | None |
+| 6 | P3.1 | Add supersede and deprecate semantics | Includes frontmatter and push-time deprecation; excludes TTL auto-deprecate | `[x] DONE (2026-04-19)` | `rag_capture.py` writes supersede frontmatter and `push-to-qdrant.sh` patches superseded chunks to `status: deprecated` | None |
+| 7 | P2.2-B | Deploy TEI plus BGE reranker | Includes reranker infra only after sparse noise is solved; excludes masking current sparse/RRF issue | `[ ] DEFERRED` | Final 2026-05-02 eval shows dense-only beats hybrid on Hit@1/MRR/NDCG@5; problem is sparse/RRF noise, not reranker absence | First A/B dense-only and redesign sparse text; revisit reranker only if top-K has correct chunks but ordering remains poor |
+| 8 | P3.3 | Add eval to chunk revision queue feedback loop | Includes low-NDCG queueing and `rag status` count; excludes automatic chunk rewriting | `[x] DONE (2026-05-02)` | `eval-retrieval-quality.py` appends low-NDCG queries to `~/scripts/.rag_revision_queue.md`; `rag status` reports open item count; Python argparse/dataclass coverage was fixed with new pattern chunks | None |
+| 9 | P2.3 | A/B dense-only vs hybrid and sparse text redesign | Includes experimental collection and metric comparison; excludes default workflow switch | `[x] DONE (2026-05-02)` | `knowledge_v2_keyfacts` smoke eval: hybrid Hit@1 0.8889, MRR 0.9167, NDCG@5 0.9547; current hybrid was Hit@1 0.6111, MRR 0.7685, NDCG@5 0.8629 | None |
+| 10 | P2.4 | Promote sparse Key Facts collection strategy | Includes separate candidate workflow and gateway smoke; excludes replacing legacy push default | `[x] DONE (2026-05-02)` | Live gateway targets `knowledge_v2_keyfacts`; separate n8n workflow `knowledge_v2_keyfacts` uses `knowledge-ingest-keyfacts`, writes to `knowledge_v2_keyfacts`, and passed webhook plus gateway search smoke; original `knowledge_v2` workflow stayed active and `push-to-qdrant.sh` smoke passed | None |
+| 11 | P2.5 | Document keyfacts production criteria and history | Includes production criteria, findings, and safe candidate status; excludes runtime cutover | `[x] DONE (2026-05-02)` | This roadmap records P2.5 criteria and findings; `RAG_EVAL_HARNESS.md` records latest keyfacts vs legacy soak metrics | None |
+| 12 | P2.6 | Add repeatable keyfacts soak workflow | Includes documented repeatable checks and session cron; excludes durable external scheduler | `[x] DONE (2026-05-02)` | Initial soak plus final production evals saved to `.claude/reports/soak-keyfacts-initial-2026-05-02.json`, `.claude/reports/soak-legacy-initial-2026-05-02.json`, `.claude/reports/final-keyfacts-production-2026-05-02.json`, and `.claude/reports/final-legacy-production-2026-05-02.json`; final smoke and logs passed | None |
+| 13 | P2.7 | Decide safe keyfacts cutover path | Includes rollback-safe retrieval cutover; excludes full ingest default switch | `[x] DONE (2026-05-02)` | VM B1 gateway production config already targets `knowledge_v2_keyfacts`; final keyfacts eval beats legacy on Hit@1, MRR, and NDCG@5; rollback is restoring gateway collection to `knowledge_v2` and restarting only gateway | Keep full ingest cutover as future work; do not modify legacy push path until sync/default-write behavior is designed |
+| 14 | P2.8 | Add negative-query not-found confidence gate | Includes gateway confidence gating and debug visibility; excludes n8n, push tooling, reranker, and full ingest cutover | `[~] IN PROGRESS` | Added `NotFoundScoreThreshold=0.55`, applied it in `RagSearchService`, exposed `not_found_threshold` and `top_score` in debug response, and `rtk dotnet build` / `rtk dotnet test` passed with 0 warnings; 2026-05-03 read-only soak still passed on current live container | Deploy/restart gateway, then verify positive search remains `found` and negative search returns `not_found` |
 
 ## Critical Files Reference
 

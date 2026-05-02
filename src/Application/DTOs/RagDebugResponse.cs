@@ -32,6 +32,12 @@ public sealed class RagDebugResponse
     [JsonPropertyName("threshold")]
     public float Threshold { get; set; }
 
+    [JsonPropertyName("not_found_threshold")]
+    public float NotFoundThreshold { get; set; }
+
+    [JsonPropertyName("top_score")]
+    public float TopScore { get; set; }
+
     [JsonPropertyName("total_raw_results")]
     public int TotalRawResults { get; set; }
 

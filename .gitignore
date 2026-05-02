@@ -4,3 +4,11 @@ appsettings.Development.json
 appsettings.Production.json
 *.user
 .vs/
+
+# Local Claude runtime artifacts
+.claude/settings.local.json
+.claude/reports/
+.claude/scheduled_tasks.lock
+.claude/summaries/
+.claude/worktrees/
+.claude/checkpoints/

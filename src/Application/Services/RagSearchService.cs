@@ -43,16 +43,18 @@ public sealed class RagSearchService : IRagSearchService
         var results = await _vector.SearchAsync(embedding, normalized, request.Project, request.ChunkType, request.FeatureSlug, cancellationToken);
 
         var threshold = _options.ScoreThreshold;
+        var notFoundThreshold = _options.NotFoundScoreThreshold;
         var filtered = results
             .Where(r => r.Score >= threshold)
             .OrderByDescending(r => r.Score)
             .ToList();
+        var topScore = filtered.FirstOrDefault()?.Score ?? 0f;
 
         _logger.LogInformation(
-            "RAG RESULT | total={Total} | above_threshold={AboveThreshold} | threshold={Threshold}",
-            results.Count, filtered.Count, threshold);
+            "RAG RESULT | total={Total} | above_threshold={AboveThreshold} | threshold={Threshold} | not_found_threshold={NotFoundThreshold} | top_score={TopScore}",
+            results.Count, filtered.Count, threshold, notFoundThreshold, topScore);
 
-        if (filtered.Count == 0)
+        if (filtered.Count == 0 || topScore < notFoundThreshold)
         {
             return new RagSearchResponse
             {
@@ -87,11 +89,13 @@ public sealed class RagSearchService : IRagSearchService
         var results = await _vector.SearchRawAsync(embedding, normalized, request.Project, request.ChunkType, request.FeatureSlug, cancellationToken);
 
         var threshold = _options.ScoreThreshold;
+        var notFoundThreshold = _options.NotFoundScoreThreshold;
+        var topScore = results.OrderByDescending(r => r.Score).FirstOrDefault()?.Score ?? 0f;
         var aboveThreshold = results.Count(r => r.Score >= threshold);
 
         _logger.LogInformation(
-            "RAG DEBUG RESULT | total={Total} | above_threshold={Above} | threshold={Threshold}",
-            results.Count, aboveThreshold, threshold);
+            "RAG DEBUG RESULT | total={Total} | above_threshold={Above} | threshold={Threshold} | not_found_threshold={NotFoundThreshold} | top_score={TopScore}",
+            results.Count, aboveThreshold, threshold, notFoundThreshold, topScore);
 
         var hybrid = _options.EnableHybridSearch;
         return new RagDebugResponse
@@ -104,6 +108,8 @@ public sealed class RagSearchService : IRagSearchService
             FusionMethod = hybrid ? _options.FusionMethod : null,
             PrefetchLimit = _options.HybridPrefetchLimit,
             Threshold = threshold,
+            NotFoundThreshold = notFoundThreshold,
+            TopScore = topScore,
             TotalRawResults = results.Count,
             ResultsAboveThreshold = aboveThreshold,
             Results = results.OrderByDescending(r => r.Score).ToList()

@@ -6,6 +6,7 @@
     "QdrantCollection": "knowledge_v2",
     "QdrantApiKey": "FILL_WITH_REAL_KEY",
     "ScoreThreshold": 0.35,
+    "NotFoundScoreThreshold": 0.55,
     "ResultLimit": 5,
     "DenseVectorName": "dense",
     "SparseVectorName": "sparse",

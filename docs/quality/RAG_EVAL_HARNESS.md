@@ -38,9 +38,9 @@ Baseline defined 2026-04-29. Re-run after any significant pipeline change.
 
 | Metric | Definition | Target | Current | Status |
 |---|---|---|---|---|
-| **MRR@5** | Mean Reciprocal Rank in top-5 | ≥ 0.80 | 0.9167 keyfacts hybrid smoke (2026-05-02) | `[x] MET` |
-| **Hit Rate @3** | Correct chunk in top-3 | ≥ 0.85 | 0.9167 keyfacts hybrid smoke (2026-05-02) | `[x] MET` |
-| **NDCG@10** | Graded relevance, top-10 | ≥ 0.75 | 0.9547 keyfacts hybrid NDCG@5 proxy (2026-05-02) | `[x] MET` |
+| **MRR@5** | Mean Reciprocal Rank in top-5 | ≥ 0.80 | 0.9444 keyfacts final production validation (2026-05-02) | `[x] MET` |
+| **Hit Rate @3** | Correct chunk in top-3 | ≥ 0.85 | 0.9444 keyfacts final production validation (2026-05-02) | `[x] MET` |
+| **NDCG@10** | Graded relevance, top-10 | ≥ 0.75 | 0.9648 keyfacts NDCG@5 proxy final production validation (2026-05-02) | `[x] MET` |
 | **Faithfulness** | LLM output consistent with retrieved chunks | ≥ 0.85 | — | `[?] UNMEASURED` |
 | **Answer Relevance** | Output on-topic for the query | ≥ 0.80 | — | `[?] UNMEASURED` |
 | **Context Precision** | Fraction of retrieved chunks actually used | ≥ 0.60 | — | `[?] UNMEASURED` |
@@ -55,6 +55,8 @@ Run `eval-retrieval-quality.py` against VM B1, copy scores here, update Status.
 **Final Priority 1-4 result (2026-05-02):** `python scripts/eval-retrieval-quality.py --project homelab --limit 5 --qdrant-url http://192.168.18.199:6333 --ollama-url http://192.168.18.199:11434 --output .claude/reports/eval-final-priority-1-4-2026-05-02.json` completed successfully on 18 queries after adding focused Python argparse and dataclass pattern chunks and fixing selective `chunk_type` filtering in the eval harness. Dense-only improved materially versus the original baseline: Hit@1 0.7222 -> 0.8333, MRR 0.7963 -> 0.9028, NDCG@5 0.7987 -> 0.9108. Hybrid recovered recall versus the post-reembed regression: Hit@3 0.8333 -> 0.9444 and Hit@5 0.8889 -> 0.9444, but top-rank quality is still worse than dense-only: Hit@1 0.6111, MRR 0.7685, NDCG@5 0.8629. The remaining issue is sparse/RRF rank noise, not corpus coverage or reranker absence. Python argparse and dataclass now retrieve the correct chunk at dense rank 1, while sparse still pushes unrelated chunks above them in hybrid.
 
 **Sparse Key Facts experiment (2026-05-02):** `scripts/build-sparse-keyfacts-experiment-rest.py` built a non-live comparison collection `knowledge_v2_keyfacts` from `knowledge_v2` without modifying the live collection. Dense vectors and payloads were preserved; sparse vectors were rebuilt from `topic + Key Facts` instead of full content. Point parity passed: 373 source points -> 373 target points, with 345 points containing Key Facts. Eval command: `python scripts/eval-retrieval-quality.py --project homelab --collection knowledge_v2_keyfacts --qdrant-url http://192.168.18.199:6333 --ollama-url http://192.168.18.199:11434 --output .claude/reports/eval-keyfacts-sparse-2026-05-02.json`. Initial result: keyfacts hybrid Hit@1 0.9444, Hit@3 0.9444, Hit@5 0.9444, MRR 0.9444, NDCG@5 0.9659. Follow-up smoke rerun saved to `.claude/reports/eval-keyfacts-smoke-2026-05-02.json` produced Hit@1 0.8889, Hit@3 0.9444, Hit@5 0.9444, MRR 0.9167, NDCG@5 0.9547. Live promotion added a separate n8n workflow `knowledge_v2_keyfacts` using webhook `knowledge-ingest-keyfacts`; smoke ingest returned 200, live gateway search returned the smoke chunk at rank 1, and the temporary smoke point was deleted. The original `knowledge_v2` workflow remained active and `push-to-qdrant.sh` smoke passed. This confirms sparse text quality was the bottleneck while preserving the legacy capture path.
+
+**Keyfacts retrieval-only production validation (2026-05-02):** Long-term-use validation kept legacy push on `knowledge_v2`, left the existing `knowledge_v2` n8n workflow untouched, and compared both collections with the same 18-query eval set. Initial reports: `.claude/reports/soak-keyfacts-initial-2026-05-02.json` and `.claude/reports/soak-legacy-initial-2026-05-02.json`. Final reports: `.claude/reports/final-keyfacts-production-2026-05-02.json` and `.claude/reports/final-legacy-production-2026-05-02.json`. Follow-up validation reports: `.claude/reports/validation-keyfacts-2026-05-02-235550.json` and `.claude/reports/validation-legacy-2026-05-02-235618.json`. Latest hybrid result: `knowledge_v2_keyfacts` Hit@1 0.8889, Hit@3 0.9444, Hit@5 0.9444, MRR 0.9167, NDCG@5 0.9555, avg latency 1183.8ms; legacy `knowledge_v2` Hit@1 0.6667, Hit@3 0.9444, Hit@5 0.9444, MRR 0.7963, NDCG@5 0.8802, avg latency 1111.2ms. VM B1 gateway production config targets `knowledge_v2_keyfacts`, `/scalar/` and `/openapi/v1.json` returned 200, `/rag/search` positive smoke returned `status=found`, recent gateway/n8n logs showed 0 relevant errors, and `push-to-qdrant.sh` remains defaulted to `knowledge_v2`. WARN: the negative query `What is the project-alpha Blazor login flow?` with `project=homelab` returned generic results around score 0.5; this requires a separate not-found confidence gate. Status: retrieval-only production is active and rollback-safe; full ingest cutover is not done. Follow-up soak on 2026-05-03 was read-only and made no n8n or `push-to-qdrant.sh` changes: `/scalar/` 200, `/openapi/v1.json` 200, `/rag/search` positive smoke HTTP 200 with `status=found`, gateway/n8n recent errors 0, and latest keyfacts report remained `knowledge_v2_keyfacts` Hit@1 0.8889, MRR 0.9167, NDCG@5 0.9555.
 
 **Latest baseline (2026-04-30):** `python scripts/eval-retrieval-quality.py --project homelab --limit 5 --qdrant-url http://192.168.18.199:6333 --ollama-url http://192.168.18.199:11434 --output .claude/reports/eval-baseline-2026-04-30.json` completed successfully on 18 queries. Hybrid summary: Hit@1 0.7778, Hit@3 0.8333, Hit@5 0.8889, MRR 0.8167, NDCG@5 0.8658, avg latency 1067.5ms. Regression analysis identified sparse-noise on 3 queries; next improvement should test sparse text restricted to topic + Key Facts or query-type-aware sparse disabling.
 
@@ -158,12 +160,12 @@ Fill in after first eval run. Update "Current" column with each subsequent run.
 
 | Metric | Baseline before P4-C hybrid | Current `knowledge_v2` hybrid | Current dense-only | `knowledge_v2_keyfacts` hybrid | Target |
 |---|---:|---:|---:|---:|---:|
-| Hit@1 | 0.7778 | 0.6111 | 0.8333 | 0.8889 | Track trend |
-| Hit@3 | 0.8333 | 0.9444 | 0.9444 | 0.9444 | ≥ 0.85 |
-| Hit@5 | 0.8889 | 0.9444 | 1.0000 | 0.9444 | Track trend |
-| MRR@5 | 0.8167 | 0.7685 | 0.9028 | 0.9167 | ≥ 0.80 |
-| NDCG@5 | 0.8671 | 0.8629 | 0.9108 | 0.9547 | ≥ 0.75 |
-| Avg latency | 1039.7ms | 1147.5ms | 1146.4ms | 1158.7ms | ≤ 1.5s p50 |
+| Hit@1 | 0.7778 | 0.6667 latest validation | 0.8333 | 0.8889 latest validation | Track trend |
+| Hit@3 | 0.8333 | 0.9444 latest validation | 0.9444 | 0.9444 latest validation | ≥ 0.85 |
+| Hit@5 | 0.8889 | 0.9444 latest validation | 1.0000 | 0.9444 latest validation | Track trend |
+| MRR@5 | 0.8167 | 0.7963 latest validation | 0.9028 | 0.9167 latest validation | ≥ 0.80 |
+| NDCG@5 | 0.8671 | 0.8802 latest validation | 0.9108 | 0.9555 latest validation | ≥ 0.75 |
+| Avg latency | 1039.7ms | 1111.2ms latest validation | 1146.4ms | 1183.8ms latest validation | ≤ 1.5s p50 |
 
 > **Note:** Pre-fix metrics are estimates from session notes (2026-04-25). First real measurement
 > will be the actual baseline. Run `eval-retrieval-quality.py` to populate.
@@ -183,14 +185,24 @@ curl http://192.168.18.199:5200/health
 
 **Run eval:**
 ```bash
-# Feed labeled query set to eval script
-python scripts/eval-retrieval-quality.py \
-  --eval-set docs/eval_queries.jsonl \
-  --gateway http://192.168.18.199:5200 \
-  --project homelab \
-  --top-k 5
+# Compare legacy and keyfacts with the same labeled query set
+set -a; source "$HOME/.config/qdrant-knowledge.env"; set +a
 
-# Output: MRR@5, hit rate, per-category breakdown
+python scripts/eval-retrieval-quality.py \
+  --project homelab \
+  --collection knowledge_v2 \
+  --qdrant-url http://192.168.18.199:6333 \
+  --ollama-url http://192.168.18.199:11434 \
+  --output .claude/reports/soak-legacy-$(date +%Y-%m-%d).json
+
+python scripts/eval-retrieval-quality.py \
+  --project homelab \
+  --collection knowledge_v2_keyfacts \
+  --qdrant-url http://192.168.18.199:6333 \
+  --ollama-url http://192.168.18.199:11434 \
+  --output .claude/reports/soak-keyfacts-$(date +%Y-%m-%d).json
+
+# Output: Hit@1/3/5, MRR, NDCG@5, latency, regression analysis
 ```
 
 **Build labeled eval set (first time):**
@@ -200,8 +212,8 @@ python scripts/eval-retrieval-quality.py \
 # {"query": "...", "expected_doc_id": "...", "expected_rank": 1, "category": "factual"}
 ```
 
-> **Status update:** Final 2026-05-02 keyfacts sparse experiment shows `topic + Key Facts` sparse text makes hybrid stronger than both current hybrid and dense-only on Hit@1, MRR, and NDCG@5.
-> **Remaining TODO:** promote `knowledge_v2_keyfacts` safely or rebuild `knowledge_v2` with the same sparse strategy, update ingest paths so future sparse vectors use topic + Key Facts, then rerun live gateway/MCP checks.
+> **Status update:** Final 2026-05-02 keyfacts production validation shows `topic + Key Facts` sparse text makes hybrid stronger than legacy on Hit@1, MRR, and NDCG@5, and VM B1 retrieval already targets `knowledge_v2_keyfacts`.
+> **Remaining TODO:** keep legacy `push-to-qdrant.sh` defaulted to `knowledge_v2` until a separate full ingest cutover and sync/default-write strategy is designed. Track the remaining 3 sparse/RRF regressions as tuning work, not a blocker for retrieval-only production.
 
 ---
 

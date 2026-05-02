@@ -10,6 +10,7 @@ public sealed class RagGatewayOptions
     public string QdrantCollection { get; set; } = "knowledge_v2";
     public string? QdrantApiKey { get; set; }
     public float ScoreThreshold { get; set; } = 0.35f;
+    public float NotFoundScoreThreshold { get; set; } = 0.55f;
     public int ResultLimit { get; set; } = 5;
 
     public string DenseVectorName { get; set; } = "dense";
