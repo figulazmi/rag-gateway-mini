@@ -1,0 +1,2744 @@
+{
+  "timestamp": "2026-05-02T15:48:23.367675",
+  "version": "2.0.0",
+  "collection": "knowledge_v2_keyfacts",
+  "dense_vector_name": "dense",
+  "sparse_vector_name": "sparse",
+  "limit": 5,
+  "prefetch_mult": 4,
+  "project_filter": "homelab",
+  "total_queries": 18,
+  "dense_avg": {
+    "hit@1": 0.8333,
+    "hit@3": 0.9444,
+    "hit@5": 1.0,
+    "mrr": 0.9028,
+    "ndcg@5": 0.9108,
+    "avg_latency_ms": 1156.9
+  },
+  "sparse_avg": {
+    "hit@1": 0.7778,
+    "hit@3": 0.9444,
+    "hit@5": 0.9444,
+    "mrr": 0.8611,
+    "ndcg@5": 0.918,
+    "avg_latency_ms": 1157.0
+  },
+  "hybrid_avg": {
+    "hit@1": 0.8889,
+    "hit@3": 0.9444,
+    "hit@5": 0.9444,
+    "mrr": 0.9167,
+    "ndcg@5": 0.9547,
+    "avg_latency_ms": 1158.7
+  },
+  "hybrid_vs_dense_delta": {
+    "hit@1": 0.0556,
+    "hit@3": 0.0,
+    "hit@5": -0.0556,
+    "mrr": 0.0139,
+    "ndcg@5": 0.0439
+  },
+  "per_query": [
+    {
+      "description": "MCP server v2.0 migration to hybrid search",
+      "query": "MCP server upgrade knowledge_v2 hybrid search djb2 RRF fusion",
+      "project": "homelab",
+      "chunk_type": "",
+      "dense": {
+        "query": "MCP server upgrade knowledge_v2 hybrid search djb2 RRF fusion",
+        "project": "homelab",
+        "description": "MCP server v2.0 migration to hybrid search",
+        "strategy": "dense",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 1.0,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 1388.4,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "MCP Server Collection Switch From knowledge to knowledg",
+            "## CHUNK 1: MCP Server Collection Switch From knowledge to knowledge_v2  ### Context  The "
+          ],
+          [
+            0.33333334,
+            "MCP Server Upgrade From knowledge to knowledge_v2 With ",
+            "## CHUNK 1: MCP Server Upgrade From knowledge to knowledge_v2 With Hybrid Search\r \r ### Co"
+          ],
+          [
+            0.25,
+            "Decision: client-side djb2 BM25 chosen over Qdrant serv",
+            "## CHUNK 9: Decision: client-side djb2 BM25 chosen over Qdrant server-side inference for k"
+          ]
+        ],
+        "top_ids": [
+          "423314733",
+          "908163150",
+          "5034038"
+        ]
+      },
+      "sparse": {
+        "query": "MCP server upgrade knowledge_v2 hybrid search djb2 RRF fusion",
+        "project": "homelab",
+        "description": "MCP server v2.0 migration to hybrid search",
+        "strategy": "sparse-only",
+        "hit_at_1": 0.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 0.5,
+        "ndcg5": 0.8597186998521971,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 1387.3,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "MCP Server Upgrade From knowledge to knowledge_v2 With ",
+            "## CHUNK 1: MCP Server Upgrade From knowledge to knowledge_v2 With Hybrid Search\r \r ### Co"
+          ],
+          [
+            0.33333334,
+            "MCP Server Collection Switch From knowledge to knowledg",
+            "## CHUNK 1: MCP Server Collection Switch From knowledge to knowledge_v2  ### Context  The "
+          ],
+          [
+            0.25,
+            "Hybrid Search Gateway Refactor From Points Search To Qu",
+            "## CHUNK 1: Hybrid Search Gateway Refactor From Points Search To Query API  ### Context  r"
+          ]
+        ],
+        "top_ids": [
+          "908163150",
+          "423314733",
+          "204856146"
+        ]
+      },
+      "hybrid": {
+        "query": "MCP server upgrade knowledge_v2 hybrid search djb2 RRF fusion",
+        "project": "homelab",
+        "description": "MCP server v2.0 migration to hybrid search",
+        "strategy": "hybrid-rrf",
+        "hit_at_1": 0.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 0.5,
+        "ndcg5": 0.8597186998521971,
+        "score_dist": {
+          "min": 0.2625,
+          "max": 0.8333,
+          "avg": 0.5235,
+          "p50": 0.3667,
+          "p95": 0.8333
+        },
+        "latency_ms": 1406.1,
+        "raw_scores": [
+          0.8333334,
+          0.8333334,
+          0.36666667,
+          0.32142857,
+          0.2625
+        ],
+        "top_docs": [
+          [
+            0.8333334,
+            "MCP Server Upgrade From knowledge to knowledge_v2 With ",
+            "## CHUNK 1: MCP Server Upgrade From knowledge to knowledge_v2 With Hybrid Search\r \r ### Co"
+          ],
+          [
+            0.8333334,
+            "MCP Server Collection Switch From knowledge to knowledg",
+            "## CHUNK 1: MCP Server Collection Switch From knowledge to knowledge_v2  ### Context  The "
+          ],
+          [
+            0.36666667,
+            "Decision: hybrid RRF dense plus sparse search over cosi",
+            "## CHUNK 1: Decision: hybrid RRF dense plus sparse search over cosine-only for knowledge_v"
+          ]
+        ],
+        "top_ids": [
+          "908163150",
+          "423314733",
+          "376078155"
+        ]
+      }
+    },
+    {
+      "description": "knowledge_v2 collection schema migration",
+      "query": "qdrant collection named vector dense sparse migration script",
+      "project": "homelab",
+      "chunk_type": "",
+      "dense": {
+        "query": "qdrant collection named vector dense sparse migration script",
+        "project": "homelab",
+        "description": "knowledge_v2 collection schema migration",
+        "strategy": "dense",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.9064058237140473,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 814.7,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "Qdrant Hybrid Collection Migration Pattern Knowledge To",
+            "## CHUNK 2: Qdrant Hybrid Collection Migration Pattern Knowledge To Knowledge V2  ### Cont"
+          ],
+          [
+            0.33333334,
+            "Decision: Qdrant over other vector databases for homela",
+            "## CHUNK 2: Decision: Qdrant over other vector databases for homelab knowledge base\r <!-- "
+          ],
+          [
+            0.25,
+            "Pattern: Qdrant cannot add sparse vector config to exis",
+            "## CHUNK 5: Pattern: Qdrant cannot add sparse vector config to existing collection require"
+          ]
+        ],
+        "top_ids": [
+          "204856147",
+          "376078154",
+          "5034042"
+        ]
+      },
+      "sparse": {
+        "query": "qdrant collection named vector dense sparse migration script",
+        "project": "homelab",
+        "description": "knowledge_v2 collection schema migration",
+        "strategy": "sparse-only",
+        "hit_at_1": 0.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 0.5,
+        "ndcg5": 0.7715428499330925,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 813.9,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "Feature: Qdrant knowledge_v2 collection named vectors d",
+            "## CHUNK 7: Feature: Qdrant knowledge_v2 collection named vectors dense and sparse hybrid "
+          ],
+          [
+            0.33333334,
+            "Qdrant Hybrid Collection Migration Pattern Knowledge To",
+            "## CHUNK 2: Qdrant Hybrid Collection Migration Pattern Knowledge To Knowledge V2  ### Cont"
+          ],
+          [
+            0.25,
+            "Decision: hybrid RRF dense plus sparse search over cosi",
+            "## CHUNK 1: Decision: hybrid RRF dense plus sparse search over cosine-only for knowledge_v"
+          ]
+        ],
+        "top_ids": [
+          "376078149",
+          "204856147",
+          "376078155"
+        ]
+      },
+      "hybrid": {
+        "query": "qdrant collection named vector dense sparse migration script",
+        "project": "homelab",
+        "description": "knowledge_v2 collection schema migration",
+        "strategy": "hybrid-rrf",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.9827561747243725,
+        "score_dist": {
+          "min": 0.3125,
+          "max": 0.8333,
+          "avg": 0.5073,
+          "p50": 0.4583,
+          "p95": 0.8333
+        },
+        "latency_ms": 816.7,
+        "raw_scores": [
+          0.8333334,
+          0.5714286,
+          0.45833334,
+          0.3611111,
+          0.3125
+        ],
+        "top_docs": [
+          [
+            0.8333334,
+            "Qdrant Hybrid Collection Migration Pattern Knowledge To",
+            "## CHUNK 2: Qdrant Hybrid Collection Migration Pattern Knowledge To Knowledge V2  ### Cont"
+          ],
+          [
+            0.5714286,
+            "Feature: Qdrant knowledge_v2 collection named vectors d",
+            "## CHUNK 7: Feature: Qdrant knowledge_v2 collection named vectors dense and sparse hybrid "
+          ],
+          [
+            0.45833334,
+            "Decision: Qdrant over other vector databases for homela",
+            "## CHUNK 2: Decision: Qdrant over other vector databases for homelab knowledge base\r <!-- "
+          ]
+        ],
+        "top_ids": [
+          "204856147",
+          "376078149",
+          "376078154"
+        ]
+      }
+    },
+    {
+      "description": "VM B1 docker compose v2 binary not found fix",
+      "query": "docker compose v2 linux binary not found rag gateway build fix",
+      "project": "homelab",
+      "chunk_type": "",
+      "dense": {
+        "query": "docker compose v2 linux binary not found rag gateway build fix",
+        "project": "homelab",
+        "description": "VM B1 docker compose v2 binary not found fix",
+        "strategy": "dense",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 1.0,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 889.1,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "Docker Compose v2 on Linux VM - No docker-compose Binar",
+            "## CHUNK 3: Docker Compose v2 on Linux VM - No docker-compose Binary  ### Context  VM B1 r"
+          ],
+          [
+            0.33333334,
+            "Docker Volume Mount Path Mismatch Causing 500 on VM B1",
+            "## CHUNK 2: Docker Volume Mount Path Mismatch Causing 500 on VM B1  ### Context  rag-gatew"
+          ],
+          [
+            0.25,
+            "VM B1 Deployment Workflow for rag-gateway-mini",
+            "## CHUNK 4: VM B1 Deployment Workflow for rag-gateway-mini  ### Context  rag-gateway-mini "
+          ]
+        ],
+        "top_ids": [
+          "1928279803",
+          "2073315142",
+          "1928279802"
+        ]
+      },
+      "sparse": {
+        "query": "docker compose v2 linux binary not found rag gateway build fix",
+        "project": "homelab",
+        "description": "VM B1 docker compose v2 binary not found fix",
+        "strategy": "sparse-only",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.9871012128387467,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 879.1,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "Docker Compose v2 on Linux VM - No docker-compose Binar",
+            "## CHUNK 3: Docker Compose v2 on Linux VM - No docker-compose Binary  ### Context  VM B1 r"
+          ],
+          [
+            0.33333334,
+            "Pattern: Docker Compose v2 uses space separator not hyp",
+            "## CHUNK 3: Pattern: Docker Compose v2 uses space separator not hyphen\r \r ### Context\r Any"
+          ],
+          [
+            0.25,
+            "Pattern: always git pull on VM before docker compose up",
+            "## CHUNK 5: Pattern: always git pull on VM before docker compose up build compose file on "
+          ]
+        ],
+        "top_ids": [
+          "1928279803",
+          "5034044",
+          "24204001"
+        ]
+      },
+      "hybrid": {
+        "query": "docker compose v2 linux binary not found rag gateway build fix",
+        "project": "homelab",
+        "description": "VM B1 docker compose v2 binary not found fix",
+        "strategy": "hybrid-rrf",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.949907305355028,
+        "score_dist": {
+          "min": 0.3125,
+          "max": 1.0,
+          "avg": 0.4755,
+          "p50": 0.3333,
+          "p95": 1.0
+        },
+        "latency_ms": 867.5,
+        "raw_scores": [
+          1.0,
+          0.4047619,
+          0.33333334,
+          0.32692307,
+          0.3125
+        ],
+        "top_docs": [
+          [
+            1.0,
+            "Docker Compose v2 on Linux VM - No docker-compose Binar",
+            "## CHUNK 3: Docker Compose v2 on Linux VM - No docker-compose Binary  ### Context  VM B1 r"
+          ],
+          [
+            0.4047619,
+            "Docker Volume Mount Path Mismatch Causing 500 on VM B1",
+            "## CHUNK 2: Docker Volume Mount Path Mismatch Causing 500 on VM B1  ### Context  rag-gatew"
+          ],
+          [
+            0.33333334,
+            "Pattern: Docker Compose v2 uses space separator not hyp",
+            "## CHUNK 3: Pattern: Docker Compose v2 uses space separator not hyphen\r \r ### Context\r Any"
+          ]
+        ],
+        "top_ids": [
+          "1928279803",
+          "2073315142",
+          "5034044"
+        ]
+      }
+    },
+    {
+      "description": "RAG Gateway hybrid search refactor",
+      "query": "RAG gateway ASP.NET Core hybrid BM25 prefetch RRF score threshold",
+      "project": "homelab",
+      "chunk_type": "",
+      "dense": {
+        "query": "RAG gateway ASP.NET Core hybrid BM25 prefetch RRF score threshold",
+        "project": "homelab",
+        "description": "RAG Gateway hybrid search refactor",
+        "strategy": "dense",
+        "hit_at_1": 0.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 0.5,
+        "ndcg5": 0.6278397607958708,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 1598.2,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "Pattern: RRF fusion scores require lower SCORE_THRESHOL",
+            "## CHUNK 6: Pattern: RRF fusion scores require lower SCORE_THRESHOLD than cosine\r \r ### Co"
+          ],
+          [
+            0.33333334,
+            "MCP v2 NOT_FOUND threshold fix and intent-aware retry h",
+            "## CHUNK 1: MCP v2 NOT_FOUND threshold fix and intent-aware retry homelab\r <!-- rag_chunk_"
+          ],
+          [
+            0.25,
+            "Fix MCP server SCORE_THRESHOLD 0.5 to 0.35 and homelab-",
+            "## CHUNK 1: Fix MCP server SCORE_THRESHOLD 0.5 to 0.35 and homelab-biased retry expansion\r"
+          ]
+        ],
+        "top_ids": [
+          "911579752",
+          "738432516",
+          "893438063"
+        ]
+      },
+      "sparse": {
+        "query": "RAG gateway ASP.NET Core hybrid BM25 prefetch RRF score threshold",
+        "project": "homelab",
+        "description": "RAG Gateway hybrid search refactor",
+        "strategy": "sparse-only",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.8484946226286495,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 1584.4,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "MCP v2 NOT_FOUND threshold fix and intent-aware retry h",
+            "## CHUNK 1: MCP v2 NOT_FOUND threshold fix and intent-aware retry homelab\r <!-- rag_chunk_"
+          ],
+          [
+            0.33333334,
+            "VM 105 knowledge_v2 Restoration Eval Results Step 6",
+            "## CHUNK 1: VM 105 knowledge_v2 Restoration Eval Results Step 6\r <!-- rag_chunk_meta chunk"
+          ],
+          [
+            0.25,
+            "Hybrid Search Gateway Refactor From Points Search To Qu",
+            "## CHUNK 1: Hybrid Search Gateway Refactor From Points Search To Query API  ### Context  r"
+          ]
+        ],
+        "top_ids": [
+          "738432516",
+          "3843143",
+          "204856146"
+        ]
+      },
+      "hybrid": {
+        "query": "RAG gateway ASP.NET Core hybrid BM25 prefetch RRF score threshold",
+        "project": "homelab",
+        "description": "RAG Gateway hybrid search refactor",
+        "strategy": "hybrid-rrf",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.8014381684711811,
+        "score_dist": {
+          "min": 0.3333,
+          "max": 0.8333,
+          "avg": 0.5233,
+          "p50": 0.375,
+          "p95": 0.8333
+        },
+        "latency_ms": 1581.9,
+        "raw_scores": [
+          0.8333334,
+          0.7,
+          0.375,
+          0.375,
+          0.33333334
+        ],
+        "top_docs": [
+          [
+            0.8333334,
+            "MCP v2 NOT_FOUND threshold fix and intent-aware retry h",
+            "## CHUNK 1: MCP v2 NOT_FOUND threshold fix and intent-aware retry homelab\r <!-- rag_chunk_"
+          ],
+          [
+            0.7,
+            "Pattern: RRF fusion scores require lower SCORE_THRESHOL",
+            "## CHUNK 6: Pattern: RRF fusion scores require lower SCORE_THRESHOLD than cosine\r \r ### Co"
+          ],
+          [
+            0.375,
+            "Fix MCP server SCORE_THRESHOLD 0.5 to 0.35 and homelab-",
+            "## CHUNK 1: Fix MCP server SCORE_THRESHOLD 0.5 to 0.35 and homelab-biased retry expansion\r"
+          ]
+        ],
+        "top_ids": [
+          "738432516",
+          "911579752",
+          "893438063"
+        ]
+      }
+    },
+    {
+      "description": "push-to-qdrant.sh network-aware ingestion script",
+      "query": "push-to-qdrant.sh network-aware bash script ingest frontmatter",
+      "project": "homelab",
+      "chunk_type": "",
+      "dense": {
+        "query": "push-to-qdrant.sh network-aware bash script ingest frontmatter",
+        "project": "homelab",
+        "description": "push-to-qdrant.sh network-aware ingestion script",
+        "strategy": "dense",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.9151505377371352,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 1220.4,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "push-to-qdrant.sh Windows Git Bash Compatibility Fix",
+            "## CHUNK 4: push-to-qdrant.sh Windows Git Bash Compatibility Fix\r \r ### Context\r `push-to-"
+          ],
+          [
+            0.33333334,
+            "push-to-qdrant.sh \ufffd Network-Aware Script",
+            "## CHUNK 4: push-to-qdrant.sh \ufffd Network-Aware Script\r \r ### Context\r Script on VM B1 (or r"
+          ],
+          [
+            0.25,
+            "push-to-qdrant.sh - Expanded Qdrant Payload Fields",
+            "## CHUNK 2: push-to-qdrant.sh - Expanded Qdrant Payload Fields  ### Context `~/scripts/pus"
+          ]
+        ],
+        "top_ids": [
+          "43596196",
+          "685981524",
+          "1998825549"
+        ]
+      },
+      "sparse": {
+        "query": "push-to-qdrant.sh network-aware bash script ingest frontmatter",
+        "project": "homelab",
+        "description": "push-to-qdrant.sh network-aware ingestion script",
+        "strategy": "sparse-only",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.9377775603567714,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 1220.3,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "push-to-qdrant.sh \ufffd Network-Aware Script",
+            "## CHUNK 4: push-to-qdrant.sh \ufffd Network-Aware Script\r \r ### Context\r Script on VM B1 (or r"
+          ],
+          [
+            0.33333334,
+            "Fix rag pipeline reliability: qdrant_url wrong IP auto_",
+            "## CHUNK 1: Fix rag pipeline reliability: qdrant_url wrong IP auto_push silent exception c"
+          ],
+          [
+            0.25,
+            "push-to-qdrant.sh Windows Git Bash Compatibility Fix",
+            "## CHUNK 4: push-to-qdrant.sh Windows Git Bash Compatibility Fix\r \r ### Context\r `push-to-"
+          ]
+        ],
+        "top_ids": [
+          "685981524",
+          "2061326988",
+          "43596196"
+        ]
+      },
+      "hybrid": {
+        "query": "push-to-qdrant.sh network-aware bash script ingest frontmatter",
+        "project": "homelab",
+        "description": "push-to-qdrant.sh network-aware ingestion script",
+        "strategy": "hybrid-rrf",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.9755281301968223,
+        "score_dist": {
+          "min": 0.2198,
+          "max": 0.8333,
+          "avg": 0.5173,
+          "p50": 0.45,
+          "p95": 0.8333
+        },
+        "latency_ms": 1242.1,
+        "raw_scores": [
+          0.8333334,
+          0.75,
+          0.45,
+          0.33333334,
+          0.21978024
+        ],
+        "top_docs": [
+          [
+            0.8333334,
+            "push-to-qdrant.sh \ufffd Network-Aware Script",
+            "## CHUNK 4: push-to-qdrant.sh \ufffd Network-Aware Script\r \r ### Context\r Script on VM B1 (or r"
+          ],
+          [
+            0.75,
+            "push-to-qdrant.sh Windows Git Bash Compatibility Fix",
+            "## CHUNK 4: push-to-qdrant.sh Windows Git Bash Compatibility Fix\r \r ### Context\r `push-to-"
+          ],
+          [
+            0.45,
+            "push-to-qdrant.sh - Expanded Qdrant Payload Fields",
+            "## CHUNK 2: push-to-qdrant.sh - Expanded Qdrant Payload Fields  ### Context `~/scripts/pus"
+          ]
+        ],
+        "top_ids": [
+          "685981524",
+          "43596196",
+          "1998825549"
+        ]
+      }
+    },
+    {
+      "description": "RAG checkpoint system \u2014 session momentum capture",
+      "query": "RAG checkpoint session continuity next_step hypothesis token budget trigger",
+      "project": "homelab",
+      "chunk_type": "implementation-spec",
+      "dense": {
+        "query": "RAG checkpoint session continuity next_step hypothesis token budget trigger",
+        "project": "homelab",
+        "description": "RAG checkpoint system \u2014 session momentum capture",
+        "strategy": "dense",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.8656751753069926,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 970.9,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "---",
+            "---\r id: 2026-04-25-rich-checkpoint-system-for-session-conti-promoted\r date: 2026-04-18\r s"
+          ],
+          [
+            0.33333334,
+            "Token Usage Monitoring for Claude Code",
+            "## CHUNK 1: Token Usage Monitoring for Claude Code\r \r ### Context\r Azmi uses Claude Code C"
+          ],
+          [
+            0.25,
+            "PostToolUse Write Hook for RAG Capture Checkpoint",
+            "## CHUNK 3: PostToolUse Write Hook for RAG Capture Checkpoint  ### Context  Token Monitor "
+          ]
+        ],
+        "top_ids": [
+          "1529843927",
+          "685981527",
+          "1046402837"
+        ]
+      },
+      "sparse": {
+        "query": "RAG checkpoint session continuity next_step hypothesis token budget trigger",
+        "project": "homelab",
+        "description": "RAG checkpoint system \u2014 session momentum capture",
+        "strategy": "sparse-only",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.9057231341795166,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 946.5,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "---",
+            "---\r id: 2026-04-25-rich-checkpoint-system-for-session-conti-promoted\r date: 2026-04-18\r s"
+          ],
+          [
+            0.33333334,
+            "CLAUDE.md Session End Protocol",
+            "## CHUNK 7: CLAUDE.md Session End Protocol\r \r ### Context\r CLAUDE.md in project root defin"
+          ],
+          [
+            0.25,
+            "---",
+            "---\r id: 2026-04-25-rag-checkpoint-system-implementation-com-promoted\r date: 2026-04-18\r s"
+          ]
+        ],
+        "top_ids": [
+          "1529843927",
+          "685981521",
+          "1297337643"
+        ]
+      },
+      "hybrid": {
+        "query": "RAG checkpoint session continuity next_step hypothesis token budget trigger",
+        "project": "homelab",
+        "description": "RAG checkpoint system \u2014 session momentum capture",
+        "strategy": "hybrid-rrf",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.8656751753069926,
+        "score_dist": {
+          "min": 0.3667,
+          "max": 1.0,
+          "avg": 0.5169,
+          "p50": 0.375,
+          "p95": 1.0
+        },
+        "latency_ms": 947.6,
+        "raw_scores": [
+          1.0,
+          0.4761905,
+          0.375,
+          0.36666667,
+          0.36666667
+        ],
+        "top_docs": [
+          [
+            1.0,
+            "---",
+            "---\r id: 2026-04-25-rich-checkpoint-system-for-session-conti-promoted\r date: 2026-04-18\r s"
+          ],
+          [
+            0.4761905,
+            "CLAUDE.md Session End Protocol",
+            "## CHUNK 7: CLAUDE.md Session End Protocol\r \r ### Context\r CLAUDE.md in project root defin"
+          ],
+          [
+            0.375,
+            "PostToolUse Write Hook for RAG Capture Checkpoint",
+            "## CHUNK 3: PostToolUse Write Hook for RAG Capture Checkpoint  ### Context  Token Monitor "
+          ]
+        ],
+        "top_ids": [
+          "1529843927",
+          "685981521",
+          "1046402837"
+        ]
+      }
+    },
+    {
+      "description": "Contextual retrieval embed_content prepend strategy",
+      "query": "contextual retrieval prepend embed_content Anthropic metadata provenance failure reduction",
+      "project": "homelab",
+      "chunk_type": "implementation-spec",
+      "dense": {
+        "query": "contextual retrieval prepend embed_content Anthropic metadata provenance failure reduction",
+        "project": "homelab",
+        "description": "Contextual retrieval embed_content prepend strategy",
+        "strategy": "dense",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.9895471976490702,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 1471.0,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "P1.2 Contextual Retrieval Verification via Cosine Simil",
+            "## CHUNK 3: P1.2 Contextual Retrieval Verification via Cosine Similarity\r \r ### Context\r P"
+          ],
+          [
+            0.33333334,
+            "n8n Contextual Retrieval Prepend Deployment Verificatio",
+            "## CHUNK 1: n8n Contextual Retrieval Prepend Deployment Verification\r \r ### Context\r Deplo"
+          ],
+          [
+            0.25,
+            "RAG Gateway retrieval pipeline bottleneck fixes session",
+            "## CHUNK 1: RAG Gateway retrieval pipeline bottleneck fixes session 2026-04-25\r \r ### Cont"
+          ]
+        ],
+        "top_ids": [
+          "1971968400",
+          "1971968402",
+          "924327782"
+        ]
+      },
+      "sparse": {
+        "query": "contextual retrieval prepend embed_content Anthropic metadata provenance failure reduction",
+        "project": "homelab",
+        "description": "Contextual retrieval embed_content prepend strategy",
+        "strategy": "sparse-only",
+        "hit_at_1": 0.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 0.5,
+        "ndcg5": 0.7128896688595353,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 1495.2,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "Claude Code Authentication - OAuth vs API Key",
+            "## CHUNK 8: Claude Code Authentication - OAuth vs API Key\r \r ### Context\r Claude Code CLI "
+          ],
+          [
+            0.33333334,
+            "RAG bottleneck fixes P1.2 P3.1 P3.2 P3.3 deployed",
+            "## CHUNK 1: RAG bottleneck fixes P1.2 P3.1 P3.2 P3.3 deployed\r \r ### Context\r rag-gateway-"
+          ],
+          [
+            0.25,
+            "n8n Contextual Retrieval Prepend Deployment Verificatio",
+            "## CHUNK 1: n8n Contextual Retrieval Prepend Deployment Verification\r \r ### Context\r Deplo"
+          ]
+        ],
+        "top_ids": [
+          "43596192",
+          "1733493780",
+          "1971968402"
+        ]
+      },
+      "hybrid": {
+        "query": "contextual retrieval prepend embed_content Anthropic metadata provenance failure reduction",
+        "project": "homelab",
+        "description": "Contextual retrieval embed_content prepend strategy",
+        "strategy": "hybrid-rrf",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.9667287082065444,
+        "score_dist": {
+          "min": 0.3667,
+          "max": 0.5833,
+          "avg": 0.5019,
+          "p50": 0.5,
+          "p95": 0.5833
+        },
+        "latency_ms": 1474.5,
+        "raw_scores": [
+          0.5833334,
+          0.5833333,
+          0.5,
+          0.4761905,
+          0.36666667
+        ],
+        "top_docs": [
+          [
+            0.5833334,
+            "n8n Contextual Retrieval Prepend Deployment Verificatio",
+            "## CHUNK 1: n8n Contextual Retrieval Prepend Deployment Verification\r \r ### Context\r Deplo"
+          ],
+          [
+            0.5833333,
+            "P1.2 Contextual Retrieval Verification via Cosine Simil",
+            "## CHUNK 3: P1.2 Contextual Retrieval Verification via Cosine Similarity\r \r ### Context\r P"
+          ],
+          [
+            0.5,
+            "Claude Code Authentication - OAuth vs API Key",
+            "## CHUNK 8: Claude Code Authentication - OAuth vs API Key\r \r ### Context\r Claude Code CLI "
+          ]
+        ],
+        "top_ids": [
+          "1971968402",
+          "1971968400",
+          "43596192"
+        ]
+      }
+    },
+    {
+      "description": "n8n knowledge ingest workflow end-to-end",
+      "query": "n8n ingest workflow webhook Ollama nomic-embed-text upsert Qdrant payload collection",
+      "project": "homelab",
+      "chunk_type": "implementation-spec",
+      "dense": {
+        "query": "n8n ingest workflow webhook Ollama nomic-embed-text upsert Qdrant payload collection",
+        "project": "homelab",
+        "description": "n8n knowledge ingest workflow end-to-end",
+        "strategy": "dense",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.9619382960184993,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 1003.2,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "Feature: n8n knowledge-ingest workflow v2 pipeline Olla",
+            "## CHUNK 12: Feature: n8n knowledge-ingest workflow v2 pipeline Ollama embed then Qdrant u"
+          ],
+          [
+            0.33333334,
+            "n8n Ingest Workflow Status Field Whitelist",
+            "## CHUNK 2: n8n Ingest Workflow Status Field Whitelist\r \r ### Context\r The n8n workflow kn"
+          ],
+          [
+            0.25,
+            "n8n Deployment \ufffd Secure Cookie & Webhook Path Fix",
+            "## CHUNK 2: n8n Deployment \ufffd Secure Cookie & Webhook Path Fix\r \r ### Context\r n8n v1.44.1 "
+          ]
+        ],
+        "top_ids": [
+          "156055376",
+          "1028044166",
+          "462643067"
+        ]
+      },
+      "sparse": {
+        "query": "n8n ingest workflow webhook Ollama nomic-embed-text upsert Qdrant payload collection",
+        "project": "homelab",
+        "description": "n8n knowledge ingest workflow end-to-end",
+        "strategy": "sparse-only",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.9323938677441936,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 1004.3,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "Feature: n8n knowledge-ingest workflow v2 pipeline Olla",
+            "## CHUNK 12: Feature: n8n knowledge-ingest workflow v2 pipeline Ollama embed then Qdrant u"
+          ],
+          [
+            0.33333334,
+            "Qdrant Hybrid Collection Migration Pattern Knowledge To",
+            "## CHUNK 2: Qdrant Hybrid Collection Migration Pattern Knowledge To Knowledge V2  ### Cont"
+          ],
+          [
+            0.25,
+            "VM 105 knowledge_v2 restoration pipeline full steps",
+            "## CHUNK 4: VM 105 knowledge_v2 restoration pipeline full steps\r <!-- rag_chunk_meta chunk"
+          ]
+        ],
+        "top_ids": [
+          "156055376",
+          "204856147",
+          "865120272"
+        ]
+      },
+      "hybrid": {
+        "query": "n8n ingest workflow webhook Ollama nomic-embed-text upsert Qdrant payload collection",
+        "project": "homelab",
+        "description": "n8n knowledge ingest workflow end-to-end",
+        "strategy": "hybrid-rrf",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.9922384844633924,
+        "score_dist": {
+          "min": 0.3088,
+          "max": 1.0,
+          "avg": 0.5018,
+          "p50": 0.3667,
+          "p95": 1.0
+        },
+        "latency_ms": 1026.4,
+        "raw_scores": [
+          1.0,
+          0.5,
+          0.36666667,
+          0.33333334,
+          0.30882353
+        ],
+        "top_docs": [
+          [
+            1.0,
+            "Feature: n8n knowledge-ingest workflow v2 pipeline Olla",
+            "## CHUNK 12: Feature: n8n knowledge-ingest workflow v2 pipeline Ollama embed then Qdrant u"
+          ],
+          [
+            0.5,
+            "n8n Ingest Workflow Status Field Whitelist",
+            "## CHUNK 2: n8n Ingest Workflow Status Field Whitelist\r \r ### Context\r The n8n workflow kn"
+          ],
+          [
+            0.36666667,
+            "n8n Workflow \ufffd knowledge-ingest Pipeline Debug",
+            "## CHUNK 5: n8n Workflow \ufffd knowledge-ingest Pipeline Debug\r \r ### Context\r n8n workflow on"
+          ]
+        ],
+        "top_ids": [
+          "156055376",
+          "1028044166",
+          "685981523"
+        ]
+      }
+    },
+    {
+      "description": "cmd_merge auto-push with queue fallback",
+      "query": "rag merge auto_push summaries network fail queue push-to-qdrant bash",
+      "project": "homelab",
+      "chunk_type": "implementation-spec",
+      "dense": {
+        "query": "rag merge auto_push summaries network fail queue push-to-qdrant bash",
+        "project": "homelab",
+        "description": "cmd_merge auto-push with queue fallback",
+        "strategy": "dense",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.9638614719361266,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 1085.6,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "Fix rag pipeline reliability: qdrant_url wrong IP auto_",
+            "## CHUNK 1: Fix rag pipeline reliability: qdrant_url wrong IP auto_push silent exception c"
+          ],
+          [
+            0.33333334,
+            "RAG pipeline execution model: local vs server responsib",
+            "## CHUNK 4: RAG pipeline execution model: local vs server responsibilities\r <!-- rag_chunk"
+          ],
+          [
+            0.25,
+            "push-to-qdrant.sh Windows Git Bash Compatibility Fix",
+            "## CHUNK 4: push-to-qdrant.sh Windows Git Bash Compatibility Fix\r \r ### Context\r `push-to-"
+          ]
+        ],
+        "top_ids": [
+          "2061326988",
+          "343924521",
+          "43596196"
+        ]
+      },
+      "sparse": {
+        "query": "rag merge auto_push summaries network fail queue push-to-qdrant bash",
+        "project": "homelab",
+        "description": "cmd_merge auto-push with queue fallback",
+        "strategy": "sparse-only",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.9778585125241057,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 1073.4,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "Fix rag pipeline reliability: qdrant_url wrong IP auto_",
+            "## CHUNK 1: Fix rag pipeline reliability: qdrant_url wrong IP auto_push silent exception c"
+          ],
+          [
+            0.33333334,
+            "RAG pipeline execution model: local vs server responsib",
+            "## CHUNK 4: RAG pipeline execution model: local vs server responsibilities\r <!-- rag_chunk"
+          ],
+          [
+            0.25,
+            "Feature: RAG auto-capture toolchain rag_capture.py rag ",
+            "## CHUNK 8: Feature: RAG auto-capture toolchain rag_capture.py rag CLI and push-to-qdrant."
+          ]
+        ],
+        "top_ids": [
+          "2061326988",
+          "343924521",
+          "376078148"
+        ]
+      },
+      "hybrid": {
+        "query": "rag merge auto_push summaries network fail queue push-to-qdrant bash",
+        "project": "homelab",
+        "description": "cmd_merge auto-push with queue fallback",
+        "strategy": "hybrid-rrf",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 1.0,
+        "score_dist": {
+          "min": 0.325,
+          "max": 1.0,
+          "avg": 0.5332,
+          "p50": 0.3409,
+          "p95": 1.0
+        },
+        "latency_ms": 1075.1,
+        "raw_scores": [
+          1.0,
+          0.6666667,
+          0.3409091,
+          0.33333334,
+          0.325
+        ],
+        "top_docs": [
+          [
+            1.0,
+            "Fix rag pipeline reliability: qdrant_url wrong IP auto_",
+            "## CHUNK 1: Fix rag pipeline reliability: qdrant_url wrong IP auto_push silent exception c"
+          ],
+          [
+            0.6666667,
+            "RAG pipeline execution model: local vs server responsib",
+            "## CHUNK 4: RAG pipeline execution model: local vs server responsibilities\r <!-- rag_chunk"
+          ],
+          [
+            0.3409091,
+            "push-to-qdrant.sh Windows Git Bash Compatibility Fix",
+            "## CHUNK 4: push-to-qdrant.sh Windows Git Bash Compatibility Fix\r \r ### Context\r `push-to-"
+          ]
+        ],
+        "top_ids": [
+          "2061326988",
+          "343924521",
+          "43596196"
+        ]
+      }
+    },
+    {
+      "description": "rag push-pending queue drain with exponential backoff",
+      "query": "push-pending exponential backoff retry queue drain 2s 4s 8s sleep",
+      "project": "homelab",
+      "chunk_type": "implementation-spec",
+      "dense": {
+        "query": "push-pending exponential backoff retry queue drain 2s 4s 8s sleep",
+        "project": "homelab",
+        "description": "rag push-pending queue drain with exponential backoff",
+        "strategy": "dense",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.9389193765427452,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 942.7,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "Fix rag pipeline reliability: qdrant_url wrong IP auto_",
+            "## CHUNK 1: Fix rag pipeline reliability: qdrant_url wrong IP auto_push silent exception c"
+          ],
+          [
+            0.33333334,
+            "Claude Code Authentication - OAuth vs API Key",
+            "## CHUNK 8: Claude Code Authentication - OAuth vs API Key\r \r ### Context\r Claude Code CLI "
+          ],
+          [
+            0.25,
+            "Phase 3 complete \u2014 AI Task Router stack status",
+            "## CHUNK 4: Phase 3 complete \u2014 AI Task Router stack status\r <!-- rag_chunk_meta chunk_type"
+          ]
+        ],
+        "top_ids": [
+          "2061326988",
+          "43596192",
+          "697557098"
+        ]
+      },
+      "sparse": {
+        "query": "push-pending exponential backoff retry queue drain 2s 4s 8s sleep",
+        "project": "homelab",
+        "description": "rag push-pending queue drain with exponential backoff",
+        "strategy": "sparse-only",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 1.0,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 940.5,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "Fix rag pipeline reliability: qdrant_url wrong IP auto_",
+            "## CHUNK 1: Fix rag pipeline reliability: qdrant_url wrong IP auto_push silent exception c"
+          ],
+          [
+            0.33333334,
+            "One-Time Auto Retry When Retrieval Quality Is Low",
+            "## CHUNK 2: One-Time Auto Retry When Retrieval Quality Is Low\r \r ### Context\r \r After SCOR"
+          ],
+          [
+            0.25,
+            "MCP v2 NOT_FOUND threshold fix and intent-aware retry h",
+            "## CHUNK 1: MCP v2 NOT_FOUND threshold fix and intent-aware retry homelab\r <!-- rag_chunk_"
+          ]
+        ],
+        "top_ids": [
+          "2061326988",
+          "550602273",
+          "738432516"
+        ]
+      },
+      "hybrid": {
+        "query": "push-pending exponential backoff retry queue drain 2s 4s 8s sleep",
+        "project": "homelab",
+        "description": "rag push-pending queue drain with exponential backoff",
+        "strategy": "hybrid-rrf",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.9864891071879608,
+        "score_dist": {
+          "min": 0.3,
+          "max": 1.0,
+          "avg": 0.4767,
+          "p50": 0.3333,
+          "p95": 1.0
+        },
+        "latency_ms": 939.1,
+        "raw_scores": [
+          1.0,
+          0.4166667,
+          0.33333334,
+          0.33333334,
+          0.3
+        ],
+        "top_docs": [
+          [
+            1.0,
+            "Fix rag pipeline reliability: qdrant_url wrong IP auto_",
+            "## CHUNK 1: Fix rag pipeline reliability: qdrant_url wrong IP auto_push silent exception c"
+          ],
+          [
+            0.4166667,
+            "MCP v2 NOT_FOUND threshold fix and intent-aware retry h",
+            "## CHUNK 1: MCP v2 NOT_FOUND threshold fix and intent-aware retry homelab\r <!-- rag_chunk_"
+          ],
+          [
+            0.33333334,
+            "Claude Code Authentication - OAuth vs API Key",
+            "## CHUNK 8: Claude Code Authentication - OAuth vs API Key\r \r ### Context\r Claude Code CLI "
+          ]
+        ],
+        "top_ids": [
+          "2061326988",
+          "738432516",
+          "43596192"
+        ]
+      }
+    },
+    {
+      "description": "Client-side djb2 BM25 sparse vector \u2014 HARD NEGATIVE vs dense cosine",
+      "query": "Qdrant sparse vector BM25 djb2 hash tokenizer indices values client-side",
+      "project": "homelab",
+      "chunk_type": "implementation-spec",
+      "dense": {
+        "query": "Qdrant sparse vector BM25 djb2 hash tokenizer indices values client-side",
+        "project": "homelab",
+        "description": "Client-side djb2 BM25 sparse vector \u2014 HARD NEGATIVE vs dense cosine",
+        "strategy": "dense",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.9656733972765301,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 1093.2,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "Pattern: sparse vector tokenizer must match exactly at ",
+            "## CHUNK 7: Pattern: sparse vector tokenizer must match exactly at index-time and query-ti"
+          ],
+          [
+            0.33333334,
+            "djb2 BM25 Sparse Tokenizer Pattern for Cross-Language C",
+            "## CHUNK 1: djb2 BM25 Sparse Tokenizer Pattern for Cross-Language Consistency  ### Context"
+          ],
+          [
+            0.25,
+            "Decision: client-side djb2 BM25 chosen over Qdrant serv",
+            "## CHUNK 9: Decision: client-side djb2 BM25 chosen over Qdrant server-side inference for k"
+          ]
+        ],
+        "top_ids": [
+          "911579751",
+          "1273689816",
+          "5034038"
+        ]
+      },
+      "sparse": {
+        "query": "Qdrant sparse vector BM25 djb2 hash tokenizer indices values client-side",
+        "project": "homelab",
+        "description": "Client-side djb2 BM25 sparse vector \u2014 HARD NEGATIVE vs dense cosine",
+        "strategy": "sparse-only",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.9598923508449303,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 1090.1,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "Qdrant REST PUT VectorStruct Does Not Support Document ",
+            "## CHUNK 2: Qdrant REST PUT VectorStruct Does Not Support Document Inference  ### Context "
+          ],
+          [
+            0.33333334,
+            "Pattern: sparse vector tokenizer must match exactly at ",
+            "## CHUNK 7: Pattern: sparse vector tokenizer must match exactly at index-time and query-ti"
+          ],
+          [
+            0.25,
+            "Decision: client-side djb2 BM25 chosen over Qdrant serv",
+            "## CHUNK 9: Decision: client-side djb2 BM25 chosen over Qdrant server-side inference for k"
+          ]
+        ],
+        "top_ids": [
+          "1985727440",
+          "911579751",
+          "5034038"
+        ]
+      },
+      "hybrid": {
+        "query": "Qdrant sparse vector BM25 djb2 hash tokenizer indices values client-side",
+        "project": "homelab",
+        "description": "Client-side djb2 BM25 sparse vector \u2014 HARD NEGATIVE vs dense cosine",
+        "strategy": "hybrid-rrf",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.9647760427540588,
+        "score_dist": {
+          "min": 0.3095,
+          "max": 0.8333,
+          "avg": 0.5602,
+          "p50": 0.5333,
+          "p95": 0.8333
+        },
+        "latency_ms": 1078.3,
+        "raw_scores": [
+          0.8333334,
+          0.625,
+          0.53333336,
+          0.5,
+          0.30952382
+        ],
+        "top_docs": [
+          [
+            0.8333334,
+            "Pattern: sparse vector tokenizer must match exactly at ",
+            "## CHUNK 7: Pattern: sparse vector tokenizer must match exactly at index-time and query-ti"
+          ],
+          [
+            0.625,
+            "Qdrant REST PUT VectorStruct Does Not Support Document ",
+            "## CHUNK 2: Qdrant REST PUT VectorStruct Does Not Support Document Inference  ### Context "
+          ],
+          [
+            0.53333336,
+            "djb2 BM25 Sparse Tokenizer Pattern for Cross-Language C",
+            "## CHUNK 1: djb2 BM25 Sparse Tokenizer Pattern for Cross-Language Consistency  ### Context"
+          ]
+        ],
+        "top_ids": [
+          "911579751",
+          "1985727440",
+          "1273689816"
+        ]
+      }
+    },
+    {
+      "description": "rag add heredoc terminator fix and draft save",
+      "query": "rag add heredoc RAGBODY_EOF chunk draft save validate frontmatter project topic",
+      "project": "homelab",
+      "chunk_type": "runbook",
+      "dense": {
+        "query": "rag add heredoc RAGBODY_EOF chunk draft save validate frontmatter project topic",
+        "project": "homelab",
+        "description": "rag add heredoc terminator fix and draft save",
+        "strategy": "dense",
+        "hit_at_1": 0.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 0.5,
+        "ndcg5": 0.6462302129493456,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 1341.8,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "push-to-qdrant.sh fix - per-chunk metadata parsed from ",
+            "## CHUNK 2: push-to-qdrant.sh fix - per-chunk metadata parsed from rag_chunk_meta not doc "
+          ],
+          [
+            0.33333334,
+            "rag-knowledge-capture-cli Skill Auto-Save via rag CLI",
+            "## CHUNK 1: rag-knowledge-capture-cli Skill Auto-Save via rag CLI\r \r ### Context\r The /rag"
+          ],
+          [
+            0.25,
+            "rag_chunk_meta per-chunk metadata enrichment - adding 5",
+            "## CHUNK 1: rag_chunk_meta per-chunk metadata enrichment - adding 5 fields to HTML comment"
+          ]
+        ],
+        "top_ids": [
+          "865120268",
+          "1512580494",
+          "865120266"
+        ]
+      },
+      "sparse": {
+        "query": "rag add heredoc RAGBODY_EOF chunk draft save validate frontmatter project topic",
+        "project": "homelab",
+        "description": "rag add heredoc terminator fix and draft save",
+        "strategy": "sparse-only",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 1.0,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 1341.9,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "rag-knowledge-capture-cli Skill Auto-Save via rag CLI",
+            "## CHUNK 1: rag-knowledge-capture-cli Skill Auto-Save via rag CLI\r \r ### Context\r The /rag"
+          ],
+          [
+            0.33333334,
+            "rag_capture.py save_draft unterminated string literal s",
+            "## CHUNK 1: rag_capture.py save_draft unterminated string literal syntax error fix\r \r ### "
+          ],
+          [
+            0.25,
+            "Feature: RAG auto-capture toolchain rag_capture.py rag ",
+            "## CHUNK 8: Feature: RAG auto-capture toolchain rag_capture.py rag CLI and push-to-qdrant."
+          ]
+        ],
+        "top_ids": [
+          "1512580494",
+          "1899067202",
+          "376078148"
+        ]
+      },
+      "hybrid": {
+        "query": "rag add heredoc RAGBODY_EOF chunk draft save validate frontmatter project topic",
+        "project": "homelab",
+        "description": "rag add heredoc terminator fix and draft save",
+        "strategy": "hybrid-rrf",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.9515234565959558,
+        "score_dist": {
+          "min": 0.2778,
+          "max": 0.8333,
+          "avg": 0.4589,
+          "p50": 0.35,
+          "p95": 0.8333
+        },
+        "latency_ms": 1344.3,
+        "raw_scores": [
+          0.8333334,
+          0.5,
+          0.35,
+          0.33333334,
+          0.2777778
+        ],
+        "top_docs": [
+          [
+            0.8333334,
+            "rag-knowledge-capture-cli Skill Auto-Save via rag CLI",
+            "## CHUNK 1: rag-knowledge-capture-cli Skill Auto-Save via rag CLI\r \r ### Context\r The /rag"
+          ],
+          [
+            0.5,
+            "push-to-qdrant.sh fix - per-chunk metadata parsed from ",
+            "## CHUNK 2: push-to-qdrant.sh fix - per-chunk metadata parsed from rag_chunk_meta not doc "
+          ],
+          [
+            0.35,
+            "Feature: RAG auto-capture toolchain rag_capture.py rag ",
+            "## CHUNK 8: Feature: RAG auto-capture toolchain rag_capture.py rag CLI and push-to-qdrant."
+          ]
+        ],
+        "top_ids": [
+          "1512580494",
+          "865120268",
+          "376078148"
+        ]
+      }
+    },
+    {
+      "description": "rag resume session-start protocol \u2014 HARD NEGATIVE vs rag checkpoint",
+      "query": "rag resume open checkpoints in_progress session start skip exploration files_modified next_step",
+      "project": "homelab",
+      "chunk_type": "runbook",
+      "dense": {
+        "query": "rag resume open checkpoints in_progress session start skip exploration files_modified next_step",
+        "project": "homelab",
+        "description": "rag resume session-start protocol \u2014 HARD NEGATIVE vs rag checkpoint",
+        "strategy": "dense",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 1.0,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 1276.5,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "---",
+            "---\r id: 2026-04-25-rich-checkpoint-system-for-session-conti-promoted\r date: 2026-04-18\r s"
+          ],
+          [
+            0.33333334,
+            "---",
+            "---\r id: 2026-04-25-rag-checkpoint-system-implementation-com-promoted\r date: 2026-04-18\r s"
+          ],
+          [
+            0.25,
+            "---",
+            "---\r id: 2026-04-25-coverage-knowledge-oi-1-complete-batch-3-promoted\r date: 2026-04-25\r s"
+          ]
+        ],
+        "top_ids": [
+          "1529843927",
+          "1297337643",
+          "456266306"
+        ]
+      },
+      "sparse": {
+        "query": "rag resume open checkpoints in_progress session start skip exploration files_modified next_step",
+        "project": "homelab",
+        "description": "rag resume session-start protocol \u2014 HARD NEGATIVE vs rag checkpoint",
+        "strategy": "sparse-only",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.9638614719361266,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 1276.3,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "---",
+            "---\r id: 2026-04-25-rich-checkpoint-system-for-session-conti-promoted\r date: 2026-04-18\r s"
+          ],
+          [
+            0.33333334,
+            "VM 105 knowledge_v2 restoration: mass push 120 files co",
+            "## CHUNK 1: VM 105 knowledge_v2 restoration: mass push 120 files completed\r <!-- rag_chunk"
+          ],
+          [
+            0.25,
+            "rag and rtk not found in git bash due to missing .local",
+            "## CHUNK 1: rag and rtk not found in git bash due to missing .local/bin in PATH\r \r ### Con"
+          ]
+        ],
+        "top_ids": [
+          "1529843927",
+          "123773772",
+          "1092053679"
+        ]
+      },
+      "hybrid": {
+        "query": "rag resume open checkpoints in_progress session start skip exploration files_modified next_step",
+        "project": "homelab",
+        "description": "rag resume session-start protocol \u2014 HARD NEGATIVE vs rag checkpoint",
+        "strategy": "hybrid-rrf",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 1.0,
+        "score_dist": {
+          "min": 0.25,
+          "max": 1.0,
+          "avg": 0.4973,
+          "p50": 0.3958,
+          "p95": 1.0
+        },
+        "latency_ms": 1276.9,
+        "raw_scores": [
+          1.0,
+          0.5,
+          0.39583334,
+          0.3409091,
+          0.25
+        ],
+        "top_docs": [
+          [
+            1.0,
+            "---",
+            "---\r id: 2026-04-25-rich-checkpoint-system-for-session-conti-promoted\r date: 2026-04-18\r s"
+          ],
+          [
+            0.5,
+            "---",
+            "---\r id: 2026-04-25-rag-checkpoint-system-implementation-com-promoted\r date: 2026-04-18\r s"
+          ],
+          [
+            0.39583334,
+            "VM 105 knowledge_v2 restoration: mass push 120 files co",
+            "## CHUNK 1: VM 105 knowledge_v2 restoration: mass push 120 files completed\r <!-- rag_chunk"
+          ]
+        ],
+        "top_ids": [
+          "1529843927",
+          "1297337643",
+          "123773772"
+        ]
+      }
+    },
+    {
+      "description": "Python subprocess.run with timeout and error handling",
+      "query": "Python subprocess run timeout returncode stderr stdout communicate bash script",
+      "project": "homelab",
+      "chunk_type": "pattern",
+      "dense": {
+        "query": "Python subprocess run timeout returncode stderr stdout communicate bash script",
+        "project": "homelab",
+        "description": "Python subprocess.run with timeout and error handling",
+        "strategy": "dense",
+        "hit_at_1": 0.0,
+        "hit_at_3": 0.0,
+        "hit_at_5": 1.0,
+        "mrr": 0.25,
+        "ndcg5": 0.7960200534283121,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 1201.1,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "Python argparse subcommand CLI pattern",
+            "## CHUNK 1: Python argparse subcommand CLI pattern\r <!-- rag_chunk_meta chunk_type=pattern"
+          ],
+          [
+            0.33333334,
+            "push-to-qdrant.sh Windows Git Bash Compatibility Fix",
+            "## CHUNK 4: push-to-qdrant.sh Windows Git Bash Compatibility Fix\r \r ### Context\r `push-to-"
+          ],
+          [
+            0.25,
+            "RTK Hook Windows Warning Suppression and Nested Substit",
+            "## CHUNK 2: RTK Hook Windows Warning Suppression and Nested Substitution Fix\r \r ### Contex"
+          ]
+        ],
+        "top_ids": [
+          "2128723946",
+          "43596196",
+          "1400154797"
+        ]
+      },
+      "sparse": {
+        "query": "Python subprocess run timeout returncode stderr stdout communicate bash script",
+        "project": "homelab",
+        "description": "Python subprocess.run with timeout and error handling",
+        "strategy": "sparse-only",
+        "hit_at_1": 0.0,
+        "hit_at_3": 0.0,
+        "hit_at_5": 0.0,
+        "mrr": 0.0,
+        "ndcg5": 0.8772153153380492,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 1200.1,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "push-to-qdrant.sh Windows Git Bash Compatibility Fix",
+            "## CHUNK 4: push-to-qdrant.sh Windows Git Bash Compatibility Fix\r \r ### Context\r `push-to-"
+          ],
+          [
+            0.33333334,
+            "SessionEnd Hook Silently Fails on Windows Due to Bash S",
+            "## CHUNK 1: SessionEnd Hook Silently Fails on Windows Due to Bash Syntax in cmd.exe  ### C"
+          ],
+          [
+            0.25,
+            "rag_capture.py Windows cp1252 Crash and Mojibake Fix",
+            "## CHUNK 1: rag_capture.py Windows cp1252 Crash and Mojibake Fix\r \r ### Context\r The rag C"
+          ]
+        ],
+        "top_ids": [
+          "43596196",
+          "1402989600",
+          "27530548"
+        ]
+      },
+      "hybrid": {
+        "query": "Python subprocess run timeout returncode stderr stdout communicate bash script",
+        "project": "homelab",
+        "description": "Python subprocess.run with timeout and error handling",
+        "strategy": "hybrid-rrf",
+        "hit_at_1": 0.0,
+        "hit_at_3": 0.0,
+        "hit_at_5": 0.0,
+        "mrr": 0.0,
+        "ndcg5": 1.0,
+        "score_dist": {
+          "min": 0.3095,
+          "max": 0.8333,
+          "avg": 0.4595,
+          "p50": 0.3333,
+          "p95": 0.8333
+        },
+        "latency_ms": 1201.4,
+        "raw_scores": [
+          0.8333334,
+          0.5,
+          0.33333334,
+          0.32142857,
+          0.30952382
+        ],
+        "top_docs": [
+          [
+            0.8333334,
+            "push-to-qdrant.sh Windows Git Bash Compatibility Fix",
+            "## CHUNK 4: push-to-qdrant.sh Windows Git Bash Compatibility Fix\r \r ### Context\r `push-to-"
+          ],
+          [
+            0.5,
+            "Python argparse subcommand CLI pattern",
+            "## CHUNK 1: Python argparse subcommand CLI pattern\r <!-- rag_chunk_meta chunk_type=pattern"
+          ],
+          [
+            0.33333334,
+            "SessionEnd Hook Silently Fails on Windows Due to Bash S",
+            "## CHUNK 1: SessionEnd Hook Silently Fails on Windows Due to Bash Syntax in cmd.exe  ### C"
+          ]
+        ],
+        "top_ids": [
+          "43596196",
+          "2128723946",
+          "1402989600"
+        ]
+      }
+    },
+    {
+      "description": "Python pathlib file operations pattern",
+      "query": "pathlib Path glob read_text write_text encoding UTF-8 mkdir parents exist_ok",
+      "project": "homelab",
+      "chunk_type": "pattern",
+      "dense": {
+        "query": "pathlib Path glob read_text write_text encoding UTF-8 mkdir parents exist_ok",
+        "project": "homelab",
+        "description": "Python pathlib file operations pattern",
+        "strategy": "dense",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.9502344167898356,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 1158.4,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "rag_capture.py Windows cp1252 Crash and Mojibake Fix",
+            "## CHUNK 1: rag_capture.py Windows cp1252 Crash and Mojibake Fix\r \r ### Context\r The rag C"
+          ],
+          [
+            0.33333334,
+            "harden.py Unicode characters causing encoding errors - ",
+            "## CHUNK 1: harden.py Unicode characters causing encoding errors - multi-iteration fix\r <!"
+          ],
+          [
+            0.25,
+            "Reading Token Usage from Claude Code Local JSONL Files",
+            "## CHUNK 2: Reading Token Usage from Claude Code Local JSONL Files  ### Context  Claude Co"
+          ]
+        ],
+        "top_ids": [
+          "27530548",
+          "343924527",
+          "1692287295"
+        ]
+      },
+      "sparse": {
+        "query": "pathlib Path glob read_text write_text encoding UTF-8 mkdir parents exist_ok",
+        "project": "homelab",
+        "description": "Python pathlib file operations pattern",
+        "strategy": "sparse-only",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.8675034925694372,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 1170.4,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "rag_capture.py Windows cp1252 Crash and Mojibake Fix",
+            "## CHUNK 1: rag_capture.py Windows cp1252 Crash and Mojibake Fix\r \r ### Context\r The rag C"
+          ],
+          [
+            0.33333334,
+            "Reading Token Usage from Claude Code Local JSONL Files",
+            "## CHUNK 2: Reading Token Usage from Claude Code Local JSONL Files  ### Context  Claude Co"
+          ],
+          [
+            0.25,
+            "Fix MCP server SCORE_THRESHOLD 0.5 to 0.35 and homelab-",
+            "## CHUNK 1: Fix MCP server SCORE_THRESHOLD 0.5 to 0.35 and homelab-biased retry expansion\r"
+          ]
+        ],
+        "top_ids": [
+          "27530548",
+          "1692287295",
+          "893438063"
+        ]
+      },
+      "hybrid": {
+        "query": "pathlib Path glob read_text write_text encoding UTF-8 mkdir parents exist_ok",
+        "project": "homelab",
+        "description": "Python pathlib file operations pattern",
+        "strategy": "hybrid-rrf",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 1.0,
+        "score_dist": {
+          "min": 0.254,
+          "max": 1.0,
+          "avg": 0.5075,
+          "p50": 0.3667,
+          "p95": 1.0
+        },
+        "latency_ms": 1160.0,
+        "raw_scores": [
+          1.0,
+          0.5833334,
+          0.36666667,
+          0.33333334,
+          0.25396827
+        ],
+        "top_docs": [
+          [
+            1.0,
+            "rag_capture.py Windows cp1252 Crash and Mojibake Fix",
+            "## CHUNK 1: rag_capture.py Windows cp1252 Crash and Mojibake Fix\r \r ### Context\r The rag C"
+          ],
+          [
+            0.5833334,
+            "Reading Token Usage from Claude Code Local JSONL Files",
+            "## CHUNK 2: Reading Token Usage from Claude Code Local JSONL Files  ### Context  Claude Co"
+          ],
+          [
+            0.36666667,
+            "harden.py Unicode Characters Causing Encoding Errors",
+            "## CHUNK 1: harden.py Unicode Characters Causing Encoding Errors\r \r ### Context\r \r homelab"
+          ]
+        ],
+        "top_ids": [
+          "27530548",
+          "1692287295",
+          "343924526"
+        ]
+      }
+    },
+    {
+      "description": "Python argparse subcommand CLI pattern",
+      "query": "argparse subparser add_parser add_argument dest choices required action store_true",
+      "project": "homelab",
+      "chunk_type": "pattern",
+      "dense": {
+        "query": "argparse subparser add_parser add_argument dest choices required action store_true",
+        "project": "homelab",
+        "description": "Python argparse subcommand CLI pattern",
+        "strategy": "dense",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 1.0,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 1267.5,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "Python argparse subcommand CLI pattern",
+            "## CHUNK 1: Python argparse subcommand CLI pattern\r <!-- rag_chunk_meta chunk_type=pattern"
+          ],
+          [
+            0.33333334,
+            "push-to-qdrant.sh Fix - Per-Chunk Metadata from rag_chu",
+            "## CHUNK 2: push-to-qdrant.sh Fix - Per-Chunk Metadata from rag_chunk_meta\r \r ### Context\r"
+          ],
+          [
+            0.25,
+            "rag_chunk_meta per-chunk metadata enrichment - adding 5",
+            "## CHUNK 1: rag_chunk_meta per-chunk metadata enrichment - adding 5 fields to HTML comment"
+          ]
+        ],
+        "top_ids": [
+          "2128723946",
+          "865120269",
+          "865120266"
+        ]
+      },
+      "sparse": {
+        "query": "argparse subparser add_parser add_argument dest choices required action store_true",
+        "project": "homelab",
+        "description": "Python argparse subcommand CLI pattern",
+        "strategy": "sparse-only",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.968014782704207,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 1267.6,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "Python argparse subcommand CLI pattern",
+            "## CHUNK 1: Python argparse subcommand CLI pattern\r <!-- rag_chunk_meta chunk_type=pattern"
+          ],
+          [
+            0.33333334,
+            "Pattern: Qdrant cannot add sparse vector config to exis",
+            "## CHUNK 5: Pattern: Qdrant cannot add sparse vector config to existing collection require"
+          ],
+          [
+            0.25,
+            "Pattern: n8n blocks env vars in expressions by default ",
+            "## CHUNK 1: Pattern: n8n blocks env vars in expressions by default requires explicit flag\r"
+          ]
+        ],
+        "top_ids": [
+          "2128723946",
+          "5034042",
+          "5034046"
+        ]
+      },
+      "hybrid": {
+        "query": "argparse subparser add_parser add_argument dest choices required action store_true",
+        "project": "homelab",
+        "description": "Python argparse subcommand CLI pattern",
+        "strategy": "hybrid-rrf",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 1.0,
+        "score_dist": {
+          "min": 0.25,
+          "max": 1.0,
+          "avg": 0.4662,
+          "p50": 0.3429,
+          "p95": 1.0
+        },
+        "latency_ms": 1294.1,
+        "raw_scores": [
+          1.0,
+          0.4047619,
+          0.34285715,
+          0.33333334,
+          0.25
+        ],
+        "top_docs": [
+          [
+            1.0,
+            "Python argparse subcommand CLI pattern",
+            "## CHUNK 1: Python argparse subcommand CLI pattern\r <!-- rag_chunk_meta chunk_type=pattern"
+          ],
+          [
+            0.4047619,
+            "Pattern: Qdrant cannot add sparse vector config to exis",
+            "## CHUNK 5: Pattern: Qdrant cannot add sparse vector config to existing collection require"
+          ],
+          [
+            0.34285715,
+            "Cosine Gate FAIL - n8n Ollama Node Wrong Field",
+            "## CHUNK 3: Cosine Gate FAIL - n8n Ollama Node Wrong Field\r \r ### Context\r \r `push-to-qdra"
+          ]
+        ],
+        "top_ids": [
+          "2128723946",
+          "5034042",
+          "865120271"
+        ]
+      }
+    },
+    {
+      "description": "Python dataclass pattern with field defaults",
+      "query": "Python dataclass field default_factory asdict frozen slots post_init validation",
+      "project": "homelab",
+      "chunk_type": "pattern",
+      "dense": {
+        "query": "Python dataclass field default_factory asdict frozen slots post_init validation",
+        "project": "homelab",
+        "description": "Python dataclass pattern with field defaults",
+        "strategy": "dense",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.9828422279067398,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 1024.6,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "Python dataclass schema pattern",
+            "## CHUNK 2: Python dataclass schema pattern\r <!-- rag_chunk_meta chunk_type=pattern tags=["
+          ],
+          [
+            0.33333334,
+            "Pattern: diagnose SSH key rejection on hardened hosts",
+            "## CHUNK 2: Pattern: diagnose SSH key rejection on hardened hosts\r <!-- rag_chunk_meta chu"
+          ],
+          [
+            0.25,
+            "Pattern: Qdrant named vector collection requires using ",
+            "## CHUNK 2: Pattern: Qdrant named vector collection requires using field in every prefetch"
+          ]
+        ],
+        "top_ids": [
+          "2128723945",
+          "306275788",
+          "24204004"
+        ]
+      },
+      "sparse": {
+        "query": "Python dataclass field default_factory asdict frozen slots post_init validation",
+        "project": "homelab",
+        "description": "Python dataclass pattern with field defaults",
+        "strategy": "sparse-only",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.9614557747069622,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 1023.6,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "Python dataclass schema pattern",
+            "## CHUNK 2: Python dataclass schema pattern\r <!-- rag_chunk_meta chunk_type=pattern tags=["
+          ],
+          [
+            0.33333334,
+            "Pattern: n8n blocks env vars in expressions by default ",
+            "## CHUNK 1: Pattern: n8n blocks env vars in expressions by default requires explicit flag\r"
+          ],
+          [
+            0.25,
+            "Feature: Proxmox VM B1 backup and restore workflow via ",
+            "## CHUNK 13: Feature: Proxmox VM B1 backup and restore workflow via vzdump vma.zst\r \r ### "
+          ]
+        ],
+        "top_ids": [
+          "2128723945",
+          "5034046",
+          "156055375"
+        ]
+      },
+      "hybrid": {
+        "query": "Python dataclass field default_factory asdict frozen slots post_init validation",
+        "project": "homelab",
+        "description": "Python dataclass pattern with field defaults",
+        "strategy": "hybrid-rrf",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 1.0,
+        "score_dist": {
+          "min": 0.3088,
+          "max": 1.0,
+          "avg": 0.4927,
+          "p50": 0.4048,
+          "p95": 1.0
+        },
+        "latency_ms": 1046.1,
+        "raw_scores": [
+          1.0,
+          0.4166667,
+          0.4047619,
+          0.33333334,
+          0.30882353
+        ],
+        "top_docs": [
+          [
+            1.0,
+            "Python dataclass schema pattern",
+            "## CHUNK 2: Python dataclass schema pattern\r <!-- rag_chunk_meta chunk_type=pattern tags=["
+          ],
+          [
+            0.4166667,
+            "Pattern: Qdrant named vector collection requires using ",
+            "## CHUNK 2: Pattern: Qdrant named vector collection requires using field in every prefetch"
+          ],
+          [
+            0.4047619,
+            "Pattern: n8n blocks env vars in expressions by default ",
+            "## CHUNK 1: Pattern: n8n blocks env vars in expressions by default requires explicit flag\r"
+          ]
+        ],
+        "top_ids": [
+          "2128723945",
+          "24204004",
+          "5034046"
+        ]
+      }
+    },
+    {
+      "description": "Qdrant collection creation with named vectors \u2014 HARD NEGATIVE vs migration",
+      "query": "Qdrant collection create named vector dense cosine sparse index on_disk REST PUT",
+      "project": "homelab",
+      "chunk_type": "runbook",
+      "dense": {
+        "query": "Qdrant collection create named vector dense cosine sparse index on_disk REST PUT",
+        "project": "homelab",
+        "description": "Qdrant collection creation with named vectors \u2014 HARD NEGATIVE vs migration",
+        "strategy": "dense",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.8848151993251644,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 1077.6,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "Decision: hybrid RRF dense plus sparse search over cosi",
+            "## CHUNK 1: Decision: hybrid RRF dense plus sparse search over cosine-only for knowledge_v"
+          ],
+          [
+            0.33333334,
+            "Pattern: Qdrant cannot add sparse vector config to exis",
+            "## CHUNK 5: Pattern: Qdrant cannot add sparse vector config to existing collection require"
+          ],
+          [
+            0.25,
+            "Decision: Qdrant over other vector databases for homela",
+            "## CHUNK 2: Decision: Qdrant over other vector databases for homelab knowledge base\r <!-- "
+          ]
+        ],
+        "top_ids": [
+          "376078155",
+          "5034042",
+          "376078154"
+        ]
+      },
+      "sparse": {
+        "query": "Qdrant collection create named vector dense cosine sparse index on_disk REST PUT",
+        "project": "homelab",
+        "description": "Qdrant collection creation with named vectors \u2014 HARD NEGATIVE vs migration",
+        "strategy": "sparse-only",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.9928227521372257,
+        "score_dist": {
+          "min": 0.1667,
+          "max": 0.5,
+          "avg": 0.29,
+          "p50": 0.25,
+          "p95": 0.5
+        },
+        "latency_ms": 1110.7,
+        "raw_scores": [
+          0.5,
+          0.33333334,
+          0.25,
+          0.2,
+          0.16666667
+        ],
+        "top_docs": [
+          [
+            0.5,
+            "Feature: Qdrant knowledge_v2 collection named vectors d",
+            "## CHUNK 7: Feature: Qdrant knowledge_v2 collection named vectors dense and sparse hybrid "
+          ],
+          [
+            0.33333334,
+            "VM 105 knowledge_v2 restoration pipeline full steps",
+            "## CHUNK 4: VM 105 knowledge_v2 restoration pipeline full steps\r <!-- rag_chunk_meta chunk"
+          ],
+          [
+            0.25,
+            "Decision: hybrid RRF dense plus sparse search over cosi",
+            "## CHUNK 1: Decision: hybrid RRF dense plus sparse search over cosine-only for knowledge_v"
+          ]
+        ],
+        "top_ids": [
+          "376078149",
+          "865120272",
+          "376078155"
+        ]
+      },
+      "hybrid": {
+        "query": "Qdrant collection create named vector dense cosine sparse index on_disk REST PUT",
+        "project": "homelab",
+        "description": "Qdrant collection creation with named vectors \u2014 HARD NEGATIVE vs migration",
+        "strategy": "hybrid-rrf",
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg5": 0.8878645697947556,
+        "score_dist": {
+          "min": 0.3667,
+          "max": 0.75,
+          "avg": 0.5189,
+          "p50": 0.45,
+          "p95": 0.75
+        },
+        "latency_ms": 1079.1,
+        "raw_scores": [
+          0.75,
+          0.6111111,
+          0.45,
+          0.4166667,
+          0.36666667
+        ],
+        "top_docs": [
+          [
+            0.75,
+            "Decision: hybrid RRF dense plus sparse search over cosi",
+            "## CHUNK 1: Decision: hybrid RRF dense plus sparse search over cosine-only for knowledge_v"
+          ],
+          [
+            0.6111111,
+            "Feature: Qdrant knowledge_v2 collection named vectors d",
+            "## CHUNK 7: Feature: Qdrant knowledge_v2 collection named vectors dense and sparse hybrid "
+          ],
+          [
+            0.45,
+            "Decision: Qdrant over other vector databases for homela",
+            "## CHUNK 2: Decision: Qdrant over other vector databases for homelab knowledge base\r <!-- "
+          ]
+        ],
+        "top_ids": [
+          "376078155",
+          "376078149",
+          "376078154"
+        ]
+      }
+    }
+  ]
+}

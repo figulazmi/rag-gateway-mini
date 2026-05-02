@@ -141,6 +141,9 @@ docs/
 
 | Document | Purpose | Status |
 |---|---|---|
+| [ROOT_README_TEMPLATE.md](templates/ROOT_README_TEMPLATE.md) | Blank root project README | Template |
+| [CLAUDE_TEMPLATE.md](templates/CLAUDE_TEMPLATE.md) | Blank project instructions for Claude Code and future agents | Template |
+| [CONTRIBUTING_TEMPLATE.md](templates/CONTRIBUTING_TEMPLATE.md) | Blank contribution workflow | Template |
 | [TASKS_TEMPLATE.md](templates/TASKS_TEMPLATE.md) | Blank cross-document task index | Template |
 | [TRACKER_TEMPLATE.md](templates/TRACKER_TEMPLATE.md) | Blank canonical tracker | Template |
 | [ADR_TEMPLATE.md](templates/ADR_TEMPLATE.md) | Blank architecture decision record | Template |
@@ -151,6 +154,8 @@ docs/
 | [ONBOARDING_TEMPLATE.md](templates/ONBOARDING_TEMPLATE.md) | Blank onboarding guide | Template |
 | [RISK_REGISTER_TEMPLATE.md](templates/RISK_REGISTER_TEMPLATE.md) | Blank risk register | Template |
 | [INCIDENT_LOG_TEMPLATE.md](templates/INCIDENT_LOG_TEMPLATE.md) | Blank incident log | Template |
+| [SECURITY_BASELINE_TEMPLATE.md](templates/SECURITY_BASELINE_TEMPLATE.md) | Blank security baseline checklist | Template |
+| [AUTOMATION_TEMPLATE.md](templates/AUTOMATION_TEMPLATE.md) | Blank CI/CD, hook, cron, and scheduled automation inventory | Template |
 
 ---
 

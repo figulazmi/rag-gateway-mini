@@ -9,6 +9,9 @@ The goal is to keep navigation, task status, decisions, runbooks, and history se
 ## Recommended Folder Structure
 
 ```text
+README.md                           # root project overview and quick start
+CLAUDE.md                           # project instructions for Claude Code and agents
+CONTRIBUTING.md                     # contribution workflow and verification checklist
 docs/
   README.md                         # navigation and reading order
   TASKS.md                          # cross-document active task index
@@ -35,9 +38,28 @@ docs/
     INCIDENT_LOG.md                 # incident records and follow-up links
   risks/
     RISK_REGISTER.md                # risks, mitigations, and review dates
+  automation/
+    AUTOMATION.md                   # CI/CD, hooks, cron, and scheduled jobs
   templates/
     *_TEMPLATE.md                   # blank reusable docs templates
 ```
+
+---
+
+## Placeholder Rules
+
+Bootstrap scripts should replace these placeholders consistently:
+
+| Placeholder | Meaning |
+|---|---|
+| `{{PROJECT_NAME}}` | Human-readable project name |
+| `{{REPO_NAME}}` | Repository or folder name |
+| `{{OWNER}}` | Primary owner or maintainer |
+| `{{DATE}}` | Bootstrap date in `YYYY-MM-DD` format |
+| `{{STACK}}` | Main stack, such as dotnet, python, node, or mixed |
+| `{{INSTALL_COMMAND}}` | Dependency install or restore command |
+| `{{RUN_COMMAND}}` | Local run command |
+| `{{TEST_COMMAND}}` | Verification command |
 
 ---
 
@@ -64,6 +86,7 @@ Short description of the project and what these docs cover.
 | history/ | Notable completed changes |
 | incidents/ | Incident records and follow-up links |
 | risks/ | Risk register and mitigation tracking |
+| automation/ | CI/CD, hooks, cron, and scheduled automation |
 | templates/ | Blank reusable templates |
 
 ## Reading Order
@@ -197,6 +220,24 @@ Facts, metrics, analysis, or design notes. Avoid owning task status here.
 ## Blank Templates
 
 Copy files from `docs/templates/` when bootstrapping another project, then rename them to the project-specific paths listed above.
+
+| Template | Target path |
+|---|---|
+| `ROOT_README_TEMPLATE.md` | `README.md` |
+| `CLAUDE_TEMPLATE.md` | `CLAUDE.md` |
+| `CONTRIBUTING_TEMPLATE.md` | `CONTRIBUTING.md` |
+| `TASKS_TEMPLATE.md` | `docs/TASKS.md` |
+| `ONBOARDING_TEMPLATE.md` | `docs/ONBOARDING.md` |
+| `TRACKER_TEMPLATE.md` | `docs/planning/ROADMAP.md` |
+| `ADR_TEMPLATE.md` | `docs/architecture/DECISIONS.md` |
+| `CHANGELOG_TEMPLATE.md` | `docs/history/CHANGELOG.md` |
+| `RUNBOOK_TEMPLATE.md` | `docs/reference/RUNBOOK.md` |
+| `CONFIGURATION_TEMPLATE.md` | `docs/config/CONFIGURATION.md` |
+| `TEST_STRATEGY_TEMPLATE.md` | `docs/testing/TEST_STRATEGY.md` |
+| `RISK_REGISTER_TEMPLATE.md` | `docs/risks/RISK_REGISTER.md` |
+| `INCIDENT_LOG_TEMPLATE.md` | `docs/incidents/INCIDENT_LOG.md` |
+| `SECURITY_BASELINE_TEMPLATE.md` | `docs/security/SECURITY_BASELINE.md` |
+| `AUTOMATION_TEMPLATE.md` | `docs/automation/AUTOMATION.md` |
 
 ---
 

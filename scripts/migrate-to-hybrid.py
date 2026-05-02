@@ -47,6 +47,19 @@ def djb2_sparse(text: str) -> SparseVector:
     values  = [float(v) for v in tf.values()]
     return SparseVector(indices=indices, values=values)
 
+
+def extract_key_facts(content: str) -> str:
+    facts: list[str] = []
+    in_key_facts = False
+    for line in content.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("### "):
+            in_key_facts = stripped.lower().strip("# ") == "key facts"
+            continue
+        if in_key_facts and stripped.startswith(("- ", "* ")):
+            facts.append(stripped[2:].strip())
+    return " ".join(facts)
+
 QDRANT_URL = "http://localhost:6333"
 OLD_COLLECTION = "knowledge"
 NEW_COLLECTION = "knowledge_v2"
@@ -131,10 +144,10 @@ while True:
             print(f"   ⚠️  Skipping point {point.id}: unknown vector format")
             continue
 
-        # Build sparse text: topic + content for richer BM25 signal
+        # Build sparse text from topic + Key Facts to reduce full-content sparse noise.
         content_text = point.payload.get("content", "") if point.payload else ""
         topic_text   = point.payload.get("topic",   "") if point.payload else ""
-        sparse_text  = f"{topic_text} {content_text}".strip()
+        sparse_text  = f"{topic_text} {extract_key_facts(content_text)}".strip()
 
         new_point = models.PointStruct(
             id=point.id,

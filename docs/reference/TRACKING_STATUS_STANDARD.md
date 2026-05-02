@@ -41,6 +41,9 @@ Legacy sections may contain historical status text. Current source of truth is [
 | `docs/testing/TEST_STRATEGY.md` | Verification expectations and evidence rules | Yes, only for testing-documentation tasks |
 | `docs/risks/RISK_REGISTER.md` | Risk identification, mitigation, and review dates | No |
 | `docs/incidents/INCIDENT_LOG.md` | Incident records and follow-up task links | No |
+| `CLAUDE.md` | Project instructions for Claude Code and future agents | No |
+| `CONTRIBUTING.md` | Contribution workflow and verification checklist | No |
+| `docs/automation/AUTOMATION.md` | CI/CD, hooks, cron, and scheduled automation inventory | No |
 | `docs/templates/` | Blank reusable templates for other projects | No |
 | Any tracker document | Planning, audit, quality, security, migration, or pipeline task ownership | Yes, only in `## Canonical Task Tracker` |
 

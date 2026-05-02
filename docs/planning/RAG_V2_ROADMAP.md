@@ -190,8 +190,8 @@ When eval flags NDCG < 0.6 for query X, append the chunk_id that should have ran
 | 7 | P2.2-B | Deploy TEI plus BGE reranker | `[!] DEFERRED` | Final 2026-05-02 eval shows dense-only beats hybrid on Hit@1/MRR/NDCG@5; problem is sparse/RRF noise, not reranker absence | First A/B dense-only and redesign sparse text; revisit reranker only if top-K has correct chunks but ordering remains poor |
 | 8 | P3.3 | Add eval to chunk revision queue feedback loop | `[x] DONE (2026-05-02)` | `eval-retrieval-quality.py` appends low-NDCG queries to `~/scripts/.rag_revision_queue.md`; `rag status` reports open item count; Python argparse/dataclass coverage was fixed with new pattern chunks | Use queue to identify sparse/RRF noise and stale/noisy chunks, then rerun eval |
 
-| 9 | P2.3 | A/B dense-only vs hybrid and sparse text redesign | `[x] DONE (2026-05-02)` | `knowledge_v2_keyfacts` eval: hybrid Hit@1 0.9444, MRR 0.9444, NDCG@5 0.9659; current hybrid was Hit@1 0.6111, MRR 0.7685, NDCG@5 0.8629 | Promote sparse Key Facts strategy into ingest/migration paths and plan safe live collection switch |
-| 10 | P2.4 | Promote sparse Key Facts collection strategy | `[ ] OPEN` | Experiment collection exists and eval passed, but live gateway/MCP still target `knowledge_v2` | Update future ingest sparse text, create rollback plan, switch live collection after smoke tests |
+| 9 | P2.3 | A/B dense-only vs hybrid and sparse text redesign | `[x] DONE (2026-05-02)` | `knowledge_v2_keyfacts` smoke eval: hybrid Hit@1 0.8889, MRR 0.9167, NDCG@5 0.9547; current hybrid was Hit@1 0.6111, MRR 0.7685, NDCG@5 0.8629 | Promote sparse Key Facts strategy into ingest/migration paths and plan safe live collection switch |
+| 10 | P2.4 | Promote sparse Key Facts collection strategy | `[x] DONE (2026-05-02)` | Live gateway now targets `knowledge_v2_keyfacts`; Scalar/OpenAPI and `/rag/search` smoke tests passed for known, argparse, and dataclass queries | Import patched n8n workflow so future chunks keep using topic + Key Facts sparse text |
 
 ## Critical Files Reference
 
