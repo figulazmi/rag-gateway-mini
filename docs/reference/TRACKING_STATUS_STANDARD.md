@@ -34,11 +34,17 @@ Legacy sections may contain historical status text. Current source of truth is [
 |---|---|---:|
 | `docs/README.md` | Navigation, reading order, and top-level orientation | No |
 | `docs/TASKS.md` | Cross-document active task index | No |
+| `docs/ONBOARDING.md` | Fast-start path, definition of ready, and definition of done | No |
 | `docs/history/CHANGELOG.md` | Notable completed changes and historical context | No |
 | `docs/architecture/DECISIONS.md` | Durable decisions, rationale, and consequences | No |
+| `docs/config/CONFIGURATION.md` | Configuration sources, required settings, and secret locations | No |
+| `docs/testing/TEST_STRATEGY.md` | Verification expectations and evidence rules | Yes, only for testing-documentation tasks |
+| `docs/risks/RISK_REGISTER.md` | Risk identification, mitigation, and review dates | No |
+| `docs/incidents/INCIDENT_LOG.md` | Incident records and follow-up task links | No |
+| `docs/templates/` | Blank reusable templates for other projects | No |
 | Any tracker document | Planning, audit, quality, security, migration, or pipeline task ownership | Yes, only in `## Canonical Task Tracker` |
 
-Use `TASKS.md` to find work, `CHANGELOG.md` to understand what changed, and `DECISIONS.md` to understand why a choice was made.
+Use `ONBOARDING.md` to start quickly, `TASKS.md` to find work, `TEST_STRATEGY.md` to verify work, `CONFIGURATION.md` to locate runtime settings safely, `CHANGELOG.md` to understand what changed, and `DECISIONS.md` to understand why a choice was made.
 
 ---
 
@@ -116,6 +122,50 @@ Do not repeat detailed evidence or independent status labels in the quick summar
 4. If a blocker becomes stale, update `Evidence` and `Next action` immediately.
 5. If another doc references the task, reference its ID and canonical doc instead of copying the status.
 6. Before reporting a tracked task as complete, run a text search for its ID and update stale references.
+
+---
+
+## Definition of Done
+
+A task may be marked `[x] DONE (YYYY-MM-DD)` only when all required conditions are true:
+
+| Condition | Requirement |
+|---|---|
+| Complete | The implementation, documentation, or operational change is finished |
+| Verified | Evidence exists in the owning canonical tracker row |
+| Linked | Related docs reference the owning tracker instead of duplicating status |
+| Safe | Secrets, destructive commands, and risky operations were handled according to project rules |
+| Current | Stale references to the task ID were searched and updated |
+
+If any condition is missing, use `[~] IN PROGRESS`, `[!] BLOCKED`, or `[ ] DEFERRED` instead of DONE.
+
+---
+
+## Documentation Hygiene Checklist
+
+Before ending a documentation-changing task, check:
+
+1. `docs/README.md` links any new folder or important document.
+2. `docs/TASKS.md` links any new active tracker.
+3. The owning tracker has exactly one `## Canonical Task Tracker` section.
+4. `docs/history/CHANGELOG.md` records notable completed changes.
+5. `docs/architecture/DECISIONS.md` records durable decisions, not todos.
+6. `docs/reference/PROJECT_DOCS_TEMPLATE.md` and `docs/templates/` stay generic enough to reuse.
+
+---
+
+## Archive Rule
+
+Move old material to history or archive form when it no longer drives current work:
+
+| Content | Archive destination |
+|---|---|
+| Completed notable change | `docs/history/CHANGELOG.md` |
+| Superseded decision | Mark ADR as `Superseded` and link replacement |
+| Obsolete task | Mark `[x] OBSOLETE (YYYY-MM-DD)` in owning tracker |
+| Incident follow-up completed | Keep incident record, link completed task evidence |
+
+Do not delete historical context if it explains why a current decision exists.
 
 ---
 

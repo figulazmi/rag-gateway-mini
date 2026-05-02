@@ -37,6 +37,10 @@ Next: P0-3 - harden cosine gate verification failure handling
 | Planning | [`planning/RAG_V2_ROADMAP.md`](planning/RAG_V2_ROADMAP.md) | RAG v2 implementation roadmap | P2.3 | Read before pipeline changes |
 | Coverage | [`quality/COVERAGE_KNOWLEDGE_TRACKER.md`](quality/COVERAGE_KNOWLEDGE_TRACKER.md) | Knowledge coverage improvement | OI-5 | Deferred until implementation-spec capture is active |
 | Reference | [`reference/RAG_BOOTSTRAP_NEW_DEVICE_AND_SERVER.md`](reference/RAG_BOOTSTRAP_NEW_DEVICE_AND_SERVER.md) | New device/server bootstrap | See tracker | Use only for migration or rebuild work |
+| Testing | [`testing/TEST_STRATEGY.md`](testing/TEST_STRATEGY.md) | Define exact repo verification commands | TEST-1 | Required before using this docs system as a strict DONE gate |
+| Configuration | [`config/CONFIGURATION.md`](config/CONFIGURATION.md) | Keep runtime settings and secret locations documented | See document | Do not store secrets in docs |
+| Risk | [`risks/RISK_REGISTER.md`](risks/RISK_REGISTER.md) | Review documentation drift and secret exposure risks | RISK-1 | Convert mitigation into tracker task if active work is needed |
+| Incidents | [`incidents/INCIDENT_LOG.md`](incidents/INCIDENT_LOG.md) | Record production-impacting failures only | None | Use changelog for normal completed changes |
 
 ---
 

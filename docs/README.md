@@ -11,23 +11,31 @@ All documents cover the RAG knowledge pipeline for `rag-gateway-mini`
 
 ```
 docs/
+  README.md     — navigation index and reading order
   TASKS.md      — cross-document active task index
+  ONBOARDING.md — fast-start guide for contributors and future agents
+  planning/     — roadmaps, strategic plans, restoration plans
+  architecture/ — durable architecture and workflow decisions
   pipeline/     — ingestion & retrieval pipeline: fixes, gaps, session continuity
   quality/      — retrieval evaluation, Qdrant health audit, coverage tracking
   security/     — security posture hardening & threat model tracker
-  planning/     — roadmaps, strategic plans, restoration plans
-  architecture/ — durable architecture and workflow decisions
+  testing/      — test strategy and verification expectations
+  config/       — configuration, environment, and secret location docs
   reference/    — manual book, runbooks, standards, templates
   history/      — notable completed changes
+  incidents/    — incident records and post-incident follow-up
+  risks/        — risk register and mitigation tracking
+  templates/    — reusable blank templates for other projects
 ```
 
 ---
 
-## Active Task Index
+## Fast Start
 
 | Document | Purpose | Status |
 |---|---|---|
 | [TASKS.md](TASKS.md) | Cross-document active task index; links to canonical trackers without owning detailed status | Active |
+| [ONBOARDING.md](ONBOARDING.md) | 15-minute onboarding path, definition of ready, and definition of done | Active |
 
 ---
 
@@ -78,6 +86,22 @@ docs/
 
 ---
 
+## testing/ — Verification
+
+| Document | Purpose | Status |
+|---|---|---|
+| [TEST_STRATEGY.md](testing/TEST_STRATEGY.md) | Test layers, evidence rules, and verification expectations before DONE | Active |
+
+---
+
+## config/ — Configuration
+
+| Document | Purpose | Status |
+|---|---|---|
+| [CONFIGURATION.md](config/CONFIGURATION.md) | Configuration sources, required settings, secret rules, and change checklist | Active |
+
+---
+
 ## reference/ — Manual & Runbooks
 
 | Document | Purpose | Status |
@@ -97,16 +121,52 @@ docs/
 
 ---
 
+## incidents/ — Incident Records
+
+| Document | Purpose | Status |
+|---|---|---|
+| [INCIDENT_LOG.md](incidents/INCIDENT_LOG.md) | Production-impacting failures, post-incident evidence, and follow-up links | Active |
+
+---
+
+## risks/ — Risk Register
+
+| Document | Purpose | Status |
+|---|---|---|
+| [RISK_REGISTER.md](risks/RISK_REGISTER.md) | Risks, mitigations, owners, review dates, and related tasks | Active |
+
+---
+
+## templates/ — Blank Reusable Templates
+
+| Document | Purpose | Status |
+|---|---|---|
+| [TASKS_TEMPLATE.md](templates/TASKS_TEMPLATE.md) | Blank cross-document task index | Template |
+| [TRACKER_TEMPLATE.md](templates/TRACKER_TEMPLATE.md) | Blank canonical tracker | Template |
+| [ADR_TEMPLATE.md](templates/ADR_TEMPLATE.md) | Blank architecture decision record | Template |
+| [CHANGELOG_TEMPLATE.md](templates/CHANGELOG_TEMPLATE.md) | Blank change history entry | Template |
+| [RUNBOOK_TEMPLATE.md](templates/RUNBOOK_TEMPLATE.md) | Blank operational runbook | Template |
+| [CONFIGURATION_TEMPLATE.md](templates/CONFIGURATION_TEMPLATE.md) | Blank configuration guide | Template |
+| [TEST_STRATEGY_TEMPLATE.md](templates/TEST_STRATEGY_TEMPLATE.md) | Blank test strategy | Template |
+| [ONBOARDING_TEMPLATE.md](templates/ONBOARDING_TEMPLATE.md) | Blank onboarding guide | Template |
+| [RISK_REGISTER_TEMPLATE.md](templates/RISK_REGISTER_TEMPLATE.md) | Blank risk register | Template |
+| [INCIDENT_LOG_TEMPLATE.md](templates/INCIDENT_LOG_TEMPLATE.md) | Blank incident log | Template |
+
+---
+
 ## Reading Order (new contributor / new session)
 
-1. [`TASKS.md`](TASKS.md) — active cross-document task index
-2. [`planning/RAG_V2_ROADMAP.md`](planning/RAG_V2_ROADMAP.md) — strategic goal and current priorities
-3. [`quality/RAG_QDRANT_AUDIT.md`](quality/RAG_QDRANT_AUDIT.md) — current health score and open issues
-4. [`pipeline/RAG_BOTTLENECK_FIXES.md`](pipeline/RAG_BOTTLENECK_FIXES.md) — what's already been fixed in retrieval
-5. [`pipeline/RAG_CAPTURE_PIPELINE_GAPS.md`](pipeline/RAG_CAPTURE_PIPELINE_GAPS.md) — what's been fixed in capture
-6. [`security/RAG_POWER_SECURITY_INDEX.md`](security/RAG_POWER_SECURITY_INDEX.md) — security hardening status
-7. [`architecture/DECISIONS.md`](architecture/DECISIONS.md) — durable decisions and tradeoffs
-8. [`history/CHANGELOG.md`](history/CHANGELOG.md) — notable completed changes
+1. [`ONBOARDING.md`](ONBOARDING.md) — 15-minute fast-start path
+2. [`TASKS.md`](TASKS.md) — active cross-document task index
+3. [`planning/RAG_V2_ROADMAP.md`](planning/RAG_V2_ROADMAP.md) — strategic goal and current priorities
+4. [`quality/RAG_QDRANT_AUDIT.md`](quality/RAG_QDRANT_AUDIT.md) — current health score and open issues
+5. [`pipeline/RAG_BOTTLENECK_FIXES.md`](pipeline/RAG_BOTTLENECK_FIXES.md) — what's already been fixed in retrieval
+6. [`pipeline/RAG_CAPTURE_PIPELINE_GAPS.md`](pipeline/RAG_CAPTURE_PIPELINE_GAPS.md) — what's been fixed in capture
+7. [`security/RAG_POWER_SECURITY_INDEX.md`](security/RAG_POWER_SECURITY_INDEX.md) — security hardening status
+8. [`testing/TEST_STRATEGY.md`](testing/TEST_STRATEGY.md) — verification rules before DONE
+9. [`config/CONFIGURATION.md`](config/CONFIGURATION.md) — runtime settings and secret handling
+10. [`architecture/DECISIONS.md`](architecture/DECISIONS.md) — durable decisions and tradeoffs
+11. [`history/CHANGELOG.md`](history/CHANGELOG.md) — notable completed changes
 
 ---
 
