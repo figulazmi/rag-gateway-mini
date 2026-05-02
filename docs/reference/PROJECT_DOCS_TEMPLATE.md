@@ -116,6 +116,8 @@ Short description of the project and what these docs cover.
 
 This file is an index, not the source of truth. Each task status is owned by the linked document's `## Canonical Task Tracker`.
 
+Rules: see `CONTEXT.md` — Verification Rules and Task Scope Boundary Rule.
+
 ## Quick Status
 
 ```text
@@ -127,9 +129,9 @@ Next: TASK-ID - short next action
 
 ## Cross-Area Task Index
 
-| Area | Source of truth | Current focus | Next task ID | Notes |
-|---|---|---|---|---|
-| Planning | `planning/ROADMAP.md` | Current roadmap focus | P1-A | Keep evidence in roadmap tracker |
+| Area | Source of truth | Current focus | Next task ID | Scope boundary | Notes |
+|---|---|---|---|---|---|
+| Planning | `planning/ROADMAP.md` | Current roadmap focus | P1-A | Includes roadmap planning only; excludes implementation work | Keep evidence in roadmap tracker |
 ````
 
 ---
