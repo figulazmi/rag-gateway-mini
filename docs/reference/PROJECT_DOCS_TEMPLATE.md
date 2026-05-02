@@ -47,6 +47,25 @@ docs/
 
 ---
 
+## Bootstrap Script
+
+Use the script below from the `rag-gateway-mini` repository to initialize another project:
+
+```bash
+rtk python scripts/init-docs-template.py \
+  --target C:/Users/Clandesitine/source/repos/my-new-project \
+  --project-name "My New Project" \
+  --owner "Figur Ulul Azmi" \
+  --stack dotnet \
+  --install-command "dotnet restore" \
+  --run-command "dotnet run" \
+  --test-command "dotnet test"
+```
+
+Add `--dry-run` to preview writes. Add `--force` only when you intentionally want to overwrite existing docs.
+
+---
+
 ## Placeholder Rules
 
 Bootstrap scripts should replace these placeholders consistently:
