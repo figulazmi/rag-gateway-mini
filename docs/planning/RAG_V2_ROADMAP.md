@@ -139,7 +139,7 @@ LLM-as-reranker (no new infra path) was implemented and evaluated on VM B1 Ollam
 - Parse reliability had a **40% JSON parse-failure rate**.
 - Final 2026-05-02 Priority 1-4 eval shows the current top-rank problem is sparse/RRF noise: dense-only reached Hit@1 0.8333, MRR 0.9028, NDCG@5 0.9108 while hybrid reached Hit@1 0.6111, MRR 0.7685, NDCG@5 0.8629.
 
-Decision: keep reranker scaffolding disabled. Do not deploy TEI/BGE just to mask sparse noise. First validate dense-only mode and redesign the sparse text/indexing path so sparse contributes only discriminative evidence.
+Decision: keep reranker scaffolding disabled. Do not deploy TEI/BGE just to mask sparse noise. The 2026-05-02 `knowledge_v2_keyfacts` experiment validated the sparse text redesign: rebuilding sparse vectors from topic + Key Facts improved hybrid to Hit@1 0.9444, MRR 0.9444, NDCG@5 0.9659.
 
 **Files changed (scaffolding):**
 
@@ -147,7 +147,7 @@ Decision: keep reranker scaffolding disabled. Do not deploy TEI/BGE just to mask
 - `scripts/eval-retrieval-quality.py` — `rerank_with_llm` helper, `--rerank / --rerank-model / --rerank-candidates` CLI flags.
 
 **Next retrieval fix before P2.2-B:**
-Run production and eval A/B tests with `EnableHybridSearch=false` against `knowledge_v2`, then rebuild sparse vectors from a more selective text source such as `topic + Key Facts` instead of full chunk content. Only revisit TEI/BGE after dense-only and sparse-text redesign are measured, and only if relevant chunks are present in top-K but ordered poorly.
+Promote the successful sparse text redesign. `scripts/build-sparse-keyfacts-experiment-rest.py` created `knowledge_v2_keyfacts` from `knowledge_v2` with point parity 373 -> 373 and 345 points carrying Key Facts sparse text. Next step is to update ingestion/migration paths so sparse vectors are generated from topic + Key Facts by default, then safely switch the live collection or rebuild `knowledge_v2` after backup.
 
 ### P3 — Lifecycle & feedback
 
@@ -190,7 +190,8 @@ When eval flags NDCG < 0.6 for query X, append the chunk_id that should have ran
 | 7 | P2.2-B | Deploy TEI plus BGE reranker | `[!] DEFERRED` | Final 2026-05-02 eval shows dense-only beats hybrid on Hit@1/MRR/NDCG@5; problem is sparse/RRF noise, not reranker absence | First A/B dense-only and redesign sparse text; revisit reranker only if top-K has correct chunks but ordering remains poor |
 | 8 | P3.3 | Add eval to chunk revision queue feedback loop | `[x] DONE (2026-05-02)` | `eval-retrieval-quality.py` appends low-NDCG queries to `~/scripts/.rag_revision_queue.md`; `rag status` reports open item count; Python argparse/dataclass coverage was fixed with new pattern chunks | Use queue to identify sparse/RRF noise and stale/noisy chunks, then rerun eval |
 
-| 9 | P2.3 | A/B dense-only vs hybrid and sparse text redesign | `[ ] OPEN` | Final eval: dense-only Hit@1 0.8333, MRR 0.9028, NDCG@5 0.9108; hybrid Hit@1 0.6111, MRR 0.7685, NDCG@5 0.8629 | Test `EnableHybridSearch=false`, then rebuild sparse vectors from topic + Key Facts and compare final eval |
+| 9 | P2.3 | A/B dense-only vs hybrid and sparse text redesign | `[x] DONE (2026-05-02)` | `knowledge_v2_keyfacts` eval: hybrid Hit@1 0.9444, MRR 0.9444, NDCG@5 0.9659; current hybrid was Hit@1 0.6111, MRR 0.7685, NDCG@5 0.8629 | Promote sparse Key Facts strategy into ingest/migration paths and plan safe live collection switch |
+| 10 | P2.4 | Promote sparse Key Facts collection strategy | `[ ] OPEN` | Experiment collection exists and eval passed, but live gateway/MCP still target `knowledge_v2` | Update future ingest sparse text, create rollback plan, switch live collection after smoke tests |
 
 ## Critical Files Reference
 

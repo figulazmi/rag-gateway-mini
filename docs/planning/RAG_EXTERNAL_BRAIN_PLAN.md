@@ -116,9 +116,10 @@ done
 
 ```text
 Done: P1-A, P1-B, P1-C, P1-D, P2-A, P2-B, P3-A, P3-B, P4-A, P4-B, P4-C
-Open: dense-only live A/B, sparse text redesign, revision queue cleanup
+Done: dense-only A/B and sparse text redesign experiment
+Open: promote sparse Key Facts strategy to live ingestion/retrieval path
 Deferred: P5 reranker
-Next: test `EnableHybridSearch=false`, then rebuild sparse vectors from topic + Key Facts and rerun eval
+Next: update ingest paths and safely switch live collection after smoke tests
 ```
 
 ---
@@ -141,7 +142,8 @@ This table is the canonical execution tracker and recommended execution order. D
 | 10 | P4-A | Add tag conventions to CLAUDE.md | `[x] DONE (2026-04-19)` | First tag convention requires `dotnet`, `python`, or `homelab` | None |
 | 11 | P4-C | Re-embed corpus after n8n deploy | `[x] DONE (2026-05-02)` | Final eval after Python pattern chunks and selective chunk_type filtering: dense-only Hit@1 0.8333, MRR 0.9028, NDCG@5 0.9108; hybrid Hit@1 0.6111, Hit@3 0.9444, Hit@5 0.9444, MRR 0.7685, NDCG@5 0.8629 | Use results to drive dense-only A/B and sparse-text redesign |
 | 12 | P5 | TEI plus BGE reranker | `[ ] DEFERRED` | Reranker scaffold exists, but final eval points to sparse/RRF noise rather than reranker absence | Revisit only after dense-only and sparse-text redesign still leave a top-K ordering gap |
-| 13 | P6-A | Dense-only and sparse-text A/B | `[ ] OPEN` | Final eval shows dense-only beats hybrid on top-rank metrics | Set `EnableHybridSearch=false` in a test deployment, compare MCP/gateway behavior, then rebuild sparse vectors from topic + Key Facts |
+| 13 | P6-A | Dense-only and sparse-text A/B | `[x] DONE (2026-05-02)` | `knowledge_v2_keyfacts` built from `knowledge_v2` with 373/373 point parity and eval improved hybrid to Hit@1 0.9444, MRR 0.9444, NDCG@5 0.9659 | Promote topic + Key Facts sparse strategy to live collection and ingestion paths |
+| 14 | P6-B | Promote Key Facts sparse strategy live | `[ ] OPEN` | Experiment passed but live gateway/MCP still use `knowledge_v2` | Add backup/rollback, update ingest sparse text generation, switch target collection or rebuild `knowledge_v2`, then run gateway smoke tests |
 
 ---
 

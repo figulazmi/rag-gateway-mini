@@ -974,6 +974,8 @@ Debug workflow for regression:
     )
     parser.add_argument("--qdrant-url",      default=QDRANT_URL)
     parser.add_argument("--ollama-url",      default=OLLAMA_URL)
+    parser.add_argument("--collection",      default=COLLECTION,
+                        help=f"Qdrant collection to evaluate (default: {COLLECTION})")
     parser.add_argument("--api-key",         default=QDRANT_API_KEY)
     parser.add_argument("--project",         default=None, choices=["homelab", "petrochina-eproc"])
     parser.add_argument("--limit",           type=int, default=DEFAULT_LIMIT)
@@ -995,6 +997,7 @@ Debug workflow for regression:
     args = parser.parse_args()
 
     global _RERANK_NOTE
+    globals()["COLLECTION"] = args.collection
     _RERANK_NOTE = f"{args.rerank_model} on {args.rerank_candidates} candidates" if args.rerank else None
 
     run_evaluation(
