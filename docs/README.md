@@ -11,12 +11,23 @@ All documents cover the RAG knowledge pipeline for `rag-gateway-mini`
 
 ```
 docs/
-  pipeline/    — ingestion & retrieval pipeline: fixes, gaps, session continuity
-  quality/     — retrieval evaluation, Qdrant health audit, coverage tracking
-  security/    — security posture hardening & threat model tracker
-  planning/    — roadmaps, strategic plans, restoration plans
-  reference/   — manual book & runbooks
+  TASKS.md      — cross-document active task index
+  pipeline/     — ingestion & retrieval pipeline: fixes, gaps, session continuity
+  quality/      — retrieval evaluation, Qdrant health audit, coverage tracking
+  security/     — security posture hardening & threat model tracker
+  planning/     — roadmaps, strategic plans, restoration plans
+  architecture/ — durable architecture and workflow decisions
+  reference/    — manual book, runbooks, standards, templates
+  history/      — notable completed changes
 ```
+
+---
+
+## Active Task Index
+
+| Document | Purpose | Status |
+|---|---|---|
+| [TASKS.md](TASKS.md) | Cross-document active task index; links to canonical trackers without owning detailed status | Active |
 
 ---
 
@@ -59,6 +70,14 @@ docs/
 
 ---
 
+## architecture/ — Decisions
+
+| Document | Purpose | Status |
+|---|---|---|
+| [DECISIONS.md](architecture/DECISIONS.md) | Durable architecture and workflow decisions with rationale and consequences | Active |
+
+---
+
 ## reference/ — Manual & Runbooks
 
 | Document | Purpose | Status |
@@ -66,16 +85,28 @@ docs/
 | [RAG_MANUAL_BOOK.md](reference/RAG_MANUAL_BOOK.md) | Complete operational manual: commands, config, troubleshooting, architecture | Reference |
 | [RAG_BOOTSTRAP_NEW_DEVICE_AND_SERVER.md](reference/RAG_BOOTSTRAP_NEW_DEVICE_AND_SERVER.md) | Bootstrap/disaster-recovery checklist for new local device or server rebuild | Active |
 | [TRACKING_STATUS_STANDARD.md](reference/TRACKING_STATUS_STANDARD.md) | Canonical status table standard for all docs trackers | Active |
+| [PROJECT_DOCS_TEMPLATE.md](reference/PROJECT_DOCS_TEMPLATE.md) | Copyable documentation structure template for other projects | Active |
+
+---
+
+## history/ — Change History
+
+| Document | Purpose | Status |
+|---|---|---|
+| [CHANGELOG.md](history/CHANGELOG.md) | Notable completed changes; not a todo list | Active |
 
 ---
 
 ## Reading Order (new contributor / new session)
 
-1. [`planning/RAG_V2_ROADMAP.md`](planning/RAG_V2_ROADMAP.md) — strategic goal and current priorities
-2. [`quality/RAG_QDRANT_AUDIT.md`](quality/RAG_QDRANT_AUDIT.md) — current health score and open issues
-3. [`pipeline/RAG_BOTTLENECK_FIXES.md`](pipeline/RAG_BOTTLENECK_FIXES.md) — what's already been fixed in retrieval
-4. [`pipeline/RAG_CAPTURE_PIPELINE_GAPS.md`](pipeline/RAG_CAPTURE_PIPELINE_GAPS.md) — what's been fixed in capture
-5. [`security/RAG_POWER_SECURITY_INDEX.md`](security/RAG_POWER_SECURITY_INDEX.md) — security hardening status
+1. [`TASKS.md`](TASKS.md) — active cross-document task index
+2. [`planning/RAG_V2_ROADMAP.md`](planning/RAG_V2_ROADMAP.md) — strategic goal and current priorities
+3. [`quality/RAG_QDRANT_AUDIT.md`](quality/RAG_QDRANT_AUDIT.md) — current health score and open issues
+4. [`pipeline/RAG_BOTTLENECK_FIXES.md`](pipeline/RAG_BOTTLENECK_FIXES.md) — what's already been fixed in retrieval
+5. [`pipeline/RAG_CAPTURE_PIPELINE_GAPS.md`](pipeline/RAG_CAPTURE_PIPELINE_GAPS.md) — what's been fixed in capture
+6. [`security/RAG_POWER_SECURITY_INDEX.md`](security/RAG_POWER_SECURITY_INDEX.md) — security hardening status
+7. [`architecture/DECISIONS.md`](architecture/DECISIONS.md) — durable decisions and tradeoffs
+8. [`history/CHANGELOG.md`](history/CHANGELOG.md) — notable completed changes
 
 ---
 
@@ -91,5 +122,5 @@ docs/
 
 ---
 
-*Last updated: 2026-04-30 · Owner: Figur Ulul Azmi*  
+*Last updated: 2026-05-02 · Owner: Figur Ulul Azmi*  
 *Update this index when adding new docs or changing subfolder structure.*

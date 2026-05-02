@@ -18,13 +18,27 @@ The canonical table heading must be:
 
 Place `## Canonical Task Tracker` as the final operational section before footer metadata, appendix-only notes, or generated provenance. This makes the unfinished work easy to find after reading the document.
 
-Quick summaries, priority boards, and README indexes may reference task IDs, but must not duplicate detailed status values unless they explicitly say they are derived from the canonical table.
+Quick summaries, priority boards, README indexes, and `docs/TASKS.md` may reference task IDs, but must not duplicate detailed status values unless they explicitly say they are derived from the canonical table.
 
 Legacy sections above the canonical tracker may contain historical status text. If they do, add this note near the top:
 
 ```markdown
 Legacy sections may contain historical status text. Current source of truth is [Canonical Task Tracker](#canonical-task-tracker).
 ```
+
+---
+
+## Documentation Roles
+
+| File | Role | Owns task status? |
+|---|---|---:|
+| `docs/README.md` | Navigation, reading order, and top-level orientation | No |
+| `docs/TASKS.md` | Cross-document active task index | No |
+| `docs/history/CHANGELOG.md` | Notable completed changes and historical context | No |
+| `docs/architecture/DECISIONS.md` | Durable decisions, rationale, and consequences | No |
+| Any tracker document | Planning, audit, quality, security, migration, or pipeline task ownership | Yes, only in `## Canonical Task Tracker` |
+
+Use `TASKS.md` to find work, `CHANGELOG.md` to understand what changed, and `DECISIONS.md` to understand why a choice was made.
 
 ---
 
