@@ -130,26 +130,24 @@ echo "short content" | rag add -p homelab -t debug --topic "x"   # exit 1
 cat body.md | rag add -p homelab -t feature --topic "x"          # exit 1
 ```
 
-**P2.2. Reranker after RRF** — **SCAFFOLDED, disabled by default; blocked on infra**
+**P2.2. Reranker after RRF** — **SCAFFOLDED, disabled by default; not the next fix**
 
 LLM-as-reranker (no new infra path) was implemented and evaluated on VM B1 Ollama with `llama3.2:3b`:
 
-- Aggregate NDCG@5: 0.9361 with rerank vs 0.9361 without — **zero measurable lift** because the current 5-query suite already saturates at Hit@1 = 1.00 / MRR = 1.00 under pure hybrid RRF.
-- Hybrid latency: **~61s/query** vs 248ms without — 30× over the 2s plan budget.
-- Parse reliability: **40% JSON parse-failure rate** (2 of 5 queries fell back to RRF order).
+- Earlier small-suite eval showed zero measurable lift because the suite saturated under hybrid RRF.
+- Hybrid latency was **~61s/query** vs 248ms without, far over the 2s plan budget.
+- Parse reliability had a **40% JSON parse-failure rate**.
+- Final 2026-05-02 Priority 1-4 eval shows the current top-rank problem is sparse/RRF noise: dense-only reached Hit@1 0.8333, MRR 0.9028, NDCG@5 0.9108 while hybrid reached Hit@1 0.6111, MRR 0.7685, NDCG@5 0.8629.
 
-Decision: code shipped as scaffolding, but the default is **off** (`RERANK_ENABLED === "true"` to opt in). Kill switch verified. This preserves the integration point for the real fix below and keeps production on pure RRF — which today is already strong enough that reranker value is invisible on this eval set.
+Decision: keep reranker scaffolding disabled. Do not deploy TEI/BGE just to mask sparse noise. First validate dense-only mode and redesign the sparse text/indexing path so sparse contributes only discriminative evidence.
 
 **Files changed (scaffolding):**
 
 - `~/scripts/qdrant-mcp-server-v2/qdrant-mcp-server-v2.js` (rag-tools) — `rerankWithLLM` helper, wired into both primary and retry search paths; gated on `RERANK_ENABLED` env var; emits `rag_rerank` and `rag_rerank_parse_error` stderr events.
 - `scripts/eval-retrieval-quality.py` — `rerank_with_llm` helper, `--rerank / --rerank-model / --rerank-candidates` CLI flags.
 
-**Real fix — promoted from P4 to active (P2.2-B):**
-Deploy BGE-reranker-v2-m3 via a TEI (text-embeddings-inference) container on VM B1. Cross-encoder reranking gives proper semantic scoring at ~50ms/query instead of ~60s. The MCP scaffolding above already has the call-site — only `rerankWithLLM` needs to be replaced with a `rerankWithTEI` that hits TEI's `/rerank` endpoint.
-
-**Also needed before P2.2-B delivers visible metric gains:**
-P3.2's expanded eval set. Current 5 queries already produce perfect Hit@1 on hybrid RRF, so no reranker improvement is measurable. Grow to 30 queries with harder negatives before re-evaluating.
+**Next retrieval fix before P2.2-B:**
+Run production and eval A/B tests with `EnableHybridSearch=false` against `knowledge_v2`, then rebuild sparse vectors from a more selective text source such as `topic + Key Facts` instead of full chunk content. Only revisit TEI/BGE after dense-only and sparse-text redesign are measured, and only if relevant chunks are present in top-K but ordered poorly.
 
 ### P3 — Lifecycle & feedback
 
@@ -189,8 +187,10 @@ When eval flags NDCG < 0.6 for query X, append the chunk_id that should have ran
 | 4 | P2.2 | Scaffold LLM-as-reranker | `[ ] DEFERRED` | Scaffolding exists, but reranker remains blocked on infra and disabled by default | Revisit after TEI plus BGE reranker is available |
 | 5 | P3.2 | Expand eval set and implementation correctness test | `[x] DONE (2026-04-19)` | External brain plan marks P2-A and P2-B done for expanded eval plus end-to-end mode | None |
 | 6 | P3.1 | Add supersede and deprecate semantics | `[x] DONE (2026-04-19)` | `rag_capture.py` writes supersede frontmatter and `push-to-qdrant.sh` patches superseded chunks to `status: deprecated` | None |
-| 7 | P2.2-B | Deploy TEI plus BGE reranker | `[!] BLOCKED` | TEI container not deployed; current eval suite saturates, so reranker benefit is not proven | Revisit after harder eval shows measurable reranker gap |
-| 8 | P3.3 | Add eval to chunk revision queue feedback loop | `[ ] OPEN` | No canonical evidence yet that `~/scripts/.rag_revision_queue.md` integration is implemented | Implement after P4-C re-embed and post-baseline eval |
+| 7 | P2.2-B | Deploy TEI plus BGE reranker | `[!] DEFERRED` | Final 2026-05-02 eval shows dense-only beats hybrid on Hit@1/MRR/NDCG@5; problem is sparse/RRF noise, not reranker absence | First A/B dense-only and redesign sparse text; revisit reranker only if top-K has correct chunks but ordering remains poor |
+| 8 | P3.3 | Add eval to chunk revision queue feedback loop | `[x] DONE (2026-05-02)` | `eval-retrieval-quality.py` appends low-NDCG queries to `~/scripts/.rag_revision_queue.md`; `rag status` reports open item count; Python argparse/dataclass coverage was fixed with new pattern chunks | Use queue to identify sparse/RRF noise and stale/noisy chunks, then rerun eval |
+
+| 9 | P2.3 | A/B dense-only vs hybrid and sparse text redesign | `[ ] OPEN` | Final eval: dense-only Hit@1 0.8333, MRR 0.9028, NDCG@5 0.9108; hybrid Hit@1 0.6111, MRR 0.7685, NDCG@5 0.8629 | Test `EnableHybridSearch=false`, then rebuild sparse vectors from topic + Key Facts and compare final eval |
 
 ## Critical Files Reference
 

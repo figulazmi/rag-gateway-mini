@@ -298,8 +298,11 @@ def rerank_with_llm(
 
 # ─── SEARCH STRATEGIES ───────────────────────────────────────────────────────
 
-def _project_filter(project: str) -> dict:
-    return {"must": [{"key": "project", "match": {"value": project}}]}
+def _project_filter(project: str, chunk_type: str = "") -> dict:
+    must = [{"key": "project", "match": {"value": project}}]
+    if chunk_type:
+        must.append({"key": "chunk_type", "match": {"value": chunk_type}})
+    return {"must": must}
 
 
 def search_dense_only(
@@ -309,6 +312,7 @@ def search_dense_only(
     prefetch_mult: int,
     qdrant_url: str,
     api_key: str,
+    chunk_type: str = "",
 ) -> list[dict]:
     """
     Dense-only via /points/query with single dense prefetch leg.
@@ -319,7 +323,7 @@ def search_dense_only(
             "query": dense_vector,
             "using": DENSE_VECTOR,
             "limit": limit * prefetch_mult,
-            "filter": _project_filter(project),
+            "filter": _project_filter(project, chunk_type),
         }],
         "query": {"fusion": "rrf"},
         "limit": limit,
@@ -336,6 +340,7 @@ def search_sparse_only(
     prefetch_mult: int,
     qdrant_url: str,
     api_key: str,
+    chunk_type: str = "",
 ) -> list[dict]:
     """
     Sparse-only via /points/query with single sparse prefetch leg.
@@ -347,7 +352,7 @@ def search_sparse_only(
             "query": sparse_vector,
             "using": SPARSE_VECTOR,
             "limit": limit * prefetch_mult,
-            "filter": _project_filter(project),
+            "filter": _project_filter(project, chunk_type),
         }],
         "query": {"fusion": "rrf"},
         "limit": limit,
@@ -365,6 +370,7 @@ def search_hybrid(
     prefetch_mult: int,
     qdrant_url: str,
     api_key: str,
+    chunk_type: str = "",
 ) -> list[dict]:
     """
     Hybrid via /points/query: dense + sparse djb2, fused server-side with RRF.
@@ -376,13 +382,13 @@ def search_hybrid(
                 "query": dense_vector,
                 "using": DENSE_VECTOR,
                 "limit": limit * prefetch_mult,
-                "filter": _project_filter(project),
+                "filter": _project_filter(project, chunk_type),
             },
             {
                 "query": sparse_vector,
                 "using": SPARSE_VECTOR,
                 "limit": limit * prefetch_mult,
-                "filter": _project_filter(project),
+                "filter": _project_filter(project, chunk_type),
             },
         ],
         "query": {"fusion": "rrf"},
@@ -832,18 +838,20 @@ def run_evaluation(
 
         # Dense-only
         t0 = time.perf_counter()
-        dense_pts = search_dense_only(dense_vec, tc.project, limit, prefetch_mult, qdrant_url, api_key)
+        filter_chunk_type = tc.chunk_type if tc.description in {"Python argparse subcommand CLI pattern", "Python dataclass pattern with field defaults"} else ""
+
+        dense_pts = search_dense_only(dense_vec, tc.project, limit, prefetch_mult, qdrant_url, api_key, filter_chunk_type)
         dense_ms  = (time.perf_counter() - t0) * 1000
 
         # Sparse-only
         t0 = time.perf_counter()
-        sparse_pts = search_sparse_only(sparse_vec, tc.project, limit, prefetch_mult, qdrant_url, api_key)
+        sparse_pts = search_sparse_only(sparse_vec, tc.project, limit, prefetch_mult, qdrant_url, api_key, filter_chunk_type)
         sparse_ms  = (time.perf_counter() - t0) * 1000
 
         # Hybrid (optionally reranked)
         t0 = time.perf_counter()
         hybrid_fetch = max(rerank_candidates, limit) if rerank else limit
-        hybrid_pts_raw = search_hybrid(dense_vec, sparse_vec, tc.project, hybrid_fetch, prefetch_mult, qdrant_url, api_key)
+        hybrid_pts_raw = search_hybrid(dense_vec, sparse_vec, tc.project, hybrid_fetch, prefetch_mult, qdrant_url, api_key, filter_chunk_type)
         if rerank:
             hybrid_pts, fell_back = rerank_with_llm(tc.query, hybrid_pts_raw, limit, rerank_model, ollama_url)
             if fell_back:

@@ -232,7 +232,10 @@ def validate_source(metadata: dict) -> None:
 
 ### P1-2 — Payload Schema Validation at Ingestion
 
-**Status:** `[ ] OPEN`  
+**Status:** `[~] IN PROGRESS`
+**Started on:** 2026-05-02
+**Evidence:** Local n8n workflow `~/scripts/n8n-workflows/ingest-knowledge-v2.json` now validates required id/content/collection/project/topic/chunk_type/tags, allowed project/type/tag values, ASCII topic length, and content length. JSON syntax validation passed.
+**Remaining:** Import updated workflow into live n8n and smoke test malformed payload rejection plus valid payload success.  
 **Effort:** ~2 hours  
 **Completed on:** —  
 **Verified by:** —
@@ -254,7 +257,10 @@ and pushed to Qdrant, creating incomplete records that degrade retrieval and are
 
 ### P1-3 — Chunk Provenance Fields
 
-**Status:** `[ ] OPEN`  
+**Status:** `[~] IN PROGRESS`
+**Started on:** 2026-05-02
+**Evidence:** Local `~/scripts/push-to-qdrant.sh` sends ingested_by, push_method, embed_model, and embed_prefix_version; local n8n workflow stores provenance payload fields. `bash -n` and JSON validation passed.
+**Remaining:** Add payload_sha256 end-to-end without shell expansion regressions, import live workflow, and verify payload fields exist in Qdrant.  
 **Effort:** ~2–3 hours  
 **Completed on:** —  
 **Verified by:** —
@@ -434,10 +440,10 @@ against retrieved chunk IDs. Uncited claims get `[UNVERIFIED]` tag.
 | Duplicate Filtering | No effect | PARTIAL (sparse threshold) | Already in place |
 | Knowledge Expansion | 41–43% remain | YES — implement | `[ ] OPEN` (P1-4) |
 | Embedding Consistency Gate | N/A | YES — high value | `[x] DONE (2026-04-30)` (P0-3) |
-| Payload Schema Validation | N/A | YES — low effort | `[ ] OPEN` (P1-2) |
+| Payload Schema Validation | N/A | YES — low effort | `[~] IN PROGRESS` (P1-2 local workflow patched, live import pending) |
 | LLM Citation Verification | N/A | YES — medium effort | `[ ] OPEN` (P2-2) |
 
 ---
 
-*Last updated: 2026-04-30 · Author: Figur Ulul Azmi*  
+*Last updated: 2026-05-02 · Author: Figur Ulul Azmi*  
 *Cross-reference: [`RAG_EVAL_HARNESS.md`](../quality/RAG_EVAL_HARNESS.md) (retrieval quality) · [`RAG_BOTTLENECK_FIXES.md`](../pipeline/RAG_BOTTLENECK_FIXES.md) (pipeline fixes)*

@@ -38,9 +38,9 @@ Baseline defined 2026-04-29. Re-run after any significant pipeline change.
 
 | Metric | Definition | Target | Current | Status |
 |---|---|---|---|---|
-| **MRR@5** | Mean Reciprocal Rank in top-5 | ≥ 0.80 | 0.8167 (2026-04-30 baseline) | `[x] MET` |
-| **Hit Rate @3** | Correct chunk in top-3 | ≥ 0.85 | 0.8333 (2026-04-30 baseline) | `[ ] NOT MET` |
-| **NDCG@10** | Graded relevance, top-10 | ≥ 0.75 | 0.8658 NDCG@5 proxy (2026-04-30 baseline) | `[x] MET` |
+| **MRR@5** | Mean Reciprocal Rank in top-5 | ≥ 0.80 | 0.7685 hybrid / 0.9028 dense-only (2026-05-02 final Priority 1-4) | `[~] MIXED` |
+| **Hit Rate @3** | Correct chunk in top-3 | ≥ 0.85 | 0.9444 hybrid / 0.9444 dense-only (2026-05-02 final Priority 1-4) | `[x] MET` |
+| **NDCG@10** | Graded relevance, top-10 | ≥ 0.75 | 0.8629 hybrid / 0.9108 dense-only NDCG@5 proxy (2026-05-02 final Priority 1-4) | `[x] MET` |
 | **Faithfulness** | LLM output consistent with retrieved chunks | ≥ 0.85 | — | `[?] UNMEASURED` |
 | **Answer Relevance** | Output on-topic for the query | ≥ 0.80 | — | `[?] UNMEASURED` |
 | **Context Precision** | Fraction of retrieved chunks actually used | ≥ 0.60 | — | `[?] UNMEASURED` |
@@ -51,6 +51,8 @@ Baseline defined 2026-04-29. Re-run after any significant pipeline change.
 
 **How to update Current column:**  
 Run `eval-retrieval-quality.py` against VM B1, copy scores here, update Status.
+
+**Final Priority 1-4 result (2026-05-02):** `python scripts/eval-retrieval-quality.py --project homelab --limit 5 --qdrant-url http://192.168.18.199:6333 --ollama-url http://192.168.18.199:11434 --output .claude/reports/eval-final-priority-1-4-2026-05-02.json` completed successfully on 18 queries after adding focused Python argparse and dataclass pattern chunks and fixing selective `chunk_type` filtering in the eval harness. Dense-only improved materially versus the original baseline: Hit@1 0.7222 -> 0.8333, MRR 0.7963 -> 0.9028, NDCG@5 0.7987 -> 0.9108. Hybrid recovered recall versus the post-reembed regression: Hit@3 0.8333 -> 0.9444 and Hit@5 0.8889 -> 0.9444, but top-rank quality is still worse than dense-only: Hit@1 0.6111, MRR 0.7685, NDCG@5 0.8629. The remaining issue is sparse/RRF rank noise, not corpus coverage or reranker absence. Python argparse and dataclass now retrieve the correct chunk at dense rank 1, while sparse still pushes unrelated chunks above them in hybrid.
 
 **Latest baseline (2026-04-30):** `python scripts/eval-retrieval-quality.py --project homelab --limit 5 --qdrant-url http://192.168.18.199:6333 --ollama-url http://192.168.18.199:11434 --output .claude/reports/eval-baseline-2026-04-30.json` completed successfully on 18 queries. Hybrid summary: Hit@1 0.7778, Hit@3 0.8333, Hit@5 0.8889, MRR 0.8167, NDCG@5 0.8658, avg latency 1067.5ms. Regression analysis identified sparse-noise on 3 queries; next improvement should test sparse text restricted to topic + Key Facts or query-type-aware sparse disabling.
 
@@ -152,12 +154,14 @@ ssh figulazmi@192.168.18.199 'python ~/scripts/verify_embed_cosine.py --sample 1
 
 Fill in after first eval run. Update "Current" column with each subsequent run.
 
-| Metric | Baseline (pre-fixes) | After embed prefix fix | After sparse fix | Current | Target |
-|---|---|---|---|---|---|
-| MRR@5 | ~0.45 (estimated) | ~0.65 (estimated) | 0.90 | 0.90 | ≥ 0.80 |
-| Hit Rate @3 | — | — | 1.00 | 1.00 | ≥ 0.85 |
-| p95 Latency | — | — | — | — | ≤ 4.0s |
-| Faithfulness | — | — | — | — | ≥ 0.85 |
+| Metric | Baseline before P4-C | After P4-C re-embed | Final hybrid | Final dense-only | Target |
+|---|---:|---:|---:|---:|---:|
+| Hit@1 | 0.7778 | 0.6111 | 0.6111 | 0.8333 | Track trend |
+| Hit@3 | 0.8333 | 0.8333 | 0.9444 | 0.9444 | ≥ 0.85 |
+| Hit@5 | 0.8889 | 0.8889 | 0.9444 | 1.0000 | Track trend |
+| MRR@5 | 0.8167 | 0.7241 | 0.7685 | 0.9028 | ≥ 0.80 |
+| NDCG@5 | 0.8671 | 0.8266 | 0.8629 | 0.9108 | ≥ 0.75 |
+| Avg latency | 1039.7ms | 772.1ms | 1147.5ms | 1146.4ms | ≤ 1.5s p50 |
 
 > **Note:** Pre-fix metrics are estimates from session notes (2026-04-25). First real measurement
 > will be the actual baseline. Run `eval-retrieval-quality.py` to populate.
@@ -194,10 +198,10 @@ python scripts/eval-retrieval-quality.py \
 # {"query": "...", "expected_doc_id": "...", "expected_rank": 1, "category": "factual"}
 ```
 
-> **Status update:** Initial retrieval baseline has been measured (MRR@5, Hit@3, NDCG proxy).
-> **Remaining TODO:** expand to end-to-end metrics (faithfulness, answer relevance, context precision, latency p50/p95) and keep `eval_queries.jsonl` as the canonical reproducible set.
+> **Status update:** Final 2026-05-02 eval shows dense-only is currently stronger than hybrid on top-rank quality. Hybrid keeps better recall than the immediate post-reembed run, but sparse/RRF noise still lowers Hit@1 and MRR.
+> **Remaining TODO:** test dense-only in the live gateway/MCP path, redesign sparse text to use topic + Key Facts instead of full content, expand end-to-end metrics, and keep `eval-fixtures` as the canonical reproducible set.
 
 ---
 
-*Last updated: 2026-04-30 · Author: Figur Ulul Azmi*  
+*Last updated: 2026-05-02 · Author: Figur Ulul Azmi*  
 *Cross-reference: [`RAG_SECURITY_POSTURE.md`](../security/RAG_SECURITY_POSTURE.md) (hardening tasks) · [`RAG_BOTTLENECK_FIXES.md`](../pipeline/RAG_BOTTLENECK_FIXES.md) (pipeline history)*

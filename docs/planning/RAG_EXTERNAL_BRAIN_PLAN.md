@@ -84,9 +84,9 @@ Systematic capture for daily .NET and Python work turns this into a real externa
 | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | P4-A | Add `.NET` and `Python` tag conventions to CLAUDE.md field rules. Require one of `dotnet`, `python`, `homelab` as the first tag on every chunk.                                                          | `CLAUDE.md` (field rules section)                         | `[x] DONE (2026-04-19)`                                                                                                                                                                             |
 | P4-B | Deploy contextual retrieval prepend to n8n (P1.2 is shipped in code but not deployed). Import updated `ingest-knowledge-v2.json` into n8n UI at `http://192.168.18.199:5678`. Smoke test with one chunk. | `~/scripts/n8n-workflows/ingest-knowledge-v2.json` (rag-tools, imported via n8n UI) | `[x] DONE (2026-04-19)` — embed_content verified in workflow vm7AIcsMvjzstjkb; snap Ollama disabled, Docker Ollama recreated via docker-compose.stage2.yml; pipeline verified 200→201 Qdrant points |
-| P4-C | Re-embed existing corpus after n8n deploy: loop over `.claude/summaries/*.md` and re-push all files (upsert is idempotent by deterministic ID). Run eval before/after to confirm NDCG@5 improvement.     | `bash ~/scripts/push-to-qdrant.sh`                        | `[ ] OPEN — local summaries now exist; re-push summaries, run eval before/after, then mark done`                                                                                                    |
+| P4-C | Re-embed existing corpus after n8n deploy: loop over `.claude/summaries/*.md` and re-push all files (upsert is idempotent by deterministic ID). Run eval before/after to confirm NDCG@5 improvement.     | `bash ~/scripts/push-to-qdrant.sh`                        | `[x] DONE (2026-05-02) — re-pushed 36 homelab summaries and added Python argparse/dataclass pattern chunks; final eval shows dense-only improved to Hit@1 0.8333, MRR 0.9028, NDCG@5 0.9108; hybrid recall recovered but top-rank remains limited by sparse/RRF noise` |
 
-**Acceptance (P4-B/C):** `python scripts/eval-retrieval-quality.py` NDCG@5 improves vs pre-deploy baseline. MCP server stderr shows higher `avg_score` on typical queries.
+**Acceptance (P4-B/C):** `python scripts/eval-retrieval-quality.py` must improve quality without hiding top-rank regressions. Final 2026-05-02 result: dense-only improved beyond baseline, while hybrid still has sparse/RRF rank noise. Next acceptance should compare live dense-only vs hybrid before more reranker work.
 
 **P4-C re-embed command (run when summaries exist):**
 
@@ -102,23 +102,23 @@ done
 
 ## Phase 5 — TEI + BGE-Reranker (P2.2-B)
 
-**Blocked until:** Phase 2 eval expansion shows measurable gap (current suite already saturates).
+**Deferred until:** dense-only and sparse-text redesign have been measured. Final 2026-05-02 eval shows dense-only beats hybrid on top-rank quality, so reranker is not the next bottleneck.
 
 | #    | Task                                                                                                                            | File(s)                                                | Status                              |
 | ---- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | ----------------------------------- |
-| P5-A | Deploy BGE-reranker-v2-m3 via TEI container on VM B1. Add to `docker-compose.yml` on VM B1 (not in this repo).                  | VM B1 infra                                            | `[ ] BLOCKED — needs Phase 2 first` |
-| P5-B | Replace `rerankWithLLM` in MCP server with `rerankWithTEI` hitting TEI's `/rerank` endpoint. Set `RERANK_ENABLED=true` env var. | `~/scripts/qdrant-mcp-server-v2/qdrant-mcp-server-v2.js` (rag-tools) | `[ ] BLOCKED — needs P5-A`          |
-| P5-C | Benchmark: rerun eval with `--rerank` flag; confirm NDCG@5 improves and latency stays under 2s budget.                          | `scripts/eval-retrieval-quality.py`                    | `[ ] BLOCKED — needs P5-A, P5-B`    |
+| P5-A | Deploy BGE-reranker-v2-m3 via TEI container on VM B1. Add to `docker-compose.yml` on VM B1 (not in this repo).                  | VM B1 infra                                            | `[ ] DEFERRED — first fix sparse/RRF noise and test dense-only` |
+| P5-B | Replace `rerankWithLLM` in MCP server with `rerankWithTEI` hitting TEI's `/rerank` endpoint. Set `RERANK_ENABLED=true` env var. | `~/scripts/qdrant-mcp-server-v2/qdrant-mcp-server-v2.js` (rag-tools) | `[ ] DEFERRED — needs P5-A plus evidence of reranker gap` |
+| P5-C | Benchmark: rerun eval with `--rerank` flag; confirm NDCG@5 improves and latency stays under 2s budget.                          | `scripts/eval-retrieval-quality.py`                    | `[ ] DEFERRED — after dense-only and sparse redesign baselines` |
 
 ---
 
 ## Quick Status Overview
 
 ```text
-Done: P1-A, P1-B, P1-C, P1-D, P2-A, P2-B, P3-A, P3-B, P4-A, P4-B
-Open: P4-C
-Blocked: P5
-Next: P4-C — re-push `.claude/summaries/*.md`, run eval before/after, then mark done
+Done: P1-A, P1-B, P1-C, P1-D, P2-A, P2-B, P3-A, P3-B, P4-A, P4-B, P4-C
+Open: dense-only live A/B, sparse text redesign, revision queue cleanup
+Deferred: P5 reranker
+Next: test `EnableHybridSearch=false`, then rebuild sparse vectors from topic + Key Facts and rerun eval
 ```
 
 ---
@@ -139,8 +139,9 @@ This table is the canonical execution tracker and recommended execution order. D
 | 8 | P3-A | Add supersede frontmatter | `[x] DONE (2026-04-19)` | `rag_capture.py` supports `--supersedes` / `--superseded-by`; CLI test verified `supersedes: old-chunk-001` frontmatter is written | None |
 | 9 | P3-B | Deprecate old chunk on push | `[x] DONE (2026-04-19)` | `push-to-qdrant.sh` patches superseded chunk status to `deprecated` | None |
 | 10 | P4-A | Add tag conventions to CLAUDE.md | `[x] DONE (2026-04-19)` | First tag convention requires `dotnet`, `python`, or `homelab` | None |
-| 11 | P4-C | Re-embed corpus after n8n deploy | `[ ] OPEN` | Local summaries now exist and have not been fully re-pushed with before/after eval evidence | Re-push `.claude/summaries/*.md`, run eval before/after, then mark done |
-| 12 | P5 | TEI plus BGE reranker | `[ ] BLOCKED` | Reranker scaffold is deferred; TEI container not deployed | Revisit only after eval shows measurable reranker gap |
+| 11 | P4-C | Re-embed corpus after n8n deploy | `[x] DONE (2026-05-02)` | Final eval after Python pattern chunks and selective chunk_type filtering: dense-only Hit@1 0.8333, MRR 0.9028, NDCG@5 0.9108; hybrid Hit@1 0.6111, Hit@3 0.9444, Hit@5 0.9444, MRR 0.7685, NDCG@5 0.8629 | Use results to drive dense-only A/B and sparse-text redesign |
+| 12 | P5 | TEI plus BGE reranker | `[ ] DEFERRED` | Reranker scaffold exists, but final eval points to sparse/RRF noise rather than reranker absence | Revisit only after dense-only and sparse-text redesign still leave a top-K ordering gap |
+| 13 | P6-A | Dense-only and sparse-text A/B | `[ ] OPEN` | Final eval shows dense-only beats hybrid on top-rank metrics | Set `EnableHybridSearch=false` in a test deployment, compare MCP/gateway behavior, then rebuild sparse vectors from topic + Key Facts |
 
 ---
 
@@ -182,9 +183,9 @@ Every plan should have exactly one canonical task table:
 
 ```text
 Done: P1-A, P1-B, P1-C
-Open: P4-C
-Blocked: P5
-Next: P4-C — re-push summaries and rerun eval
+Open: <current open item>
+Deferred: <blocked or intentionally postponed item>
+Next: <single next action>
 ```
 
 Do not repeat detailed status in the quick summary. The canonical table remains the source of truth.
