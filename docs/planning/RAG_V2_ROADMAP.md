@@ -5,9 +5,9 @@
 
 ## Strategic Goal
 
-Claude AI is used as a **reasoning + capture specialist only** for `knowledge_v2`. Code implementation is delegated to cheaper models (e.g., qwen2.5-coder via Ollama) that consume chunks from `knowledge_v2` via the MCP server.
+Claude AI is used as a **reasoning + capture specialist only** for `knowledge_v2`. Code implementation is delegated primarily to GitHub Copilot, which consumes chunks from `knowledge_v2` via MCP wiring or manual `/rag/search` context. Local models such as `qwen2.5-coder` are optional benchmark targets only, not the production implementer path.
 
-**Success criterion:** chunks must be rich and precise enough that the implementer model does not hallucinate when writing code from them.
+**Success criterion:** chunks must be rich and precise enough that Copilot or another implementer model does not hallucinate when writing code from them.
 
 **Implication:** the bottleneck is **chunk content quality** and **retrieval precision**, not retrieval recall. The right chunk must reach the implementer's context window, and its content must be an executable specification, not prose.
 
@@ -199,11 +199,9 @@ Rollback for retrieval-only production is restoring the gateway collection setti
 
 Full ingest cutover remains a separate future task. Do not overwrite the existing `knowledge_v2` workflow; export and preserve it before any future full-ingest default change.
 
-**P2.8. Negative-query not-found confidence gate**
+**P2.8. Negative-query not-found confidence gate** — **SHIPPED**
 
-Latest retrieval-only validation found one hardening gap: the out-of-domain query `What is the project-alpha Blazor login flow?` with `project=homelab` returned generic `status=found` results around score 0.5. This was not cross-project payload leakage, but the gateway found/not-found gate is too permissive because `/rag/search` currently returns found whenever any result is above the general RRF `ScoreThreshold` of 0.35.
-
-The fix is a separate top-score confidence gate: keep `ScoreThreshold` for result inclusion, add `NotFoundScoreThreshold` for deciding whether `/rag/search` should return `status=found` or `status=not_found`. This avoids dropping useful RRF results while preventing low-confidence generic answers from being treated as authoritative RAG context.
+Deployed commit `d686c46` to VM B1 on 2026-05-04. The gateway now keeps `ScoreThreshold` for result inclusion and uses `NotFoundScoreThreshold` to decide whether `/rag/search` returns `status=found` or `status=not_found`. Positive smoke returned `status=found` with top score 0.8333. Negative Blazor/homelab smoke returned `status=not_found`.
 
 ### P3 — Lifecycle & feedback
 
@@ -215,12 +213,11 @@ Add frontmatter fields `supersedes: <old_chunk_id>` and `superseded_by`. When `p
 - `~/scripts/rag-capture-v2/rag_capture.py:222-236` (rag-tools) — add `supersedes`/`superseded_by` to frontmatter output
 - `~/scripts/push-to-qdrant.sh` (rag-tools) — add deprecate-on-supersede logic during ingest
 
-**P3.2. Expand eval set + implementation correctness test**
+**P3.2. Expand eval set + implementation correctness test** — **REFRESHED**
 
-- Grow from 7 to 30 test queries, at least 15 of them `implementation-spec` type
-- Add `--end-to-end` mode: retrieve top-5 → feed to a cheap implementer model (qwen2.5-coder via Ollama) → generate code → diff against expected snippet in the test fixture → report hallucination rate
+Expanded retrieval fixtures now live at `scripts/eval-fixtures/homelab-expanded.json`, with reports under `.claude/reports/p32-expanded-*.json`. End-to-end mode exists but is not currently usable with Ollama on VM B1 because `qwen2.5-coder:7b` is not installed. Treat qwen2.5-coder as an optional benchmark model; the recommended production smoke is Copilot consuming `/rag/search` context and generating a small implementation from an `implementation-spec` chunk.
 
-**Files:** `scripts/eval-retrieval-quality.py` plus a new fixture file at `scripts/eval-fixtures/implementation-tests.json`.
+**Next actions:** define a Copilot smoke strategy, clean up any expanded-eval regressions, decide whether sparse Key Facts should become the default ingestion strategy, and revisit TEI/BGE reranking later only if needed.
 
 **P3.3. Feedback loop: eval → chunk revision queue**
 When eval flags NDCG < 0.6 for query X, append the chunk_id that should have ranked 1 to `~/scripts/.rag_revision_queue.md`. Surface the backlog in `rag status`.
@@ -241,7 +238,7 @@ When eval flags NDCG < 0.6 for query X, append the chunk_id that should have ran
 | 2 | P2.1 | Add hard-reject validation | Includes CLI hard rejects for low-quality chunks; excludes n8n runtime validation changes | `[x] DONE (2026-04-19)` | CLI negative tests rejected short content, feature without `### Target Files`, and implementation-spec missing `### Contract`; no drafts were saved | None |
 | 3 | P1.2 | Deploy contextual retrieval prepend | Includes n8n embed-content prepend; excludes full keyfacts cutover | `[x] DONE (2026-04-19)` | `~/scripts/n8n-workflows/ingest-knowledge-v2.json` (rag-tools) stores `content` unchanged and sends `embed_content` to Ollama; Hit@1 improved from 0.60 to 1.00 after deployment | None |
 | 4 | P2.2 | Scaffold LLM-as-reranker | Includes disabled scaffolding only; excludes TEI/BGE production deployment | `[ ] DEFERRED` | Scaffolding exists, but reranker remains blocked on infra and disabled by default | Revisit after TEI plus BGE reranker is available |
-| 5 | P3.2 | Expand eval set and implementation correctness test | Includes retrieval eval expansion and end-to-end mode; excludes future semantic judge replacement | `[x] DONE (2026-04-19)` | External brain plan marks P2-A and P2-B done for expanded eval plus end-to-end mode | None |
+| 5 | P3.2 | Expand eval set and implementation correctness test | Includes retrieval eval expansion and end-to-end strategy; excludes future semantic judge replacement | `[~] REFRESHED (2026-05-04)` | Added `scripts/eval-fixtures/homelab-expanded.json`; expanded homelab eval now runs 46 queries. Reports: `.claude/reports/p32-expanded-keyfacts-2026-05-04.json`, `.claude/reports/p32-expanded-legacy-2026-05-04.json`, `.claude/reports/p32-expanded-keyfacts-e2e-2026-05-04.json`. Ollama end-to-end is blocked because `qwen2.5-coder:7b` is not installed on VM B1. | Define Copilot smoke as the primary implementation-correctness check; keep qwen2.5-coder optional for benchmark runs |
 | 6 | P3.1 | Add supersede and deprecate semantics | Includes frontmatter and push-time deprecation; excludes TTL auto-deprecate | `[x] DONE (2026-04-19)` | `rag_capture.py` writes supersede frontmatter and `push-to-qdrant.sh` patches superseded chunks to `status: deprecated` | None |
 | 7 | P2.2-B | Deploy TEI plus BGE reranker | Includes reranker infra only after sparse noise is solved; excludes masking current sparse/RRF issue | `[ ] DEFERRED` | Final 2026-05-02 eval shows dense-only beats hybrid on Hit@1/MRR/NDCG@5; problem is sparse/RRF noise, not reranker absence | First A/B dense-only and redesign sparse text; revisit reranker only if top-K has correct chunks but ordering remains poor |
 | 8 | P3.3 | Add eval to chunk revision queue feedback loop | Includes low-NDCG queueing and `rag status` count; excludes automatic chunk rewriting | `[x] DONE (2026-05-02)` | `eval-retrieval-quality.py` appends low-NDCG queries to `~/scripts/.rag_revision_queue.md`; `rag status` reports open item count; Python argparse/dataclass coverage was fixed with new pattern chunks | None |
@@ -250,7 +247,7 @@ When eval flags NDCG < 0.6 for query X, append the chunk_id that should have ran
 | 11 | P2.5 | Document keyfacts production criteria and history | Includes production criteria, findings, and safe candidate status; excludes runtime cutover | `[x] DONE (2026-05-02)` | This roadmap records P2.5 criteria and findings; `RAG_EVAL_HARNESS.md` records latest keyfacts vs legacy soak metrics | None |
 | 12 | P2.6 | Add repeatable keyfacts soak workflow | Includes documented repeatable checks and session cron; excludes durable external scheduler | `[x] DONE (2026-05-02)` | Initial soak plus final production evals saved to `.claude/reports/soak-keyfacts-initial-2026-05-02.json`, `.claude/reports/soak-legacy-initial-2026-05-02.json`, `.claude/reports/final-keyfacts-production-2026-05-02.json`, and `.claude/reports/final-legacy-production-2026-05-02.json`; final smoke and logs passed | None |
 | 13 | P2.7 | Decide safe keyfacts cutover path | Includes rollback-safe retrieval cutover; excludes full ingest default switch | `[x] DONE (2026-05-02)` | VM B1 gateway production config already targets `knowledge_v2_keyfacts`; final keyfacts eval beats legacy on Hit@1, MRR, and NDCG@5; rollback is restoring gateway collection to `knowledge_v2` and restarting only gateway | Keep full ingest cutover as future work; do not modify legacy push path until sync/default-write behavior is designed |
-| 14 | P2.8 | Add negative-query not-found confidence gate | Includes gateway confidence gating and debug visibility; excludes n8n, push tooling, reranker, and full ingest cutover | `[~] IN PROGRESS` | Added `NotFoundScoreThreshold=0.55`, applied it in `RagSearchService`, exposed `not_found_threshold` and `top_score` in debug response, and `rtk dotnet build` / `rtk dotnet test` passed with 0 warnings; 2026-05-03 read-only soak still passed on current live container | Deploy/restart gateway, then verify positive search remains `found` and negative search returns `not_found` |
+| 14 | P2.8 | Add negative-query not-found confidence gate | Includes gateway confidence gating and debug visibility; excludes n8n, push tooling, reranker, and full ingest cutover | `[x] DONE (2026-05-04)` | Deployed commit `d686c46` to VM B1, rebuilt `rag-gateway`, positive homelab smoke returned `status=found` with top score 0.8333, negative `What is the project-alpha Blazor login flow?` with `project=homelab` returned `status=not_found`, and promoted checkpoint to Qdrant summary `2026-05-04-keyfacts-production-hardening-p28-promoted`. | None |
 
 ## Critical Files Reference
 
@@ -267,8 +264,9 @@ When eval flags NDCG < 0.6 for query X, append the chunk_id that should have ran
 
 1. `rag add` a sample `implementation-spec` chunk → must pass validation, or reject with a clear reason
 2. `python scripts/eval-retrieval-quality.py --project homelab --debug` → compare NDCG@5 before vs after
-3. End-to-end: query via MCP `search_knowledge`, feed the result to the implementer model, verify generated code compiles and matches the chunk spec
-4. Watch MCP server stderr for `avg_score` improvement after contextual retrieval lands
+3. End-to-end strategy: query via MCP `search_knowledge` or `/rag/search`, feed the result to Copilot, verify generated code compiles and matches the chunk spec
+4. Optional benchmark: run Ollama end-to-end only after a code model such as `qwen2.5-coder:7b` is installed
+5. Watch MCP server stderr for `avg_score` improvement after contextual retrieval lands
 
 ## Session Handoff Notes
 

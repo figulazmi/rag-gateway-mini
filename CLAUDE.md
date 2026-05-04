@@ -58,12 +58,13 @@ cd src && docker compose up -d --build      # docker
 ## VM B1 Redeploy
 
 ```bash
-git push origin main
-ssh figulazmi@192.168.18.199 'cd /opt/homelab/ai-stack/rag-gateway-mini && git pull && cd src && docker compose up -d --build'
-curl http://192.168.18.199:5200/health
+rtk git push origin main
+ssh figulazmi@192.168.18.199 'cd /opt/homelab/ai-stack/rag-gateway-mini && rtk sudo git fetch origin && rtk sudo git reset --hard origin/main && cd src && rtk sudo docker compose up -d --build'
+rtk curl http://192.168.18.199:5200/scalar/
+rtk curl http://192.168.18.199:5200/openapi/v1.json
 ```
 
-Secrets live outside repo at `/opt/homelab/ai-stack/rag-gateway-mini/appsettings.Production.json` (template: `src/appsettings.Production.json.template`). Build context is repo root so `Directory.Packages.props` is included.
+There is no `/health` endpoint. Use `/scalar/`, `/openapi/v1.json`, or `/rag/search` for liveness. The VM B1 repo is usually root-owned, so git and docker commands often need `sudo`. Secrets live outside repo at `/opt/homelab/ai-stack/rag-gateway-mini/appsettings.Production.json` (template: `src/appsettings.Production.json.template`); do not modify production secrets during redeploy. Build context is repo root so `Directory.Packages.props` is included.
 
 ## Critical Rules
 
@@ -141,7 +142,7 @@ Then print ONE status line:
 
 ## Implementation-spec chunk rules
 
-For chunks targeting consumption by implementer models (qwen2.5-coder etc.) to write code without hallucination. See `docs/RAG_V2_ROADMAP.md` and `~/.claude/commands/rag-knowledge-capture-cli.md` for full template.
+For chunks targeting consumption by implementer models such as GitHub Copilot to write code without hallucination. `qwen2.5-coder` is an optional benchmark target, not the production implementer path. See `docs/RAG_V2_ROADMAP.md` and `~/.claude/commands/rag-knowledge-capture-cli.md` for full template.
 
 Required sections (rag_capture.py warns if missing; hard-reject in P2.1):
 
