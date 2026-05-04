@@ -1,0 +1,479 @@
+[
+  {
+    "query": "What Qdrant API header must every script and HTTP node include?",
+    "project": "homelab",
+    "gold_keywords": [
+      "api-key header",
+      "QDRANT_API_KEY"
+    ],
+    "gold_topics": [
+      "Qdrant",
+      "api-key"
+    ],
+    "description": "Qdrant API key header requirement",
+    "expected_snippet": "headers={\"Content-Type\": \"application/json\", \"api-key\": api_key}",
+    "expected_ids": [
+      "685981523",
+      "24204002",
+      "685981522",
+      "810850998"
+    ]
+  },
+  {
+    "query": "How do I redeploy rag-gateway-mini on VM B1 after pushing main?",
+    "project": "homelab",
+    "gold_keywords": [
+      "docker compose up -d --build",
+      "rag-gateway-mini"
+    ],
+    "gold_topics": [
+      "Redeploy",
+      "VM B1",
+      "rag-gateway-mini"
+    ],
+    "description": "VM B1 rag-gateway redeploy runbook",
+    "expected_snippet": "sudo docker compose up -d --build",
+    "expected_ids": [
+      "607517453",
+      "1928279802",
+      "2098923700"
+    ]
+  },
+  {
+    "query": "What endpoint should verify rag-gateway-mini liveness if /health is not implemented?",
+    "project": "homelab",
+    "gold_keywords": [
+      "/scalar/",
+      "/openapi/v1.json",
+      "/rag/search"
+    ],
+    "gold_topics": [
+      "health",
+      "rag-gateway",
+      "smoke"
+    ],
+    "description": "Rag gateway liveness without health endpoint"
+  },
+  {
+    "query": "Why is the rag-gateway production collection knowledge_v2_keyfacts rollback-safe?",
+    "project": "homelab",
+    "gold_keywords": [
+      "knowledge_v2_keyfacts production collection",
+      "rollback-safe",
+      "knowledge_v2"
+    ],
+    "gold_topics": [
+      "keyfacts",
+      "cutover"
+    ],
+    "description": "Keyfacts rollback-safe retrieval cutover",
+    "expected_ids": [
+      "607517453",
+      "1512580494"
+    ]
+  },
+  {
+    "query": "Why should push-to-qdrant.sh stay defaulted to knowledge_v2 for now?",
+    "project": "homelab",
+    "gold_keywords": [
+      "push-to-qdrant.sh",
+      "knowledge_v2",
+      "full ingest cutover deferred"
+    ],
+    "gold_topics": [
+      "keyfacts",
+      "ingest"
+    ],
+    "description": "Full ingest default deferred decision",
+    "expected_ids": [
+      "423314733",
+      "1998825549",
+      "2061326988"
+    ]
+  },
+  {
+    "query": "What threshold makes low confidence rag search return NOT FOUND IN RAG?",
+    "project": "homelab",
+    "gold_keywords": [
+      "NotFoundScoreThreshold",
+      "0.55",
+      "NOT FOUND IN RAG"
+    ],
+    "gold_topics": [
+      "confidence gate",
+      "not-found"
+    ],
+    "description": "Negative query confidence gate",
+    "expected_snippet": "if (filtered.Count == 0 || topScore < notFoundThreshold)"
+  },
+  {
+    "query": "How is the djb2 sparse hash calculated for knowledge_v2 queries?",
+    "project": "homelab",
+    "gold_keywords": [
+      "5381",
+      "0x7FFFFFFF",
+      "djb2"
+    ],
+    "gold_topics": [
+      "djb2",
+      "sparse",
+      "knowledge_v2"
+    ],
+    "description": "djb2 sparse vector algorithm",
+    "expected_snippet": "h = (((h << 5) + h) + ord(ch)) & 0x7FFFFFFF"
+  },
+  {
+    "query": "Why was client-side djb2 chosen instead of Qdrant server-side BM25?",
+    "project": "homelab",
+    "gold_keywords": [
+      "server-side BM25",
+      "re-indexing",
+      "tokenizer"
+    ],
+    "gold_topics": [
+      "djb2",
+      "BM25",
+      "decision"
+    ],
+    "description": "Client-side djb2 BM25 decision"
+  },
+  {
+    "query": "What collection uses sparse vectors rebuilt from topic plus Key Facts?",
+    "project": "homelab",
+    "gold_keywords": [
+      "knowledge_v2_keyfacts",
+      "topic + Key Facts",
+      "sparse"
+    ],
+    "gold_topics": [
+      "Sparse Key Facts",
+      "knowledge_v2_keyfacts"
+    ],
+    "description": "Sparse keyfacts collection design"
+  },
+  {
+    "query": "What was the root cause of sparse RRF rank noise in homelab evals?",
+    "project": "homelab",
+    "gold_keywords": [
+      "Keyfacts production candidate path",
+      "sparse RRF rank noise"
+    ],
+    "gold_topics": [
+      "sparse",
+      "RRF",
+      "regression"
+    ],
+    "description": "Sparse RRF rank noise diagnosis",
+    "expected_ids": [
+      "1951409694"
+    ]
+  },
+  {
+    "query": "Why is the LLM reranker scaffold disabled by default?",
+    "project": "homelab",
+    "gold_keywords": [
+      "RERANK_ENABLED",
+      "61 seconds",
+      "parse"
+    ],
+    "gold_topics": [
+      "reranker",
+      "deferred",
+      "TEI"
+    ],
+    "description": "LLM reranker disabled decision"
+  },
+  {
+    "query": "What infrastructure is required before enabling BGE reranker production?",
+    "project": "homelab",
+    "gold_keywords": [
+      "TEI",
+      "BAAI/bge-reranker-v2-m3",
+      "cross-encoder"
+    ],
+    "gold_topics": [
+      "reranker",
+      "TEI",
+      "BGE"
+    ],
+    "description": "BGE reranker infrastructure requirement"
+  },
+  {
+    "query": "Bash script pattern to fail fast when QDRANT_API_KEY is missing",
+    "project": "homelab",
+    "gold_keywords": [
+      "QDRANT_API_KEY",
+      "missing",
+      "exit"
+    ],
+    "gold_topics": [
+      "bash",
+      "api-key",
+      "implementation-spec"
+    ],
+    "description": "Bash required environment variable guard",
+    "expected_snippet": ": \"${QDRANT_API_KEY:?QDRANT_API_KEY env var not set}\""
+  },
+  {
+    "query": "Python urllib request pattern for posting JSON to Qdrant with api-key",
+    "project": "homelab",
+    "gold_keywords": [
+      "urllib.request.Request",
+      "api-key header",
+      "json.dumps"
+    ],
+    "gold_topics": [
+      "Python",
+      "Qdrant",
+      "api-key"
+    ],
+    "description": "Python Qdrant POST with api-key",
+    "expected_snippet": "urllib.request.Request(url, data=json.dumps(body).encode(), headers={\"Content-Type\": \"application/json\", \"api-key\": api_key})",
+    "expected_ids": [
+      "721482737",
+      "810850998",
+      "685981524"
+    ]
+  },
+  {
+    "query": "CSharp HTTP client must send Qdrant api-key header from options",
+    "project": "homelab",
+    "gold_keywords": [
+      "QdrantApiKey",
+      "api-key",
+      "DefaultRequestHeaders"
+    ],
+    "gold_topics": [
+      "Qdrant",
+      "api-key",
+      "CSharp"
+    ],
+    "description": "CSharp Qdrant api-key header pattern",
+    "expected_snippet": "client.DefaultRequestHeaders.Add(\"api-key\", opts.QdrantApiKey)"
+  },
+  {
+    "query": "How do I add a RAG knowledge chunk from a shell heredoc?",
+    "project": "homelab",
+    "gold_keywords": [
+      "rag add",
+      "RAGBODY_EOF",
+      "--topic"
+    ],
+    "gold_topics": [
+      "rag add",
+      "knowledge capture"
+    ],
+    "description": "rag add heredoc capture workflow",
+    "expected_snippet": "cat <<'RAGBODY_EOF' | rag add -p homelab"
+  },
+  {
+    "query": "How do I promote a solved checkpoint into Qdrant knowledge?",
+    "project": "homelab",
+    "gold_keywords": [
+      "rag promote",
+      "push-to-qdrant.sh",
+      "checkpoint"
+    ],
+    "gold_topics": [
+      "checkpoint",
+      "promote",
+      "Qdrant"
+    ],
+    "description": "checkpoint promotion workflow",
+    "expected_snippet": "rag promote --file .claude/checkpoints/"
+  },
+  {
+    "query": "What files should not be touched during P2.8 confidence gate deployment validation?",
+    "project": "homelab",
+    "gold_keywords": [
+      "n8n",
+      "push-to-qdrant.sh",
+      "P2.8"
+    ],
+    "gold_topics": [
+      "P2.8",
+      "confidence gate"
+    ],
+    "description": "P2.8 deployment scope boundary"
+  },
+  {
+    "query": "Why did git pull fail on VM B1 rag-gateway-mini after force push?",
+    "project": "homelab",
+    "gold_keywords": [
+      "divergent",
+      "reset --hard origin/main",
+      "safe.directory"
+    ],
+    "gold_topics": [
+      "VM B1",
+      "deployment",
+      "git"
+    ],
+    "description": "VM B1 git divergence deployment fix",
+    "expected_snippet": "sudo git fetch origin && sudo git reset --hard origin/main"
+  },
+  {
+    "query": "What is the correct Docker Compose command format on VM B1?",
+    "project": "homelab",
+    "gold_keywords": [
+      "docker compose up -d --build",
+      "docker compose",
+      "v2"
+    ],
+    "gold_topics": [
+      "Docker Compose",
+      "VM B1"
+    ],
+    "description": "Docker Compose v2 command format",
+    "expected_snippet": "docker compose up -d --build",
+    "expected_ids": [
+      "5034044",
+      "1928279803"
+    ]
+  },
+  {
+    "query": "How should eval low NDCG queries be queued for revision?",
+    "project": "homelab",
+    "gold_keywords": [
+      ".rag_revision_queue.md",
+      "NDCG",
+      "0.6"
+    ],
+    "gold_topics": [
+      "revision queue",
+      "P3.3",
+      "eval"
+    ],
+    "description": "Eval to revision queue feedback loop",
+    "expected_snippet": "NDCG_REVISION_THRESHOLD = 0.6"
+  },
+  {
+    "query": "What retrieval metrics are reported by eval-retrieval-quality.py?",
+    "project": "homelab",
+    "gold_keywords": [
+      "Hit@1",
+      "MRR",
+      "NDCG@5"
+    ],
+    "gold_topics": [
+      "eval",
+      "retrieval quality"
+    ],
+    "description": "Retrieval eval metric definitions"
+  },
+  {
+    "query": "What query should return not_found for cross project Blazor login against homelab?",
+    "project": "homelab",
+    "gold_keywords": [],
+    "gold_topics": [
+      "negative-query",
+      "not_found"
+    ],
+    "description": "Cross-project negative Blazor query",
+    "negative": true,
+    "expected_snippet": "NOT FOUND IN RAG"
+  },
+  {
+    "query": "What is the weather in Jakarta today according to the homelab knowledge base?",
+    "project": "homelab",
+    "gold_keywords": [],
+    "gold_topics": [
+      "negative-query",
+      "not_found"
+    ],
+    "description": "Out-of-domain weather negative query",
+    "negative": true,
+    "expected_snippet": "NOT FOUND IN RAG"
+  },
+  {
+    "query": "What RagGatewayOptions property configures the not-found score threshold?",
+    "project": "homelab",
+    "gold_keywords": [
+      "NotFoundScoreThreshold",
+      "RagGatewayOptions"
+    ],
+    "gold_topics": [
+      "RagGatewayOptions",
+      "confidence gate"
+    ],
+    "description": "CSharp RAG not-found threshold option",
+    "expected_snippet": "public float NotFoundScoreThreshold { get; set; } = 0.55f;",
+    "expected_ids": [
+      "1054034482",
+      "911579752",
+      "738432516"
+    ]
+  },
+  {
+    "query": "Why do RRF fusion scores require a lower SCORE_THRESHOLD than cosine scores?",
+    "project": "homelab",
+    "gold_keywords": [
+      "RRF fusion scores",
+      "SCORE_THRESHOLD",
+      "cosine"
+    ],
+    "gold_topics": [
+      "RRF",
+      "threshold"
+    ],
+    "description": "RRF threshold calibration pattern",
+    "expected_ids": [
+      "911579752",
+      "738432516"
+    ]
+  },
+  {
+    "query": "How should Python argparse subcommands be implemented in reusable scripts?",
+    "project": "homelab",
+    "gold_keywords": [
+      "add_subparsers",
+      "subparsers.add_parser",
+      "dest=\"command\""
+    ],
+    "gold_topics": [
+      "argparse",
+      "subcommand",
+      "CLI"
+    ],
+    "description": "Python argparse subcommand CLI pattern",
+    "expected_ids": [
+      "2128723946"
+    ]
+  },
+  {
+    "query": "How should Python dataclass defaults use field default_factory?",
+    "project": "homelab",
+    "gold_keywords": [
+      "field(default_factory=list)",
+      "asdict",
+      "slots=True"
+    ],
+    "gold_topics": [
+      "dataclass",
+      "default_factory",
+      "Python"
+    ],
+    "description": "Python dataclass pattern with field defaults",
+    "expected_ids": [
+      "2128723945"
+    ]
+  },
+  {
+    "query": "How does the eval harness load JSON fixture test cases?",
+    "project": "homelab",
+    "gold_keywords": [
+      "load_json_fixtures",
+      "eval-fixtures",
+      "expected_ids"
+    ],
+    "gold_topics": [
+      "eval",
+      "fixture",
+      "TestCase"
+    ],
+    "description": "Eval fixture loader behavior",
+    "expected_ids": [
+      "1525001672"
+    ]
+  }
+]

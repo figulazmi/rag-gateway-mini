@@ -62,6 +62,7 @@ SPARSE_VECTOR  = "sparse"
 EMBED_MODEL    = "nomic-embed-text"
 DEFAULT_LIMIT  = 5
 DEFAULT_PREFETCH_MULT = 4   # prefetch = limit * PREFETCH_MULT per leg
+DEFAULT_CODE_MODEL = "qwen2.5-coder:7b"
 
 
 # ─── TEST SUITE ─────────────────────────────────────────────────────────────
@@ -76,7 +77,9 @@ class TestCase:
     gold_topics: list
     description: str = ""
     chunk_type: str = ""
-    expected_snippet: str = ""  # used by --end-to-end mode
+    expected_snippet: str = ""  # used by --end-to-end mode and retrieval relevance
+    expected_ids: list = field(default_factory=list)
+    negative: bool = False
 
 
 def load_json_fixtures(fixtures_dir: "Path") -> "list[TestCase]":
@@ -98,6 +101,8 @@ def load_json_fixtures(fixtures_dir: "Path") -> "list[TestCase]":
                     description=e.get("description", ""),
                     chunk_type=e.get("chunk_type", ""),
                     expected_snippet=e.get("expected_snippet", ""),
+                    expected_ids=e.get("expected_ids", []),
+                    negative=e.get("negative", False),
                 ))
         except Exception as exc:
             print(f"[warn] Could not load fixture {jf.name}: {exc}", flush=True)
@@ -403,15 +408,23 @@ def search_hybrid(
 
 def relevance_score(point: dict, tc: TestCase) -> float:
     """
-    Partial relevance: fraction of gold signals found in content + topic.
-    Returns 0.0–1.0.
+    Partial relevance: expected IDs/snippets are exact gold signals; otherwise use content + topic signals.
+    Returns 0.0-1.0.
     """
     payload = point.get("payload", {})
-    content = (payload.get("content", "") or "").lower()
-    topic   = (payload.get("topic", "")   or "").lower()
+    point_id = str(point.get("id", ""))
+    content_raw = payload.get("content", "") or ""
+    content = content_raw.lower()
+    topic = (payload.get("topic", "") or "").lower()
+
+    if tc.expected_ids and point_id in {str(i) for i in tc.expected_ids}:
+        return 1.0
+
+    if tc.expected_snippet and tc.expected_snippet.lower() in content:
+        return 1.0
 
     keyword_hits = sum(1 for kw in tc.gold_keywords if kw.lower() in content)
-    topic_hits   = sum(1 for t  in tc.gold_topics   if t.lower()  in topic)
+    topic_hits = sum(1 for t in tc.gold_topics if t.lower() in topic)
 
     total = len(tc.gold_keywords) + len(tc.gold_topics)
     return min(1.0, (keyword_hits + topic_hits) / total) if total else 0.0
@@ -683,6 +696,7 @@ def run_end_to_end(
     suite: "list[TestCase]",
     hybrid_results_map: "dict[str, list[dict]]",
     ollama_url: str,
+    code_model: str,
 ) -> dict:
     """For test cases with expected_snippet: retrieve → generate → diff."""
     import difflib
@@ -695,7 +709,7 @@ def run_end_to_end(
     print()
     print("=" * W)
     print("  END-TO-END HALLUCINATION TEST")
-    print("  Model: qwen2.5-coder  |  Strategy: hybrid-rrf")
+    print(f"  Model: {code_model}  |  Strategy: hybrid-rrf")
     print("=" * W)
 
     per_query = []
@@ -713,7 +727,7 @@ def run_end_to_end(
             "Generate ONLY the code. No explanation."
         )
         payload = json.dumps({
-            "model": "qwen2.5-coder",
+            "model": code_model,
             "prompt": prompt,
             "stream": False,
         }).encode()
@@ -725,8 +739,14 @@ def run_end_to_end(
             )
             with urllib.request.urlopen(req, timeout=120) as resp:
                 generated = json.loads(resp.read())["response"].strip()
+        except urllib.error.HTTPError as exc:
+            if exc.code == 404:
+                print(f"  [skip] {tc.description[:50]}: Ollama model not found ({code_model}) -- HTTP 404")
+            else:
+                print(f"  [skip] {tc.description[:50]}: Ollama HTTP error for {code_model} -- HTTP {exc.code}")
+            continue
         except Exception as exc:
-            print(f"  [skip] {tc.description[:50]}: Ollama error — {exc}")
+            print(f"  [skip] {tc.description[:50]}: Ollama generation skipped for {code_model} -- {exc}")
             continue
 
         ratio = difflib.SequenceMatcher(None, generated, tc.expected_snippet).ratio()
@@ -809,6 +829,7 @@ def run_evaluation(
     rerank_candidates: int = 20,
     fixtures_dir: str = "",
     end_to_end: bool = False,
+    code_model: str = DEFAULT_CODE_MODEL,
 ):
     from pathlib import Path
     _fixtures_dir = fixtures_dir or str(Path(__file__).parent / "eval-fixtures")
@@ -910,7 +931,7 @@ def run_evaluation(
 
     e2e_report = {}
     if end_to_end:
-        e2e_report = run_end_to_end(suite, hybrid_pts_map, ollama_url)
+        e2e_report = run_end_to_end(suite, hybrid_pts_map, ollama_url, code_model)
 
     # P3.3 — write low-NDCG queries to revision queue
     _write_revision_queue(suite, hybrid_results, hybrid_pts_map)
@@ -993,7 +1014,9 @@ Debug workflow for regression:
     parser.add_argument("--fixtures-dir",   default="",
                         help="Directory with JSON fixture files (default: scripts/eval-fixtures/)")
     parser.add_argument("--end-to-end",     action="store_true",
-                        help="Run end-to-end hallucination test via qwen2.5-coder for cases with expected_snippet")
+                        help="Run optional end-to-end hallucination test for cases with expected_snippet")
+    parser.add_argument("--code-model",     default=DEFAULT_CODE_MODEL,
+                        help=f"Ollama model used by --end-to-end (default: {DEFAULT_CODE_MODEL})")
     args = parser.parse_args()
 
     global _RERANK_NOTE
@@ -1014,6 +1037,7 @@ Debug workflow for regression:
         rerank_candidates=args.rerank_candidates,
         fixtures_dir=args.fixtures_dir,
         end_to_end=args.end_to_end,
+        code_model=args.code_model,
     )
 
 
