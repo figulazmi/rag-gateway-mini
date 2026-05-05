@@ -1,5 +1,15 @@
 # CLAUDE.md
 
+## Session Resume Protocol
+
+Before reading source files or answering project-specific questions, run:
+
+```bash
+rtk rag resume
+```
+
+If open checkpoints are listed, load the relevant checkpoint and follow its `next_step` before any broad exploration. If no open checkpoint exists, continue with the repository's existing RAG-first protocol.
+
 ## Fallback Essentials (if global CLAUDE.md is absent)
 
 Full versions live in `~/.claude/CLAUDE.md`. Minimal rules below keep this repo self-sufficient.
