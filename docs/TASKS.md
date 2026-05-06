@@ -18,11 +18,11 @@ It is an index, not the source of truth. Each task status must be owned by the `
 ## Quick Status
 
 ```text
-Done: see owning trackers
+Done: P1-3 completed in security tracker; see owning trackers for full history
 Open: none listed here
 Blocked: none listed here
 Deferred: P2.2, P2.2-B, OI-5
-Next: choose a deferred item or new task after user approval
+Next: choose a deferred item or approve a new follow-up task
 ```
 
 ---
@@ -31,7 +31,7 @@ Next: choose a deferred item or new task after user approval
 
 | Area | Source of truth | Current focus | Next task ID | Notes |
 |---|---|---|---|---|
-| Security | [`security/RAG_SECURITY_POSTURE.md`](security/RAG_SECURITY_POSTURE.md) | Hardening and threat controls | P0-3 | Use security tracker for evidence and verification steps |
+| Security | [`security/RAG_SECURITY_POSTURE.md`](security/RAG_SECURITY_POSTURE.md) | Hardening and threat controls | P1-4 | Use security tracker for evidence and verification steps |
 | Quality | [`quality/RAG_EVAL_HARNESS.md`](quality/RAG_EVAL_HARNESS.md) | Broaden eval beyond retrieval-only metrics | See tracker | Keep metric history in quality docs |
 | Pipeline | [`pipeline/RAG_BOTTLENECK_FIXES.md`](pipeline/RAG_BOTTLENECK_FIXES.md) | Deferred sparse-text and IDF tuning | #2C | Revisit after corpus diversity improves |
 | Planning | [`planning/RAG_V2_ROADMAP.md`](planning/RAG_V2_ROADMAP.md) | Keyfacts production default maintenance | See tracker | Read before pipeline changes |
@@ -65,4 +65,4 @@ The linked tracker must contain exactly one `## Canonical Task Tracker` section.
 
 ---
 
-*Last updated: 2026-05-02 · Owner: Figur Ulul Azmi*
+*Last updated: 2026-05-06 · Owner: Figur Ulul Azmi*

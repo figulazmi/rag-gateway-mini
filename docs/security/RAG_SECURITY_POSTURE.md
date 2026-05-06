@@ -258,13 +258,12 @@ and pushed to Qdrant, creating incomplete records that degrade retrieval and are
 
 ### P1-3 — Chunk Provenance Fields
 
-**Status:** `[~] IN PROGRESS`
+**Status:** `[x] DONE (2026-05-06)`
 **Started on:** 2026-05-02
-**Evidence:** Local `~/scripts/push-to-qdrant.sh` sends ingested_by, push_method, embed_model, and embed_prefix_version; local n8n workflow stores provenance payload fields. `bash -n` and JSON validation passed.
-**Remaining:** Add payload_sha256 end-to-end without shell expansion regressions, import live workflow, and verify payload fields exist in Qdrant.  
+**Evidence:** Published patched live n8n workflow `knowledge_v2_keyfacts` (`id=keyfacts63ce76d761`) from local export `C:\Users\Clandesitine\scripts\n8n-workflows\ingest-knowledge-v2-keyfacts.json` using n8n API `PUT /api/v1/workflows/{id}` plus activate. Post-publish controlled smoke write `p1-3-provenance-smoke-live-after-publish-2026-05-06` returned webhook `status=ok` with `qdrant_id=227909133`; Qdrant read-back for that point confirmed `chunk_source`, `session_type`, `environment`, `git_branch`, `git_commit`, `captured_at`, and `related` persisted end-to-end in `knowledge_v2_keyfacts`.
 **Effort:** ~2–3 hours  
-**Completed on:** —  
-**Verified by:** —
+**Completed on:** 2026-05-06  
+**Verified by:** Claude Code live n8n API publish + single webhook smoke write + Qdrant payload read-back with `api-key` header.
 
 **Problem:** Existing chunks have no `ingested_by`, `ingested_at`, `push_host`, or `payload_sha256`
 fields. Cannot trace a poisoned chunk back to its origin.
