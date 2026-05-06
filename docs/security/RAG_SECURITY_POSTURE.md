@@ -287,10 +287,10 @@ fields. Cannot trace a poisoned chunk back to its origin.
 
 ### P1-4 — Knowledge Expansion Defense
 
-**Status:** `[~] IN PROGRESS`  
+**Status:** `[x] DONE (2026-05-06)`  
 **Effort:** ~3–4 hours  
-**Completed on:** —  
-**Verified by:** —
+**Completed on:** 2026-05-06  
+**Verified by:** Claude Code local build + VM B1 live smoke
 **File:** `src/Application/Services/RagSearchService.cs`
 
 **Problem:** Single-query retrieval is vulnerable to a poisoned chunk that wins top-1 for a specific phrasing. Knowledge Expansion (3 phrasings → union → vote) reduces this risk.
@@ -316,25 +316,23 @@ Query Q → Paraphrase(Q) → [Q, Q', Q'']
 - `DebugAsync` exposes `expanded_queries` in response when flag is true
 - Build: `dotnet build` → 0 errors, 0 warnings
 
-**Pending live verification after VM B1 redeploy:**
+**Live verification (VM B1, 2026-05-06):**
+- `GET /scalar/` returned `200`
+- Default search (`knowledge_expansion` omitted) for `how to push knowledge chunk to Qdrant` returned `status=not_found`
+- Expansion search (`knowledge_expansion=true`) for the same query returned `status=found`
+- Debug call with expansion returned `knowledge_expansion=true` and populated `expanded_queries`
+- Negative query `What is the project-alpha Blazor login flow?` with `project=homelab` and `knowledge_expansion=true` returned `status=not_found`
+
+**Evidence command (executed over SSH):**
 ```bash
-# Default path unchanged:
-curl -s -X POST http://192.168.18.199:5200/rag/search \
-  -H "Content-Type: application/json" \
-  -d '{"query":"how to push knowledge chunk to Qdrant","project":"homelab"}' | python -m json.tool
-
-# Knowledge expansion opt-in:
-curl -s -X POST http://192.168.18.199:5200/rag/search \
-  -H "Content-Type: application/json" \
-  -d '{"query":"how to push knowledge chunk to Qdrant","project":"homelab","knowledge_expansion":true}' | python -m json.tool
-# Expected: status=found, max 5 results ranked by hit_count then score
-
-# Negative query must still return not_found:
-curl -s -X POST http://192.168.18.199:5200/rag/search \
-  -H "Content-Type: application/json" \
-  -d '{"query":"What is the project-alpha Blazor login flow?","project":"homelab","knowledge_expansion":true}' | python -m json.tool
-# Expected: status=not_found
+curl -s -o /tmp/p14_scalar.out -w "%{http_code}" http://192.168.18.199:5200/scalar/
+curl -s -X POST http://192.168.18.199:5200/rag/search -H "Content-Type: application/json" -d '{"query":"how to push knowledge chunk to Qdrant","project":"homelab"}'
+curl -s -X POST http://192.168.18.199:5200/rag/search -H "Content-Type: application/json" -d '{"query":"how to push knowledge chunk to Qdrant","project":"homelab","knowledge_expansion":true}'
+curl -s -X POST http://192.168.18.199:5200/rag/debug -H "Content-Type: application/json" -d '{"query":"how to push knowledge chunk to Qdrant","project":"homelab","knowledge_expansion":true}'
+curl -s -X POST http://192.168.18.199:5200/rag/search -H "Content-Type: application/json" -d '{"query":"What is the project-alpha Blazor login flow?","project":"homelab","knowledge_expansion":true}'
 ```
+
+**Outcome:** Knowledge expansion improved recall for phrasing-sensitive query while preserving negative-query not-found gating.
 
 ---
 
