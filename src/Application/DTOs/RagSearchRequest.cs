@@ -15,4 +15,7 @@ public sealed class RagSearchRequest
 
     [JsonPropertyName("feature_slug")]
     public string? FeatureSlug { get; set; }
+
+    [JsonPropertyName("knowledge_expansion")]
+    public bool KnowledgeExpansion { get; set; }
 }

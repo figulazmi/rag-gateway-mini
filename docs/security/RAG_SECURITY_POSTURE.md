@@ -287,7 +287,7 @@ fields. Cannot trace a poisoned chunk back to its origin.
 
 ### P1-4 — Knowledge Expansion Defense
 
-**Status:** `[ ] OPEN`  
+**Status:** `[~] IN PROGRESS`  
 **Effort:** ~3–4 hours  
 **Completed on:** —  
 **Verified by:** —
@@ -308,6 +308,33 @@ Query Q → Paraphrase(Q) → [Q, Q', Q'']
 **ASR reduction per paper:** ~50–60% when combined with other defenses.
 
 **Tradeoff:** 3x embed calls → +2–3x latency. Implement as opt-in flag: `POST /rag/search { "knowledge_expansion": true }`.
+
+**Implementation (2026-05-06 local):**
+- Added `knowledge_expansion: bool` to `RagSearchRequest` and `RagDebugResponse`
+- `RagSearchService.SearchAsync` branches on the flag; default path unchanged
+- Expansion path: 3 rule-based variants (`original`, `Explain: {q}`, `Describe the approach for: {q}`) embedded in parallel, top results per variant union-deduplicated by `doc_id`, ranked by `(hit_count DESC, best_score DESC)`, `AggregateExpansionResults` returns top `ResultLimit` items
+- `DebugAsync` exposes `expanded_queries` in response when flag is true
+- Build: `dotnet build` → 0 errors, 0 warnings
+
+**Pending live verification after VM B1 redeploy:**
+```bash
+# Default path unchanged:
+curl -s -X POST http://192.168.18.199:5200/rag/search \
+  -H "Content-Type: application/json" \
+  -d '{"query":"how to push knowledge chunk to Qdrant","project":"homelab"}' | python -m json.tool
+
+# Knowledge expansion opt-in:
+curl -s -X POST http://192.168.18.199:5200/rag/search \
+  -H "Content-Type: application/json" \
+  -d '{"query":"how to push knowledge chunk to Qdrant","project":"homelab","knowledge_expansion":true}' | python -m json.tool
+# Expected: status=found, max 5 results ranked by hit_count then score
+
+# Negative query must still return not_found:
+curl -s -X POST http://192.168.18.199:5200/rag/search \
+  -H "Content-Type: application/json" \
+  -d '{"query":"What is the project-alpha Blazor login flow?","project":"homelab","knowledge_expansion":true}' | python -m json.tool
+# Expected: status=not_found
+```
 
 ---
 

@@ -19,6 +19,13 @@ public sealed class RagDebugResponse
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? FeatureSlugFilter { get; set; }
 
+    [JsonPropertyName("knowledge_expansion")]
+    public bool KnowledgeExpansion { get; set; }
+
+    [JsonPropertyName("expanded_queries")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public List<string>? ExpandedQueries { get; set; }
+
     [JsonPropertyName("search_mode")]
     public string SearchMode { get; set; } = "hybrid";
 
