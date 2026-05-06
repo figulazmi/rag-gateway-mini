@@ -30,7 +30,7 @@ Baseline defined 2026-04-29. Re-run after any significant pipeline change.
 | LLM (generation) | `llama3.2:3b` | Local Ollama |
 | Primary code implementer | GitHub Copilot | Human-in-the-loop path using retrieved RAG context |
 | Optional Ollama code benchmark | `qwen2.5-coder:7b` | Required only when running `--end-to-end` benchmark mode with the default `--code-model`; not installed on VM B1 as of 2026-05-04 |
-| Chunk count | `knowledge_v2_keyfacts` 519; legacy `knowledge_v2` 441 | Live Qdrant verification after 2026-05-05 sync; missing legacy point IDs in keyfacts: 0 |
+| Chunk count | `knowledge_v2_keyfacts` 541 stable corpus; legacy `knowledge_v2` 441 | Live Qdrant verification on 2026-05-06: keyfacts contains all legacy points plus 100 keyfacts-only retained records; excludes temporary P1-3 smoke point |
 | Gateway endpoint | `http://192.168.18.199:5200` | VM B1 Docker |
 
 ---
@@ -70,6 +70,8 @@ Run `eval-retrieval-quality.py` against VM B1, copy scores here, update Status.
 **T2-B semantic judge and miss cleanup (2026-05-05):** Added optional `--semantic-judge`, `--judge-model`, and `--case-limit` flags to `scripts/eval-retrieval-quality.py`. Full semantic judge smoke output is preserved at `C:\Users\CLANDE~1\AppData\Local\Temp\claude\C--Users-Clandesitine-source-repos-rag-gateway-mini\82746d80-e90b-4355-82b1-6a1d58802cdf\tasks\b8gs2e5rt.output`; it took about 90 seconds per judged query and repeatedly fell back to keyword scoring, so the implementation was changed to gate judge calls only for top-1 misses or low-NDCG cases. Gated smoke report: `.claude/reports/t2b-semantic-judge-gated-smoke-2026-05-04.json`. Added two implementation-spec corpus chunks (`Qdrant script API key patterns`, `Python subprocess run pattern`) and expected IDs for the prior genuine misses. Final retrieval report: `.claude/reports/t2b-final-keyfacts-2026-05-05.json`; `knowledge_v2_keyfacts` hybrid Hit@1 **0.9574**, Hit@3 **0.9574**, Hit@5 **0.9574**, MRR **0.9574**, NDCG@5 **0.9261**. Remaining H@1 misses are only the 2 intentional negative queries.
 
 **Post-sync production parity (2026-05-05):** Direct Qdrant verification after legacy-to-keyfacts sync showed `knowledge_v2` 441 points and `knowledge_v2_keyfacts` 519 points. The sync copied 49 point IDs that existed only in legacy into keyfacts with payload and dense vector preserved. Missing legacy point IDs in keyfacts after sync: 0. Post-sync eval report `.claude/reports/post-sync-keyfacts-2026-05-05.json` on 47 queries: hybrid Hit@1 **0.9574**, Hit@3 **0.9574**, Hit@5 **0.9574**, MRR **0.9574**, NDCG@5 **0.9216**, avg latency **850.5ms**. Hybrid-RRF remained beneficial, with 4 aggregate metrics improved versus dense-only and 0 aggregate regressions. This makes `knowledge_v2_keyfacts` the complete production default while preserving legacy `knowledge_v2` as a fallback comparison collection.
+
+**Final P2.6 evidence pass (2026-05-06):** Same-date 47-query comparison kept semantic judge off and confirmed keyfacts still beats legacy: `knowledge_v2_keyfacts` Hit@1 **0.9574**, Hit@3 **0.9574**, Hit@5 **0.9574**, MRR **0.9574**, NDCG@5 **0.9276**, avg latency **757.9ms**, p50 **824.5ms**, p95 **1248.3ms**; legacy `knowledge_v2` Hit@1 **0.7021**, Hit@3 **0.9362**, Hit@5 **0.9574**, MRR **0.8199**, NDCG@5 **0.8449**, avg latency **751.9ms**, p50 **741.5ms**, p95 **1270.6ms**. Gateway `/scalar/`, `/openapi/v1.json`, positive `/rag/search`, and negative confidence-gate smoke passed. Live count drift was explained as `knowledge_v2_keyfacts` 541 stable corpus points: all 441 legacy points plus 100 keyfacts-only retained records. `VM105 webhook auth smoke test` is retained debug knowledge, while `p12-valid-001` and `unknown-chunk-1` remain classified as cleanup candidates rather than production evidence blockers.
 
 **Previous baseline (2026-04-30):** `python scripts/eval-retrieval-quality.py --project homelab --limit 5 --qdrant-url http://192.168.18.199:6333 --ollama-url http://192.168.18.199:11434 --output .claude/reports/eval-baseline-2026-04-30.json` completed successfully on 18 queries. Hybrid summary: Hit@1 0.7778, Hit@3 0.8333, Hit@5 0.8889, MRR 0.8167, NDCG@5 0.8658, avg latency 1067.5ms. Regression analysis identified sparse-noise on 3 queries; next improvement should test sparse text restricted to topic + Key Facts or query-type-aware sparse disabling.
 
@@ -264,11 +266,11 @@ python scripts/eval-retrieval-quality.py \
 
 Current expanded fixture: `scripts/eval-fixtures/homelab-expanded.json`.
 
-> **Status update (2026-05-05):** T1-A/B/C and T2-B miss cleanup complete. 47-query keyfacts hybrid Hit@1 **0.9574**, MRR **0.9574**, NDCG@5 **0.9261**. All retrievable homelab queries now hit at rank 1; only the 2 intentional negative queries remain H@1=0. VM B1 production targets `knowledge_v2_keyfacts`. `push-to-qdrant.sh` (laptop + VM B1) now defaults to `knowledge_v2_keyfacts`.
-> **Semantic judge note:** Full ungated semantic judge was too slow on VM B1 CPU/Ollama (`llama3.2:3b`) at about 90s per judged query and fell back repeatedly; keep the output file path above as tuning evidence. Current implementation gates judge calls to likely miss/low-NDCG cases only.
-> **Next milestone:** T2-A (TEI+BGE reranker — blocked on VM B1 RAM check) or tune semantic judge latency/parser.
+> **Status update (2026-05-06):** T1-A/B/C and T2-B miss cleanup remain complete. A final 47-query P2.6 evidence pass kept semantic judge off and confirmed `knowledge_v2_keyfacts` still leads legacy on Hit@1, MRR, NDCG@5, and p95 latency while gateway smoke and negative confidence gating passed. VM B1 production targets `knowledge_v2_keyfacts`, and the stable documented corpus state is 541 keyfacts points versus 441 legacy points.
+> **Semantic judge note:** Full ungated semantic judge was too slow on VM B1 CPU/Ollama (`llama3.2:3b`) at about 90s per judged query and fell back repeatedly; keep the output file path above as tuning evidence. Current implementation gates judge calls to likely miss or low-NDCG cases only.
+> **Next milestone:** choose a deferred task with approval, or perform a separate cleanup pass for `p12-valid-001`, `unknown-chunk-1`, and temporary smoke records before any further corpus-state docs tightening.
 
 ---
 
-*Last updated: 2026-05-04 · Author: Figur Ulul Azmi*  
+*Last updated: 2026-05-06 · Author: Figur Ulul Azmi*  
 *Cross-reference: [`RAG_SECURITY_POSTURE.md`](../security/RAG_SECURITY_POSTURE.md) (hardening tasks) · [`RAG_BOTTLENECK_FIXES.md`](../pipeline/RAG_BOTTLENECK_FIXES.md) (pipeline history)*
