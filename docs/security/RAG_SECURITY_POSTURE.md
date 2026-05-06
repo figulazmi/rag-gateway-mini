@@ -338,43 +338,42 @@ curl -s -X POST http://192.168.18.199:5200/rag/search -H "Content-Type: applicat
 
 ### P1-5 — Embedding Anomaly Detector
 
-**Status:** `[ ] OPEN`  
+**Status:** `[x] DONE (2026-05-06)`  
 **Effort:** ~4–6 hours  
-**Completed on:** —  
-**Verified by:** —
+**Completed on:** 2026-05-06  
+**Verified by:** Claude Code local syntax check + VM B1 live push-hook smoke
 
 **Problem:** A carefully crafted injection chunk can have `cosine(poison, legitimate) > 0.97`
 but belong to a different project or chunk_type — hijacking the retrieval neighborhood.
 
-**Fix — `scripts/anomaly_check.py` (run post-upsert via cron or push hook):**
+**Implemented fix:**
+- Added repo script `scripts/anomaly_check.py` and deployed it to VM B1 at `~/scripts/anomaly_check.py`
+- Detector loads `QDRANT_API_KEY` from environment or `~/.config/qdrant-knowledge.env`
+- Default collection is `knowledge_v2_keyfacts`; collection, threshold, limit, Qdrant URL, and audit log path are CLI-configurable
+- Detector loads the new point's dense vector and payload, queries nearest dense neighbors, skips self-hit, and emits `ANOMALY` lines when score is above threshold and `project` or type family (`chunk_type`/`session_type`) mismatches
+- Patched VM B1 `~/scripts/push-to-qdrant.sh` post-upsert flow to run `anomaly_check.py` using returned `qdrant_id`; anomaly status is non-blocking for v1 and alerts are appended to `~/.rag_audit.log`
+- VM script backup before patch: `~/scripts/push-to-qdrant.sh.bak-p15-20260506140218`
 
-```python
-ANOMALY_THRESHOLD = 0.97
+**Verification:**
+```bash
+# Local syntax check
+python -m py_compile scripts/anomaly_check.py
 
-def check_anomaly(new_point_id: str, qdrant_client) -> list[str]:
-    alerts = []
-    new_vec = get_stored_dense_vector(new_point_id, qdrant_client)
-    new_payload = get_payload(new_point_id, qdrant_client)
-    
-    neighbors = qdrant_client.search(
-        collection_name="knowledge_v2",
-        query_vector=("dense", new_vec),
-        using="dense",
-        limit=6,
-        with_payload=True
-    )
-    
-    for n in neighbors[1:]:  # skip self
-        if n.score > ANOMALY_THRESHOLD:
-            if new_payload.get("project") != n.payload.get("project"):
-                alerts.append(
-                    f"ANOMALY project_mismatch: {new_point_id} score={n.score:.3f} "
-                    f"project={new_payload['project']} vs neighbor={n.payload['project']}"
-                )
-    return alerts
+# VM syntax check
+python3 -m py_compile ~/scripts/anomaly_check.py
+bash -n ~/scripts/push-to-qdrant.sh
+
+# Direct detector smoke on existing point
+python3 ~/scripts/anomaly_check.py --point-id 3843143 --collection knowledge_v2_keyfacts
+# Observed: OK: no anomalies for point_id=3843143 threshold=0.97
+
+# Live push-hook smoke
+bash ~/scripts/push-to-qdrant.sh /tmp/p15-anomaly-smoke.md
+# Observed: webhook OK (200), detector ran and printed OK: no anomalies for point_id=552949229 threshold=0.97
+# Temporary smoke point 552949229 was deleted after verification; knowledge_v2_keyfacts count returned to 545.
 ```
 
-**Alert delivery:** Append to `~/.rag_audit.log` + optional email via `mail`.
+**Alert delivery:** Append `ANOMALY point_id=... neighbor_id=... score=... project/type ...` lines to `~/.rag_audit.log`; non-anomalous pushes continue normally.
 
 ---
 
