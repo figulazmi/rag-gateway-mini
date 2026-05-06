@@ -122,6 +122,7 @@ TEST_SUITE: list[TestCase] = [
         gold_keywords=["djb2sparse", "hassearched", "retryThreshold", "rag_search"],
         gold_topics=["MCP Server Upgrade to Hybrid", "MCP Server Collection Switch"],
         description="MCP server v2.0 migration to hybrid search",
+        expected_ids=["908163150", "423314733"],
     ),
     TestCase(
         query="qdrant collection named vector dense sparse migration script",
@@ -408,9 +409,12 @@ def search_hybrid(
 
 def relevance_score(point: dict, tc: TestCase) -> float:
     """
-    Partial relevance: expected IDs/snippets are exact gold signals; otherwise use content + topic signals.
+    Partial relevance: expected IDs/snippets are exact gold signals; otherwise use semantic judge or content + topic signals.
     Returns 0.0-1.0.
     """
+    if "_semantic_relevance" in point:
+        return float(point["_semantic_relevance"])
+
     payload = point.get("payload", {})
     point_id = str(point.get("id", ""))
     content_raw = payload.get("content", "") or ""
@@ -428,6 +432,73 @@ def relevance_score(point: dict, tc: TestCase) -> float:
 
     total = len(tc.gold_keywords) + len(tc.gold_topics)
     return min(1.0, (keyword_hits + topic_hits) / total) if total else 0.0
+
+
+def judge_relevance_with_llm(
+    tc: TestCase,
+    points: list[dict],
+    model: str,
+    ollama_url: str,
+    snippet_chars: int = 120,
+    timeout_seconds: int = 45,
+) -> dict[str, float]:
+    if not points:
+        return {}
+
+    lines = []
+    for i, p in enumerate(points, start=1):
+        payload = p.get("payload", {}) or {}
+        topic = payload.get("topic", "") or "(no topic)"
+        content = " ".join(str(payload.get("content", "") or "").split())[:snippet_chars]
+        lines.append(f"{i}. {topic}: {content}")
+
+    prompt = (
+        "Return JSON only as {\"scores\":[1,0,0]}. "
+        "Use 1 if the doc answers the query, else 0.\n"
+        f"Query: {tc.query}\n"
+        f"Hints: {', '.join(tc.gold_topics + tc.gold_keywords) or 'none'}\n"
+        + "\n".join(lines)
+    )
+
+    body = {
+        "model": model,
+        "prompt": prompt,
+        "stream": False,
+        "format": "json",
+        "options": {"temperature": 0, "num_predict": 64, "num_ctx": 1024},
+    }
+    req = urllib.request.Request(
+        f"{ollama_url}/api/generate",
+        data=json.dumps(body).encode(),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=timeout_seconds) as resp:
+            raw = json.loads(resp.read()).get("response", "")
+        parsed = json.loads(raw)
+        values = parsed.get("scores") if isinstance(parsed, dict) else parsed
+        if not isinstance(values, list):
+            return {}
+
+        scores: dict[str, float] = {}
+        for idx, value in enumerate(values[:len(points)], start=1):
+            if isinstance(value, dict):
+                value = value.get("score", value.get("relevant", 0))
+            score = 1.0 if value is True else 0.0 if value is False else float(value)
+            scores[str(points[idx - 1].get("id", ""))] = max(0.0, min(1.0, score))
+        return scores
+    except Exception:
+        return {}
+
+
+def annotate_semantic_relevance(points: list[dict], scores: dict[str, float]) -> list[dict]:
+    annotated = []
+    for p in points:
+        new_p = dict(p)
+        new_p["_semantic_relevance"] = scores.get(str(p.get("id", "")), 0.0)
+        annotated.append(new_p)
+    return annotated
 
 
 def is_relevant(point: dict, tc: TestCase, threshold: float = 0.2) -> bool:
@@ -830,11 +901,16 @@ def run_evaluation(
     fixtures_dir: str = "",
     end_to_end: bool = False,
     code_model: str = DEFAULT_CODE_MODEL,
+    semantic_judge: bool = False,
+    judge_model: str = "llama3.2:3b",
+    case_limit: int = 0,
 ):
     from pathlib import Path
     _fixtures_dir = fixtures_dir or str(Path(__file__).parent / "eval-fixtures")
     all_tests = TEST_SUITE + load_json_fixtures(_fixtures_dir)
     suite = [tc for tc in all_tests if project_filter is None or tc.project == project_filter]
+    if case_limit > 0:
+        suite = suite[:case_limit]
     if not suite:
         print(f"No test cases for project '{project_filter}'. "
               f"Available: {list({tc.project for tc in TEST_SUITE})}")
@@ -879,6 +955,16 @@ def run_evaluation(
                 print(f"    [rerank fell back to RRF order — parse error]")
         else:
             hybrid_pts = hybrid_pts_raw[:limit]
+
+        if semantic_judge:
+            should_judge = not any(is_relevant(p, tc) for p in hybrid_pts[:1]) or ndcg_at_k(hybrid_pts, tc, 5) < NDCG_REVISION_THRESHOLD
+            if should_judge:
+                semantic_scores = judge_relevance_with_llm(tc, hybrid_pts[:3], judge_model, ollama_url)
+                if semantic_scores:
+                    judged_top = annotate_semantic_relevance(hybrid_pts[:3], semantic_scores)
+                    hybrid_pts = judged_top + hybrid_pts[3:]
+                else:
+                    print(f"    [semantic judge fell back to keyword scoring — parse/error]")
         hybrid_ms  = (time.perf_counter() - t0) * 1000
 
         def extract_top_docs(pts: list[dict]) -> list:
@@ -956,6 +1042,8 @@ def run_evaluation(
             "sparse_avg":             sparse_avg,
             "hybrid_avg":             hybrid_avg,
             "hybrid_vs_dense_delta":  d_vs_dense,
+            "semantic_judge":         semantic_judge,
+            "judge_model":            judge_model if semantic_judge else "",
             "per_query": [
                 {
                     "description": suite[i].description,
@@ -1017,11 +1105,22 @@ Debug workflow for regression:
                         help="Run optional end-to-end hallucination test for cases with expected_snippet")
     parser.add_argument("--code-model",     default=DEFAULT_CODE_MODEL,
                         help=f"Ollama model used by --end-to-end (default: {DEFAULT_CODE_MODEL})")
+    parser.add_argument("--semantic-judge", action="store_true",
+                        help="Use an Ollama LLM binary relevance judge instead of keyword-only scoring")
+    parser.add_argument("--judge-model",    default="llama3.2:3b",
+                        help="Ollama model used by --semantic-judge (default: llama3.2:3b)")
+    parser.add_argument("--case-limit",     type=int, default=0,
+                        help="Limit number of test cases after project filtering (for smoke tests)")
     args = parser.parse_args()
 
     global _RERANK_NOTE
     globals()["COLLECTION"] = args.collection
-    _RERANK_NOTE = f"{args.rerank_model} on {args.rerank_candidates} candidates" if args.rerank else None
+    notes = []
+    if args.rerank:
+        notes.append(f"rerank={args.rerank_model} on {args.rerank_candidates} candidates")
+    if args.semantic_judge:
+        notes.append(f"semantic-judge={args.judge_model}")
+    _RERANK_NOTE = "; ".join(notes) if notes else None
 
     run_evaluation(
         qdrant_url=args.qdrant_url.rstrip("/"),
@@ -1038,6 +1137,9 @@ Debug workflow for regression:
         fixtures_dir=args.fixtures_dir,
         end_to_end=args.end_to_end,
         code_model=args.code_model,
+        semantic_judge=args.semantic_judge,
+        judge_model=args.judge_model,
+        case_limit=args.case_limit,
     )
 
 

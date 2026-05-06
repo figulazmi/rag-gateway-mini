@@ -12,7 +12,7 @@ Do not store secrets in this file.
 |---|---|---:|---|
 | `src/appsettings.json` | Local/default application settings | No | Commit safe defaults only |
 | `src/appsettings.Production.json.template` | Production config template | No | Template only; fill secrets outside repo |
-| `/opt/rag-gateway/appsettings.Production.json` | VM B1 production secrets/config | Yes | Never commit |
+| `/opt/homelab/ai-stack/rag-gateway-mini/appsettings.Production.json` | VM B1 production secrets/config | Yes | Never commit |
 | Environment variables | Runtime overrides | Maybe | Document every required variable here |
 
 ---
@@ -24,6 +24,7 @@ Do not store secrets in this file.
 | `Qdrant:Url` | Yes | `http://192.168.18.199:6333` | Infrastructure | Use VM B1 Qdrant endpoint |
 | `Qdrant:ApiKey` | Yes | Secret value | Infrastructure | Must be passed as secret, never committed |
 | `Ollama:BaseUrl` | Yes | `http://192.168.18.199:11434` | Infrastructure | Embedding provider endpoint |
+| `RagGateway:QdrantCollection` | Yes | `knowledge_v2_keyfacts` | Application | Production default collection; use `knowledge_v2` only as fallback/comparison evidence |
 
 ---
 
@@ -49,4 +50,4 @@ Do not store secrets in this file.
 
 ---
 
-*Last updated: 2026-05-02 · Owner: Figur Ulul Azmi*
+*Last updated: 2026-05-05 · Owner: Figur Ulul Azmi*

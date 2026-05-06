@@ -7,12 +7,13 @@
 
 > Status tracking standard: [`../reference/TRACKING_STATUS_STANDARD.md`](../reference/TRACKING_STATUS_STANDARD.md).
 > This legacy restoration tracker is historical; for new edits, keep one canonical table row per task with evidence.
+> For current day-to-day production operations, use `../testing/TEST_STRATEGY.md`, `../quality/RAG_EVAL_HARNESS.md`, and `../reference/RAG_BOOTSTRAP_NEW_DEVICE_AND_SERVER.md` as canonical runtime references.
 >
 > Backup yang tersedia di VM 105: **2026-04-13** (gap = 14 hari updates hilang).
 > User memiliki 120 summary `.md` files tersebar di 8 lokasi lokal Windows.
 > Sebelum push, scripts harus sesuai konfigurasi April 27.
 >
-> **Live verification 2026-04-30:** VM target `192.168.18.199` currently has MCP v2, Qdrant env, `push-to-qdrant.sh`, `rag_capture.py`, n8n workflow source, eval script, and cosine verifier present. Qdrant `knowledge_v2` is reachable with `points_count=368`, dense vector `dense`, sparse vector `sparse`, and `sparse.modifier=idf`. Treat older 350/359 counts below as historical restoration checkpoints, not current counts.
+> **Live verification 2026-04-30:** VM target `192.168.18.199` currently has MCP v2, Qdrant env, `push-to-qdrant.sh`, `rag_capture.py`, n8n workflow source, eval script, and cosine verifier present. Qdrant `knowledge_v2` is reachable with `points_count=368`, dense vector `dense`, sparse vector `sparse`, and `sparse.modifier=idf`. Treat older 350/359 counts below as historical restoration checkpoints, not current counts. Current gateway production retrieval default is `knowledge_v2_keyfacts`; this document keeps `knowledge_v2` references only because the restoration target predates the keyfacts cutover.
 
 ---
 

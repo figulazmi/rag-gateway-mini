@@ -10,6 +10,8 @@ Sorted by severity. Status updated as fixes land.
 > "Before" metrics are from the original diagnosis. "After" metrics are from live tests
 > run on 2026-04-25 against VM B1 (`192.168.18.199:5200`, collection `knowledge_v2`, historical 252-point corpus). Live verification on 2026-04-30 shows 368 points; keep the 252 values below as test evidence snapshots, not current corpus size.
 > Re-run the test queries in each section to verify regressions after future changes.
+>
+> **Operational drift guard (2026-05-05):** This file is historical bottleneck evidence. Current production retrieval default is `knowledge_v2_keyfacts` and liveness checks use `/scalar/` plus `/openapi/v1.json` per `docs/testing/TEST_STRATEGY.md` and `docs/quality/RAG_EVAL_HARNESS.md`.
 
 ---
 
@@ -414,7 +416,7 @@ force webhook re-registration.
 
 ### Test Evidence (2026-04-25)
 
-**Observed output** dari `rag merge` yang menjalankan auto-push pada sesi ini:
+**Historical observed output** dari `rag merge` pada sesi 2026-04-25:
 
 ```
 Points: 251 → 252 (+1 new)

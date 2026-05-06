@@ -187,7 +187,7 @@ EOF
 rag merge --output 2026-01-01-topic.md
 ```
 
-Chunk types: `debug` | `feature` | `runbook` | `pattern` | `decision` | `reference` | `implementation-spec` (**BLOCKED** until P2.2-B reranker is deployed).
+Chunk types: `debug` | `feature` | `runbook` | `pattern` | `decision` | `reference` | `implementation-spec`. Production retrieval uses `knowledge_v2_keyfacts`; keep implementation-spec capture aligned with `docs/planning/RAG_V2_ROADMAP.md` before changing pipeline behavior.
 
 ---
 
@@ -255,8 +255,8 @@ The CLI tried localhost, LAN, and Tailscale — all failed.
 
 ```bash
 # Check which path is reachable:
-curl -s --connect-timeout 3 http://192.168.18.199:5200/health
-curl -s --connect-timeout 3 http://100.120.249.99:5200/health
+curl -s --connect-timeout 3 http://192.168.18.199:5200/scalar/
+curl -s --connect-timeout 3 http://100.120.249.99:5200/scalar/
 
 # Override manually:
 export RAG_BASE_URL=http://192.168.18.199:5200
@@ -338,10 +338,16 @@ Returns all raw Qdrant results before threshold filtering. Use to tune `ScoreThr
 }
 ```
 
-### `GET /health`
+### `GET /scalar/`
 
 ```bash
-curl http://localhost:5200/health
+curl http://localhost:5200/scalar/
+```
+
+### `GET /openapi/v1.json`
+
+```bash
+curl http://localhost:5200/openapi/v1.json
 ```
 
 ---
@@ -358,7 +364,7 @@ Update both config files together to avoid drift:
     "OllamaBaseUrl": "http://192.168.18.199:11434",
     "QdrantBaseUrl": "http://192.168.18.199:6333",
     "OllamaModel": "nomic-embed-text",
-    "QdrantCollection": "knowledge_v2",
+    "QdrantCollection": "knowledge_v2_keyfacts",
     "QdrantApiKey": "",
     "ScoreThreshold": 0.35,
     "ResultLimit": 8,
@@ -387,8 +393,11 @@ dotnet run --project src
 ```bash
 git push origin main
 ssh figulazmi@192.168.18.199 \
-  'cd /opt/homelab/ai-stack/rag-gateway-mini && git pull && cd src && docker compose up -d --build'
-curl http://192.168.18.199:5200/health
+  'cd /opt/homelab/ai-stack/rag-gateway-mini && sudo git fetch origin && sudo git reset --hard origin/main && cd src && sudo docker compose up -d --build'
+curl http://192.168.18.199:5200/scalar/
+curl http://192.168.18.199:5200/openapi/v1.json
 ```
 
-Interactive API docs (Scalar UI): `http://localhost:5200/scalar/v1`
+Interactive API docs (Scalar UI): `http://localhost:5200/scalar/`
+
+For exact production verification commands and current pass criteria, use `docs/testing/TEST_STRATEGY.md` as the canonical source.

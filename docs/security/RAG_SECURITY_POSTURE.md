@@ -207,10 +207,12 @@ tail -5 ~/.rag_audit.log
 
 ### P1-1 — Source Allowlisting in rag_capture.py
 
-**Status:** `[ ] OPEN`  
+**Status:** `[x] DONE (2026-05-05)`  
 **Effort:** ~1 hour  
-**Completed on:** —  
-**Verified by:** —
+**Completed on:** 2026-05-05  
+**Verified by:** Claude Code + local `rtk python` accepted/rejected source-path verification + `py_compile` syntax check
+
+**Evidence:** Active tool file `C:\Users\Clandesitine\scripts\rag-capture-v2\rag_capture.py` now defines `ALLOWED_SOURCES`, validates source values through `validate_source()`, exposes `--source` on `rag add`, and writes frontmatter `source` from validated input instead of a hardcoded value. Accepted-path smoke succeeded with `--source claude-code-cli`; invalid source was rejected before draft save via CLI choice enforcement. `rtk python -m py_compile` passed after the change.
 
 **Problem:** The `source` field in chunk metadata is a free-form string. An attacker or
 misconfigured script can set any value, making audit logs unreliable.
@@ -232,13 +234,12 @@ def validate_source(metadata: dict) -> None:
 
 ### P1-2 — Payload Schema Validation at Ingestion
 
-**Status:** `[~] IN PROGRESS`
+**Status:** `[x] DONE (2026-05-05)`
 **Started on:** 2026-05-02
-**Evidence:** Local n8n workflow `~/scripts/n8n-workflows/ingest-knowledge-v2.json` now validates required id/content/collection/project/topic/chunk_type/tags, allowed project/type/tag values, ASCII topic length, and content length. JSON syntax validation passed.
-**Remaining:** Import updated workflow into live n8n and smoke test malformed payload rejection plus valid payload success.  
+**Evidence:** Local n8n workflows `~/scripts/n8n-workflows/ingest-knowledge-v2.json` and `~/scripts/n8n-workflows/ingest-knowledge-v2-keyfacts.json` validate required id/content/collection/project/topic/chunk_type/tags, allowed project/type/tag values, ASCII topic length, first-tag allowlist, and content length (`100..20000`). JSON syntax validation passed for both files. Local node-level smoke via `node` + `vm.runInNewContext` confirmed: one valid payload passed, while malformed payloads for missing project, non-ASCII topic, invalid first tag, and too-short content were all rejected in `Validate & Clean`. Live webhook smoke against `http://192.168.18.199:5678/webhook/knowledge-ingest-keyfacts` then confirmed the active n8n workflow rejected a malformed payload missing `project`, accepted a valid payload, upserted the temporary point into `knowledge_v2_keyfacts`, and allowed cleanup of the test point (`qdrant_id=2510859428`) via Qdrant delete API.
 **Effort:** ~2 hours  
-**Completed on:** —  
-**Verified by:** —
+**Completed on:** 2026-05-05  
+**Verified by:** Claude Code local JSON validation + local `Validate & Clean` smoke harness + live n8n malformed rejection/valid success + Qdrant cleanup verification.
 
 **Problem:** Chunks missing required fields (project, chunk_type, topic, tags, body) are accepted
 and pushed to Qdrant, creating incomplete records that degrade retrieval and are harder to audit.
@@ -251,7 +252,7 @@ and pushed to Qdrant, creating incomplete records that degrade retrieval and are
 | `chunk_type` | string | Must be in `{debug, feature, runbook, pattern, decision, reference, implementation-spec}` |
 | `topic` | string | Non-empty, max 60 chars, ASCII only |
 | `tags` | list[str] | Min 1, max 8, first tag must be in `{dotnet, python, homelab}` |
-| `body` | string | Min 100 chars, max 2000 chars |
+| `body` | string | Min 100 chars, max 20000 chars |
 
 ---
 

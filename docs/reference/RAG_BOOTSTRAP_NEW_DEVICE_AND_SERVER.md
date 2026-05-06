@@ -1,8 +1,10 @@
 # RAG Bootstrap Runbook — New Device and New Server
 
 **Purpose:** step-by-step recovery checklist when moving to a new local device, replacing VM B1, or rebuilding the RAG stack from scratch.
-**Scope:** `rag_capture.py`, `push-to-qdrant.sh`, Qdrant `knowledge_v2`, n8n `knowledge-ingest`, Ollama, and `rag-gateway-mini`.
-**Last updated:** 2026-04-30
+**Scope:** `rag_capture.py`, `push-to-qdrant.sh`, Qdrant `knowledge_v2_keyfacts` production retrieval plus legacy `knowledge_v2` fallback comparison, n8n `knowledge-ingest`, Ollama, and `rag-gateway-mini`.
+**Last updated:** 2026-05-05
+
+> Current production posture: `knowledge_v2_keyfacts` is the gateway default collection. Legacy `knowledge_v2` is retained as fallback/comparison evidence during pipeline audits.
 
 > Use this runbook when the scripts work on the old laptop/server but fail after migration. For daily usage and architecture details, read [`RAG_MANUAL_BOOK.md`](RAG_MANUAL_BOOK.md). For VM restoration history, read [`../planning/VM105_RESTORATION_PLAN.md`](../planning/VM105_RESTORATION_PLAN.md).
 
@@ -145,7 +147,7 @@ jq --version
 
 | Service | Default LAN endpoint | Purpose |
 |---|---|---|
-| Qdrant | `http://192.168.18.199:6333` | Stores `knowledge_v2` dense and sparse vectors |
+| Qdrant | `http://192.168.18.199:6333` | Stores `knowledge_v2_keyfacts` production vectors and legacy `knowledge_v2` fallback vectors |
 | n8n | `http://192.168.18.199:5678` | Ingest workflow webhook |
 | Ollama | `http://192.168.18.199:11434` | `nomic-embed-text` embeddings |
 | rag-gateway-mini | `http://192.168.18.199:5200` | `/rag/search` and `/rag/debug` API |
@@ -171,10 +173,12 @@ Basic deployment:
 
 ```bash
 cd /opt/homelab/ai-stack/rag-gateway-mini
-git pull
+sudo git fetch origin
+sudo git reset --hard origin/main
 cd src
-docker compose up -d --build
-curl http://192.168.18.199:5200/health
+sudo docker compose up -d --build
+curl http://192.168.18.199:5200/scalar/
+curl http://192.168.18.199:5200/openapi/v1.json
 ```
 
 Secrets must stay outside git:
@@ -210,21 +214,25 @@ Expected: `key_len=64`.
 
 ### 3.5 Restore Qdrant collection
 
-The collection must be named `knowledge_v2` and support:
+The production collection must be `knowledge_v2_keyfacts`; keep legacy `knowledge_v2` available only for fallback/comparison checks when needed.
+
+Required collection capabilities:
 
 - Dense vector: `dense`, 768 dimensions, cosine distance
 - Sparse vector: BM25 style sparse vector, server-side IDF modifier if configured
 - Payload fields used by filters: `project`, `chunk_type`, `status`, `topic`, `tags`, `date`, `content`
 
-Verify collection access:
+Verify production collection access:
 
 ```bash
 source ~/.config/qdrant-knowledge.env
 curl -s -H "api-key: $QDRANT_API_KEY" \
-  http://192.168.18.199:6333/collections/knowledge_v2
+  http://192.168.18.199:6333/collections/knowledge_v2_keyfacts
 ```
 
 Expected: HTTP 200 JSON with `points_count`.
+
+If you are validating fallback parity during a pipeline audit, compare the same command against `knowledge_v2` as a secondary check only.
 
 ---
 

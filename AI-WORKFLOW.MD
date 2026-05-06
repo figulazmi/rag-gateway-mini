@@ -34,7 +34,7 @@ pada knowledge base proyek yang sudah kita isi sendiri — zero hallucination.
           └────────────┬─────────────┘
                        │
           ┌────────────▼─────────────┐
-          │   RAG Gateway Mini API   │  ← jembatan ke Qdrant (localhost:5200)
+          │   RAG Gateway Mini API   │  ← jembatan ke Qdrant (local or VM B1:5200)
           └────────────┬─────────────┘
                        │
           ┌────────────▼─────────────┐
@@ -66,10 +66,10 @@ pada knowledge base proyek yang sudah kita isi sendiri — zero hallucination.
 
 ```bash
 # Di terminal project root
-dotnet run --project src/RagGateway
+dotnet run --project src
 ```
 
-Gateway berjalan di `http://localhost:5200`. Cek di browser: `http://localhost:5200/health`
+Gateway berjalan di `http://localhost:5200`. Cek dengan `http://localhost:5200/scalar/` atau `http://localhost:5200/openapi/v1.json`. Tidak ada endpoint `/health` di repo ini.
 
 ### 2. Pastikan `jq` sudah terinstall
 
@@ -426,7 +426,7 @@ bash ~/rag-tools/push-to-qdrant.sh .claude/checkpoints/YYYY-MM-DD-*.md
 
 > **Kenapa ini penting?**
 > Knowledge yang tidak disimpan = hilang setelah sesi selesai.
-> `rag merge` sekarang auto-push — tidak perlu jalankan push-to-qdrant.sh manual lagi.
+> Ikuti output `rag merge` sebagai sumber kebenaran untuk langkah push berikutnya.
 
 ---
 
@@ -437,7 +437,7 @@ bash ~/rag-tools/push-to-qdrant.sh .claude/checkpoints/YYYY-MM-DD-*.md
 RAG Gateway belum jalan. Jalankan:
 
 ```bash
-dotnet run --project src/RagGateway
+dotnet run --project src
 ```
 
 ---
@@ -477,7 +477,7 @@ Gunakan `--debug` untuk lihat detail:
 rag "query kamu" -p petrochina-eproc --debug
 ```
 
-Kalau semua score di bawah 0.55 → knowledge base belum punya informasi ini.
+Kalau hasil utama tidak memenuhi gate not-found (`topScore < 0.50`) atau score retrieval tetap rendah, knowledge base kemungkinan belum punya informasi ini.
 Kerjakan dulu, lalu simpan ke Qdrant lewat Session End Protocol.
 
 ---

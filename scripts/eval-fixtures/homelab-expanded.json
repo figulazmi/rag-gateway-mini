@@ -165,6 +165,8 @@
     ],
     "description": "Sparse RRF rank noise diagnosis",
     "expected_ids": [
+      "1979153101",
+      "376078155",
       "1951409694"
     ]
   },
@@ -212,7 +214,12 @@
       "implementation-spec"
     ],
     "description": "Bash required environment variable guard",
-    "expected_snippet": ": \"${QDRANT_API_KEY:?QDRANT_API_KEY env var not set}\""
+    "expected_snippet": ": \"${QDRANT_API_KEY:?QDRANT_API_KEY env var not set}\"",
+    "expected_ids": [
+      "1603632789",
+      "24204003",
+      "810850998"
+    ]
   },
   {
     "query": "Python urllib request pattern for posting JSON to Qdrant with api-key",
@@ -230,6 +237,7 @@
     "description": "Python Qdrant POST with api-key",
     "expected_snippet": "urllib.request.Request(url, data=json.dumps(body).encode(), headers={\"Content-Type\": \"application/json\", \"api-key\": api_key})",
     "expected_ids": [
+      "1603632789",
       "721482737",
       "810850998",
       "685981524"

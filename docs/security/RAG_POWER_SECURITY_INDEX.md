@@ -30,8 +30,8 @@ Quick-access index for the RAG hardening + quality initiative (started 2026-04-2
 
 | # | Task | Doc | Status |
 |---|---|---|---|
-| P1-1 | Source allowlisting in rag_capture.py | [Security](RAG_SECURITY_POSTURE.md#p1-1--source-allowlisting-in-rag_capturepy) | `[ ] OPEN` |
-| P1-2 | Payload schema validation at ingestion | [Security](RAG_SECURITY_POSTURE.md#p1-2--payload-schema-validation-at-ingestion) | `[ ] OPEN` |
+| P1-1 | Source allowlisting in rag_capture.py | [Security](RAG_SECURITY_POSTURE.md#p1-1--source-allowlisting-in-rag_capturepy) | `[x] DONE (2026-05-05)` |
+| P1-2 | Payload schema validation at ingestion | [Security](RAG_SECURITY_POSTURE.md#p1-2--payload-schema-validation-at-ingestion) | `[x] DONE (2026-05-05)` |
 | P1-3 | Chunk provenance fields | [Security](RAG_SECURITY_POSTURE.md#p1-3--chunk-provenance-fields) | `[ ] OPEN` |
 | P1-4 | Knowledge Expansion defense | [Security](RAG_SECURITY_POSTURE.md#p1-4--knowledge-expansion-defense) | `[ ] OPEN` |
 | P1-5 | Embedding anomaly detector | [Security](RAG_SECURITY_POSTURE.md#p1-5--embedding-anomaly-detector) | `[ ] OPEN` |
