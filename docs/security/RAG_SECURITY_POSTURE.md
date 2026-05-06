@@ -381,27 +381,61 @@ bash ~/scripts/push-to-qdrant.sh /tmp/p15-anomaly-smoke.md
 
 ### P2-1 — Forensics Snapshot Vector
 
-**Status:** `[ ] OPEN`  
+**Status:** `[x] DONE (2026-05-06)`  
 **Effort:** ~4–6 hours  
-**Completed on:** —  
-**Verified by:** —
+**Completed on:** 2026-05-06  
+**Verified by:** Claude Code staged Qdrant migration + VM B1 live ingest smoke + tamper-check sample
 
 **Problem:** If a stored vector is tampered with post-upsert (direct Qdrant API write),
 there is currently no way to detect it.
 
-**Fix:** At ingest time, store the raw embed as an additional named vector `"snapshot"` in Qdrant.
-Never update `"snapshot"` after initial upsert. At any future point:
+**Implemented fix:**
+- Added `scripts/add-snapshot-vector-migration.py` for guarded Qdrant migration to named vectors `dense` and `snapshot` plus sparse vector `sparse`
+- Added `scripts/snapshot_tamper_check.py` to compare `dense` vs `snapshot` cosine and append `TAMPER` lines to `~/.rag_audit.log` when cosine falls below `0.99`
+- Migrated live `knowledge_v2_keyfacts` via staging collection `knowledge_v2_keyfacts_snapshot_stage`
+- Created retained backup collection `knowledge_v2_keyfacts_backup_20260506145220`
+- Live `knowledge_v2_keyfacts` now has named vectors `dense` and `snapshot` and sparse vector `sparse`
+- Patched local n8n workflow export `C:\Users\Clandesitine\scripts\n8n-workflows\ingest-knowledge-v2-keyfacts.json` so new upserts write `snapshot: embedding` alongside `dense: embedding`
+- Published the patched workflow to live n8n via `n8n import:workflow`, `n8n publish:workflow`, then restarted the `n8n` container
 
-```python
-# Tamper detection check
-stored_dense = get_vector(point_id, using="dense")
-stored_snapshot = get_vector(point_id, using="snapshot")
-cos = cosine_similarity(stored_dense, stored_snapshot)
-if cos < 0.99:
-    alert(f"TAMPER DETECTED: {point_id} cos(dense, snapshot)={cos:.4f}")
+**Verification:**
+```bash
+# Local/VM syntax checks
+python -m py_compile scripts/add-snapshot-vector-migration.py scripts/snapshot_tamper_check.py
+python3 -m py_compile ~/scripts/add-snapshot-vector-migration.py ~/scripts/snapshot_tamper_check.py
+
+# Preflight before migration
+python3 ~/scripts/add-snapshot-vector-migration.py --collection knowledge_v2_keyfacts
+# Observed before: points_count=545, has_snapshot=False
+
+# Staging migration
+python3 ~/scripts/add-snapshot-vector-migration.py --collection knowledge_v2_keyfacts --prepare-stage --force
+# Observed: copied 545 points, stage_ready=knowledge_v2_keyfacts_snapshot_stage points=545
+
+# Staging tamper sample
+python3 ~/scripts/snapshot_tamper_check.py --collection knowledge_v2_keyfacts_snapshot_stage --sample 5
+# Observed: 5/5 points OK with cos=1.000000
+
+# Production promotion
+python3 ~/scripts/add-snapshot-vector-migration.py --collection knowledge_v2_keyfacts --promote
+# Observed: promoted=knowledge_v2_keyfacts points=545 backup=knowledge_v2_keyfacts_backup_20260506145220
+
+# Live ingest smoke after n8n workflow publish
+bash ~/scripts/push-to-qdrant.sh /tmp/p21-snapshot-smoke.md
+# Observed: webhook OK (200), qdrant_id=109591335, vectors ['dense', 'snapshot'], cos=1.000000
+
+# Gateway smoke
+curl http://192.168.18.199:5200/scalar/
+# Observed: 200
+# Positive /rag/search with knowledge_expansion=true returned status=found
+# Negative homelab cross-project query returned status=not_found
+
+# Final tamper sample
+python3 ~/scripts/snapshot_tamper_check.py --collection knowledge_v2_keyfacts --sample 10
+# Observed: 10/10 points OK with cos=1.000000, exit 0
 ```
 
-**Note:** Requires Qdrant collection schema update to add `"snapshot"` named vector (768-dim cosine).
+**Cleanup note:** Temporary smoke point `109591335` was deleted with `wait=true` and verified absent by `has_id` lookup. Qdrant exact count reported `546` after cleanup; treat this as the live post-migration corpus count unless a later compaction/count audit says otherwise.
 
 ---
 
