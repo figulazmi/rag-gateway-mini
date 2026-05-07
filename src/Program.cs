@@ -26,6 +26,13 @@ builder.Services.AddHttpClient<IEmbeddingClient, OllamaEmbeddingClient>((sp, cli
     client.Timeout = TimeSpan.FromSeconds(30);
 });
 
+builder.Services.AddHttpClient<ILlmGenerationClient, OllamaGenerationClient>((sp, client) =>
+{
+    var opts = sp.GetRequiredService<IOptions<RagGatewayOptions>>().Value;
+    client.BaseAddress = new Uri(opts.OllamaBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(60);
+});
+
 // Infrastructure — Qdrant
 builder.Services.AddHttpClient<IVectorSearchClient, QdrantVectorSearchClient>((sp, client) =>
 {

@@ -441,18 +441,33 @@ python3 ~/scripts/snapshot_tamper_check.py --collection knowledge_v2_keyfacts --
 
 ### P2-2 — LLM Citation Verification
 
-**Status:** `[ ] OPEN`  
+**Status:** `[~] IN PROGRESS (2026-05-07)`  
 **Effort:** ~6–10 hours  
+**Started on:** 2026-05-07  
 **Completed on:** —  
 **Verified by:** —
 
 **Problem:** llama3.2:3b (3B params) has low adversarial resistance and will follow retrieved context
 even if poisoned. No way to know post-generation which claims are grounded vs hallucinated.
 
-**Fix:** After generation, run a second LLM pass that extracts claims and verifies each
-against retrieved chunk IDs. Uncited claims get `[UNVERIFIED]` tag.
+**Fix:** New `/rag/answer` endpoint: retrieve chunks → generate grounded answer via Ollama `/api/generate`
+with inline citation prompt (`[1]`, `[2]`...) → programmatic `CitationVerifier` tags uncited sentences
+`[UNVERIFIED]`. Opt-in: `"citation_verify": true`. No second LLM pass — deterministic regex check.
 
-**Tradeoff:** +500ms latency per query. Implement as opt-in: `"citation_verify": true`.
+**Implementation approach (2026-05-07 local):**
+- Added `ILlmGenerationClient` + `OllamaGenerationClient` (`POST /api/generate`, stream=false, 60 s timeout)
+- Added `CitationVerifier` static class: splits answer into sentences, checks `[N]` refs against chunk count, tags uncited sentences
+- Added `RagAnswerRequest` / `RagAnswerResponse` DTOs; `RagAnswerSource` includes `doc_id` + `score`
+- Extended `IRagSearchService` with `AnswerAsync`; `RagSearchService.AnswerAsync` delegates to search then generation
+- Added `POST /rag/answer` action in `RagController`
+- Added `GenerationModel` to `RagGatewayOptions` (default `llama3.2:3b`) and both appsettings files
+- Registered `OllamaGenerationClient` as `ILlmGenerationClient` typed HttpClient in `Program.cs`
+
+**Tradeoff:** +1–5 s latency per `/rag/answer` call (Ollama generation warmth dependent).
+`citation_verify: false` (default) returns answer without citation markup. Existing `/rag/search` and
+`/rag/debug` endpoints are completely unchanged.
+
+**Pending:** Local build verification + VM B1 smoke.
 
 ---
 

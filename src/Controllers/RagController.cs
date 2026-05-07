@@ -36,6 +36,23 @@ public sealed class RagController : ControllerBase
     }
 
     /// <summary>
+    /// Generate a grounded answer from retrieved RAG knowledge.
+    /// </summary>
+    [HttpPost("answer")]
+    [ProducesResponseType(typeof(RagAnswerResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Answer(
+        [FromBody] RagAnswerRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(request.Query))
+            return BadRequest(new { error = "Query is required." });
+
+        var result = await _service.AnswerAsync(request, cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Debug endpoint: returns ALL raw Qdrant results before threshold filtering.
     /// Use to diagnose score values and confirm connectivity.
     /// </summary>

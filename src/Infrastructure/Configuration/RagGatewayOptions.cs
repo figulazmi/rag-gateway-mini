@@ -21,4 +21,5 @@ public sealed class RagGatewayOptions
     public float SparseScoreThreshold { get; set; } = 0.01f;
     public string FusionMethod { get; set; } = "rrf";
     public string SparseInferenceModel { get; set; } = "Qdrant/bm25";
+    public string GenerationModel { get; set; } = "llama3.2:3b";
 }

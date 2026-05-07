@@ -1,3 +1,4 @@
+using System.Text;
 using Microsoft.Extensions.Options;
 using RagGateway.Application.DTOs;
 using RagGateway.Application.Interfaces;
@@ -11,17 +12,20 @@ public sealed class RagSearchService : IRagSearchService
 {
     private readonly IEmbeddingClient _embedding;
     private readonly IVectorSearchClient _vector;
+    private readonly ILlmGenerationClient _generation;
     private readonly ILogger<RagSearchService> _logger;
     private readonly RagGatewayOptions _options;
 
     public RagSearchService(
         IEmbeddingClient embedding,
         IVectorSearchClient vector,
+        ILlmGenerationClient generation,
         ILogger<RagSearchService> logger,
         IOptions<RagGatewayOptions> options)
     {
         _embedding = embedding;
         _vector = vector;
+        _generation = generation;
         _logger = logger;
         _options = options.Value;
     }
@@ -84,6 +88,53 @@ public sealed class RagSearchService : IRagSearchService
         };
     }
 
+    public async Task<RagAnswerResponse> AnswerAsync(RagAnswerRequest request, CancellationToken cancellationToken = default)
+    {
+        var searchRequest = new RagSearchRequest
+        {
+            Query = request.Query,
+            Project = request.Project,
+            ChunkType = request.ChunkType,
+            FeatureSlug = request.FeatureSlug,
+            KnowledgeExpansion = request.KnowledgeExpansion
+        };
+
+        var search = await SearchAsync(searchRequest, cancellationToken);
+        if (search.Status != "found" || search.Results is not { Count: > 0 })
+        {
+            return new RagAnswerResponse
+            {
+                Status = "not_found",
+                Message = "NOT FOUND IN RAG"
+            };
+        }
+
+        var prompt = BuildAnswerPrompt(request.Query, search.Results);
+        var answer = await _generation.GenerateAsync(prompt, cancellationToken);
+        var unverifiedSentences = new List<string>();
+
+        if (request.CitationVerify)
+        {
+            var verification = CitationVerifier.Verify(answer, search.Results.Count);
+            answer = verification.TaggedAnswer;
+            unverifiedSentences = verification.UnverifiedSentences;
+        }
+
+        _logger.LogInformation(
+            "RAG ANSWER | query={Query} | sources={Sources} | citation_verify={CitationVerify} | unverified={Unverified}",
+            request.Query, search.Results.Count, request.CitationVerify, unverifiedSentences.Count);
+
+        return new RagAnswerResponse
+        {
+            Status = "found",
+            Query = request.Query,
+            NormalizedQuery = search.NormalizedQuery,
+            Answer = answer,
+            Sources = BuildSources(search.Results),
+            UnverifiedSentences = request.CitationVerify ? unverifiedSentences : null
+        };
+    }
+
     private async Task<RagSearchResponse> SearchSingleAsync(string normalized, RagSearchRequest request, CancellationToken cancellationToken)
     {
         var queryEmbedContent = BuildEmbedContent(normalized, request.Project);
@@ -128,6 +179,33 @@ public sealed class RagSearchService : IRagSearchService
         => project is { Length: > 0 } p
             ? $"This chunk is from project {p}. Content: {text}"
             : text;
+
+    private static string BuildAnswerPrompt(string query, List<RagResultItem> results)
+    {
+        var prompt = new StringBuilder();
+        prompt.AppendLine("You are a helpful assistant. Answer the question below using ONLY the provided knowledge chunks.");
+        prompt.AppendLine("For each factual claim you make, cite its source inline as [1], [2], etc. matching the chunk numbers below.");
+        prompt.AppendLine("Do NOT invent information not present in the chunks.");
+        prompt.AppendLine();
+        prompt.AppendLine("Knowledge chunks:");
+
+        for (var i = 0; i < results.Count; i++)
+        {
+            prompt.Append('[').Append(i + 1).Append("] ").AppendLine(results[i].Content);
+        }
+
+        prompt.AppendLine();
+        prompt.Append("Question: ").AppendLine(query);
+        prompt.Append("Answer:");
+        return prompt.ToString();
+    }
+
+    private static List<RagAnswerSource> BuildSources(List<RagResultItem> results)
+        => results.Select(r => new RagAnswerSource
+        {
+            DocId = r.Metadata.TryGetValue("doc_id", out var docId) ? docId?.ToString() ?? string.Empty : string.Empty,
+            Score = r.Score
+        }).ToList();
 
     private RagSearchResponse BuildResponse(string originalQuery, string normalized, List<RagResultItem> candidates)
     {
