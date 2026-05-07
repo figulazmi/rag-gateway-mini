@@ -23,7 +23,6 @@ Risk level = impact x likelihood.
 | ID | Risk | Impact | Likelihood | Level | Mitigation | Owner | Review date | Related task |
 |---|---|---:|---:|---:|---|---|---|---|
 | RISK-1 | Documentation status drift causes wrong task selection | 2 | 1 | 2 | Keep status in canonical trackers only, use `TASKS.md` as index, and update TEST-1 verification commands before marking docs-driven work done | Figur Ulul Azmi | 2026-06-02 | TEST-1 |
-| RISK-2 | Secrets accidentally copied into reusable docs or examples | 3 | 1 | 3 | Store only secret locations and placeholders in docs | Figur Ulul Azmi | 2026-06-02 | None |
 
 ---
 
@@ -39,8 +38,8 @@ Risk level = impact x likelihood.
 
 | ID | Resolution date | Evidence | Notes |
 |---|---|---|---|
-| None | None | None | None |
+| RISK-2 | 2026-05-07 | `git grep` audit across tracked `docs`, `scripts`, `src`, `CLAUDE.md`, and `README.md` found only secret-location guidance and placeholders such as `FILL_WITH_REAL_KEY`; no real secret literal was present in committed docs/examples/templates | Keep using placeholder-only templates and document locations, not values |
 
 ---
 
-*Last updated: 2026-05-05 · Owner: Figur Ulul Azmi*
+*Last updated: 2026-05-07 · Owner: Figur Ulul Azmi*
