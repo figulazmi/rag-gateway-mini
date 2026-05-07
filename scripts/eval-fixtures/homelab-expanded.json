@@ -52,7 +52,8 @@
       "rag-gateway",
       "smoke"
     ],
-    "description": "Rag gateway liveness without health endpoint"
+    "description": "Rag gateway liveness without health endpoint",
+    "expected_snippet": "/scalar/"
   },
   {
     "query": "Why is the rag-gateway production collection knowledge_v2_keyfacts rollback-safe?",
@@ -67,6 +68,7 @@
       "cutover"
     ],
     "description": "Keyfacts rollback-safe retrieval cutover",
+    "expected_snippet": "knowledge_v2_keyfacts",
     "expected_ids": [
       "607517453",
       "1512580494"
@@ -85,6 +87,7 @@
       "ingest"
     ],
     "description": "Full ingest default deferred decision",
+    "expected_snippet": "push-to-qdrant.sh",
     "expected_ids": [
       "423314733",
       "1998825549",

@@ -44,10 +44,10 @@ Baseline defined 2026-04-29. Re-run after any significant pipeline change.
 | **NDCG@10** | Graded relevance, top-10 | ≥ 0.75 | 0.9648 keyfacts NDCG@5 proxy final production validation (2026-05-02) | `[x] MET` |
 | **Faithfulness** | LLM output consistent with retrieved chunks | ≥ 0.85 | — | `[?] UNMEASURED` |
 | **Answer Relevance** | Output on-topic for the query | ≥ 0.80 | — | `[?] UNMEASURED` |
-| **Context Precision** | Fraction of retrieved chunks actually used | ≥ 0.60 | 0.3444 keyfacts hybrid 3-query smoke (2026-05-07) | `[ ] NOT MET` |
+| **Context Precision** | Fraction of retrieved chunks actually used | ≥ 0.60 | 0.5733 keyfacts hybrid 12-query smoke (2026-05-07) | `[ ] NOT MET` |
 | **Latency p50** | End-to-end query time, VM B1 CPU | ≤ 1.5s | — | `[?] UNMEASURED` |
 | **Latency p95** | End-to-end query time, VM B1 CPU | ≤ 4.0s | — | `[?] UNMEASURED` |
-| **Hallucination Rate** | Claims with zero chunk grounding | ≤ 5% | 100.0% on 1/1 completed end-to-end smoke; 1 case skipped due generation timeout (2026-05-07) | `[ ] NOT MET` |
+| **Hallucination Rate** | Claims with zero chunk grounding | ≤ 5% | 100.0% on 4/4 completed end-to-end smoke; 3 cases skipped due generation timeout (2026-05-07) | `[ ] NOT MET` |
 | **Cross-project contamination** | homelab result in project-alpha query (or vice versa) | 0% | 0% (no contamination observed in latest smoke/eval checks) | `[x] MET` |
 
 **How to update Current column:**  
@@ -75,7 +75,7 @@ Run `eval-retrieval-quality.py` against VM B1, copy scores here, update Status.
 
 **Context precision smoke (2026-05-07):** `scripts/eval-retrieval-quality.py` now reports `context_precision@5` per strategy and in aggregate JSON. Smoke report `.claude/reports/quality-context-precision-smoke-2026-05-07.json` on 3 homelab cases against `knowledge_v2_keyfacts` measured hybrid `context_precision@5` **0.3444**, below the 0.60 target, while Hit@1/3/5 and MRR stayed at 1.0000. This converts Context Precision from unmeasured to an active Quality gap.
 
-**Hallucination smoke (2026-05-07):** `scripts/eval-retrieval-quality.py` now supports `--embed-timeout` and `--generate-timeout` for slow VM B1 Ollama runs, caps end-to-end generation to 128 tokens, and records skipped generation cases in JSON. Smoke report `.claude/reports/quality-hallucination-smoke-2026-05-07.json` used `llama3.2:3b` with 8 homelab cases. One eligible snippet case completed and hallucinated (`1/1 = 100.0%`); one eligible case timed out and is recorded under `skipped_cases`. Treat this as a small-sample red flag, not a stable benchmark.
+**Hallucination coverage smoke (2026-05-07):** `scripts/eval-retrieval-quality.py` now supports `--embed-timeout` and `--generate-timeout` for slow VM B1 Ollama runs, caps end-to-end generation to 128 tokens, and records skipped generation cases in JSON. Added `expected_snippet` coverage for liveness, rollback-safe keyfacts, and full ingest default fixtures. Report `.claude/reports/quality-hallucination-coverage-2026-05-07.json` used `llama3.2:3b` with 12 homelab cases: 7 eligible end-to-end cases, 4 completed, 3 skipped due generation timeout, and 4/4 completed cases hallucinated (`100.0%`). Hybrid retrieval stayed strong (`Hit@1=1.0000`, `MRR=1.0000`, `NDCG@5=0.9616`) while `context_precision@5=0.5733` remained below the 0.60 target.
 
 **Previous baseline (2026-04-30):** `python scripts/eval-retrieval-quality.py --project homelab --limit 5 --qdrant-url http://192.168.18.199:6333 --ollama-url http://192.168.18.199:11434 --output .claude/reports/eval-baseline-2026-04-30.json` completed successfully on 18 queries. Hybrid summary: Hit@1 0.7778, Hit@3 0.8333, Hit@5 0.8889, MRR 0.8167, NDCG@5 0.8658, avg latency 1067.5ms. Regression analysis identified sparse-noise on 3 queries; next improvement should test sparse text restricted to topic + Key Facts or query-type-aware sparse disabling.
 
