@@ -473,14 +473,36 @@ with inline citation prompt (`[1]`, `[2]`...) → programmatic `CitationVerifier
 
 ### P2-3 — Existing Chunk Provenance Backfill
 
-**Status:** `[ ] OPEN`  
+**Status:** `[x] DONE (2026-05-07)`  
 **Effort:** ~6–12 hours  
-**Completed on:** —  
-**Verified by:** —
+**Started on:** 2026-05-07  
+**Completed on:** 2026-05-07  
+**Verified by:** Claude Code local syntax check + live VM B1 Qdrant dry-run/apply/post-verify + spot-check read-back with `api-key` header.
 
-**Problem:** ~252 existing points in `knowledge_v2` lack provenance fields.
+**Problem:** Legacy points in the active Qdrant collection lacked provenance fields, so historical chunks could not be traced to a backfill source or method during incident response.
 
-**Fix:** Scroll all points, add `{"ingested_by": "backfill-2026-04", "push_method": "backfill-script"}` to each via Qdrant `set_payload` API. Original vectors unchanged.
+**Implemented fix:**
+- Added `scripts/backfill-provenance.py` using the existing stdlib Qdrant script pattern (`urllib`, `api-key` header, `~/.config/qdrant-knowledge.env` fallback)
+- Script supports `--dry-run` preflight and `--apply` write mode
+- Uses `POST /collections/{collection}/points/payload?wait=true` with `filter.must[].is_empty.key` for idempotent field-level backfill
+- Backfilled only missing fields: `ingested_by`, `push_method`, `backfilled_at`, `backfill_id`
+- Preserved vectors and existing payload keys; did not invent unrecoverable historical values such as original `payload_sha256` or `push_host`
+- Supports `--collection` override; live target was `knowledge_v2_keyfacts`
+
+**Live verification (VM B1 Qdrant, 2026-05-07):**
+```bash
+rtk python -m py_compile scripts/backfill-provenance.py
+rtk python scripts/backfill-provenance.py --qdrant-url http://192.168.18.199:6333 --collection knowledge_v2_keyfacts --dry-run
+# Observed: total_points=560; ingested_by missing=419; push_method missing=419; backfill_id missing=560; backfilled_at missing=560
+
+rtk python scripts/backfill-provenance.py --qdrant-url http://192.168.18.199:6333 --collection knowledge_v2_keyfacts --apply
+# Observed: all four fields applied; post-apply result=all_provenance_fields_present
+
+rtk python scripts/backfill-provenance.py --qdrant-url http://192.168.18.199:6333 --collection knowledge_v2_keyfacts --dry-run
+# Observed: total_points=560; missing=0 for ingested_by, push_method, backfill_id, backfilled_at
+```
+
+**Spot-check evidence:** point `3843143` now has `ingested_by=backfill-p2-3`, `push_method=provenance-backfill-script`, `backfill_id=p2-3-existing-chunk-provenance-2026-05-07`, and `backfilled_at=2026-05-07T08:55:16Z`.
 
 ---
 
