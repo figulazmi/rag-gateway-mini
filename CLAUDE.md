@@ -248,3 +248,57 @@ bash ~/scripts/push-to-qdrant.sh .claude/summaries/YYYY-MM-DD-[slug]-promoted.md
 1. Capture any solved-but-unsaved problems via `rag add`
 2. Run `rag merge --output YYYY-MM-DD-[slug].md`
 3. Relay the push command from rag CLI stdout to user (don't duplicate)
+
+
+---
+
+## RAG Capture Canonical Tooling                                                                                                                                            
+   
+  For all RAG knowledge capture, checkpoint, resume, promote, merge, and push workflows, use the canonical local implementation:                                             
+                                                               
+  `C:/Users/Clandesitine/scripts/rag-capture-v2/rag_capture.py`
+
+  The `rag` command is acceptable only as a CLI wrapper if it resolves to the same implementation. Prefer explicit `python
+  "C:/Users/Clandesitine/scripts/rag-capture-v2/rag_capture.py" ...` when there is any ambiguity.
+
+  Do not treat `rag-knowledge-capture-cli` as the storage engine. It is only a Claude Code skill/instruction wrapper that describes the workflow. The actual execution must
+  be done through `rag_capture.py` or the `rag` CLI.
+
+  ### Required flow
+
+  For capture:
+  1. Create chunk content internally.
+  2. Run:
+     ```bash
+     rtk python "C:/Users/Clandesitine/scripts/rag-capture-v2/rag_capture.py" add        -p PROJECT        -t TYPE        --topic "TOPIC"        --tags "tag1,tag2,tag3"        --environment homelab        --status implemented        --content "$CONTENT"
+  3. Run:
+  rtk python "C:/Users/Clandesitine/scripts/rag-capture-v2/rag_capture.py" merge     -p PROJECT     --output YYYY-MM-DD-topic.md
+
+  For resume:
+  rtk python "C:/Users/Clandesitine/scripts/rag-capture-v2/rag_capture.py" resume
+
+  For checkpoint:
+  rtk python "C:/Users/Clandesitine/scripts/rag-capture-v2/rag_capture.py" checkpoint ...
+
+  For promote:
+  rtk python "C:/Users/Clandesitine/scripts/rag-capture-v2/rag_capture.py" promote ...
+
+  Rules
+
+  - Do not invoke rag-knowledge-capture-cli unless the user explicitly asks to inspect or update the skill instructions.
+  - Do not use the Write tool to create .claude/summaries/*.md; rag_capture.py merge creates summary files.
+  - Do not print chunk bodies to chat unless the user explicitly asks to review the content.
+  - Use English only inside chunks for embedding quality.
+  - Use one chunk per distinct problem-solution pair.
+  - Use --project homelab for VM B1, Qdrant, Ollama, MCP, n8n, Docker, and infrastructure knowledge.
+  - Use --project petrochina-eproc only for PetroChina/Eproc/.NET/Blazor/CQRS knowledge.
+  - Always use rtk for shell commands.
+
+  Versi super pendek kalau mau dimasukkan ke memory:
+
+  ```markdown
+  Always use `C:/Users/Clandesitine/scripts/rag-capture-v2/rag_capture.py` or its `rag` CLI wrapper for RAG capture/resume/checkpoint/merge/promote. Do not invoke
+  `rag-knowledge-capture-cli` as the capture engine; it is only an instruction wrapper. Prefer explicit `rtk python
+  "C:/Users/Clandesitine/scripts/rag-capture-v2/rag_capture.py" ...` when ambiguity exists.
+  ```
+

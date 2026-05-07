@@ -21,7 +21,9 @@
       "mcp__qdrant-knowledge__search_knowledge",
       "mcp__ide__getDiagnostics",
       "Bash(~/scripts/rag-capture-v2/rag_capture.py push-pending *)",
-      "Bash(CONTEXT.md)"
+      "Bash(CONTEXT.md)",
+      "Bash(''\\\\''set -e *)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ],
     "deny": [
       "Bash(git *)",

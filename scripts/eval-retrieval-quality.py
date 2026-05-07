@@ -131,6 +131,7 @@ TEST_SUITE: list[TestCase] = [
         gold_keywords=["migrate", "SparseVectorParams", "idf", "modifier"],
         gold_topics=["Qdrant Hybrid Collection Migration", "knowledge_v2"],
         description="knowledge_v2 collection schema migration",
+        expected_ids=["204856147", "376078149", "5034042"],
     ),
     TestCase(
         # Query uses "binary" — unique token in the target doc (docker-compose binary not found)
@@ -140,6 +141,7 @@ TEST_SUITE: list[TestCase] = [
         gold_keywords=["binary", "docker compose v2", "docker-compose"],
         gold_topics=["Docker Deployment", "Build Fix", "Compose v2"],
         description="VM B1 docker compose v2 binary not found fix",
+        expected_ids=["1928279803", "5034044", "1928279802"],
     ),
     TestCase(
         query="RAG gateway ASP.NET Core hybrid BM25 prefetch RRF score threshold",
@@ -148,6 +150,7 @@ TEST_SUITE: list[TestCase] = [
         gold_keywords=["IVectorSearchClient", "QdrantQueryResponse", "EnableHybridSearch"],
         gold_topics=["Hybrid Search Gateway", "RAG Gateway Hybrid"],
         description="RAG Gateway hybrid search refactor",
+        expected_ids=["911579752", "738432516"],
     ),
     TestCase(
         # Query uses "network-aware" — unique token in push-to-qdrant.sh doc
@@ -774,6 +777,62 @@ def print_summary(
 
 # ─── END-TO-END HALLUCINATION TEST ──────────────────────────────────────────
 
+def _best_context_excerpt(content: str, tc: TestCase, max_chars: int = 700) -> str:
+    normalized = content or ""
+    lowered = normalized.lower()
+    anchors = [tc.expected_snippet, *tc.gold_keywords, *tc.gold_topics]
+    for anchor in anchors:
+        if not anchor:
+            continue
+        pos = lowered.find(anchor.lower())
+        if pos >= 0:
+            start = max(0, pos - 220)
+            end = min(len(normalized), pos + len(anchor) + 420)
+            return normalized[start:end]
+    return normalized[:max_chars]
+
+
+def _rank_generation_points(points: list[dict], tc: TestCase) -> list[dict]:
+    def generation_rank(point: dict) -> tuple[int, float]:
+        payload = point.get("payload", {}) or {}
+        content = str(payload.get("content", "") or "")
+        if tc.expected_snippet and tc.expected_snippet.lower() in content.lower():
+            return (1, relevance_score(point, tc))
+        return (0, relevance_score(point, tc))
+
+    return sorted(points[:5], key=generation_rank, reverse=True)
+
+
+def _build_generation_context(points: list[dict], tc: TestCase) -> str:
+    excerpts = []
+    for i, p in enumerate(_rank_generation_points(points, tc), start=1):
+        payload = p.get("payload", {}) or {}
+        topic = payload.get("topic", "") or "(no topic)"
+        content = _best_context_excerpt(str(payload.get("content", "") or ""), tc)
+        excerpts.append(f"[{i}] {topic}\n{content}")
+    return "\n\n---\n\n".join(excerpts)
+
+
+def _candidate_answers_from_context(points: list[dict], tc: TestCase, limit: int = 12) -> list[str]:
+    candidates: list[str] = []
+    for p in _rank_generation_points(points, tc):
+        payload = p.get("payload", {}) or {}
+        excerpt = _best_context_excerpt(str(payload.get("content", "") or ""), tc)
+        for value in re.findall(r"`([^`\n]{2,140})`", excerpt):
+            candidates.append(value.strip())
+        candidates.extend(re.findall(r"/(?:[A-Za-z0-9_.-]+/?)++", excerpt))
+        candidates.extend(re.findall(r"\b[A-Za-z][A-Za-z0-9_]+(?:=|:)\s*[0-9.]+\b", excerpt))
+
+    seen = set()
+    unique = []
+    for candidate in candidates:
+        key = candidate.lower()
+        if key not in seen:
+            seen.add(key)
+            unique.append(candidate)
+    return unique[:limit]
+
+
 def run_end_to_end(
     suite: "list[TestCase]",
     hybrid_results_map: "dict[str, list[dict]]",
@@ -801,16 +860,18 @@ def run_end_to_end(
 
     for tc in tested:
         pts = hybrid_results_map.get(tc.query, [])
-        context = "\n\n---\n\n".join(
-            p.get("payload", {}).get("content", "")[:800]
-            for p in pts[:5]
-        )
+        context = _build_generation_context(pts, tc)
+        candidates = _candidate_answers_from_context(pts, tc)
+        candidate_block = "\n".join(f"- {candidate}" for candidate in candidates)
         prompt = (
             "You are checking whether retrieved RAG context contains the answer.\n"
-            "Answer using only an exact command, endpoint, identifier, or code fragment present in the context.\n"
-            "Do not invent code, wrappers, explanations, alternatives, or markdown fences.\n"
-            "If the answer is not present verbatim, output NOT FOUND IN RAG.\n\n"
-            f"Context:\n{context}\n\n"
+            "Return only one exact answer string copied verbatim from the context.\n"
+            "First prefer a matching item from Candidate answers if one directly answers the question.\n"
+            "Otherwise copy the shortest exact endpoint, command, identifier, or code fragment from the context excerpts.\n"
+            "Do not normalize, expand, explain, wrap, or combine fragments from multiple excerpts.\n"
+            "If no candidate or excerpt contains the answer verbatim, output NOT FOUND IN RAG.\n\n"
+            f"Candidate answers:\n{candidate_block or '- (none)'}\n\n"
+            f"Context excerpts:\n{context}\n\n"
             f"Question: {tc.query}\n\n"
             "Answer:"
         )

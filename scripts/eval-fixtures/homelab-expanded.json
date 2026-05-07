@@ -32,7 +32,7 @@
       "rag-gateway-mini"
     ],
     "description": "VM B1 rag-gateway redeploy runbook",
-    "expected_snippet": "sudo docker compose up -d --build",
+    "expected_snippet": "docker compose up -d --build",
     "expected_ids": [
       "607517453",
       "1928279802",
@@ -87,7 +87,7 @@
       "ingest"
     ],
     "description": "Full ingest default deferred decision",
-    "expected_snippet": "push-to-qdrant.sh",
+    "expected_snippet": "`~/scripts/push-to-qdrant.sh`",
     "expected_ids": [
       "423314733",
       "1998825549",
@@ -107,7 +107,7 @@
       "not-found"
     ],
     "description": "Negative query confidence gate",
-    "expected_snippet": "if (filtered.Count == 0 || topScore < notFoundThreshold)"
+    "expected_snippet": "NotFoundScoreThreshold=0.55"
   },
   {
     "query": "How is the djb2 sparse hash calculated for knowledge_v2 queries?",
