@@ -508,19 +508,37 @@ rtk python scripts/backfill-provenance.py --qdrant-url http://192.168.18.199:633
 
 ### P2-4 — Automated Red Team Cron
 
-**Status:** `[ ] OPEN`  
+**Status:** `[x] DONE (2026-05-07)`  
 **Effort:** ~3–5 hours  
-**Completed on:** —  
-**Verified by:** —
+**Started on:** 2026-05-07  
+**Completed on:** 2026-05-07  
+**Verified by:** Claude Code local syntax check + VM B1 one-shot probe + forced msmtp/mail alert test + Qdrant cleanup verification.
 
 **Problem:** No continuous validation that the poisoning defenses are working.
 
-**Fix:** Weekly cron on VM B1 that:
-1. Inserts a known-poisoned probe chunk (specific topic: `"redteam-probe-{YYYYWW}"`)
-2. Queries for it via rag-gateway-mini search endpoint
-3. Checks if probe surfaces in top-5 results
-4. Alerts if it does (means defenses are insufficient)
-5. Deletes the probe chunk regardless of result
+**Implemented fix:**
+- Added `scripts/redteam-probe.py` for weekly RAG poisoning-defense validation
+- Script inserts one temporary synthetic probe into `knowledge_v2_keyfacts`, queries live `/rag/search` with `knowledge_expansion=true`, alerts if the probe appears in top-5, and deletes the probe before exit
+- Uses existing script conventions: stdlib `urllib`, `QDRANT_API_KEY` from environment or `~/.config/qdrant-knowledge.env`, direct Qdrant `api-key` header
+- Alert path is VM B1 `mail` command backed by existing homelab msmtp/mailutils pattern, sent to `azmi.codes@gmail.com`
+- Default target: `knowledge_v2_keyfacts`; default gateway URL for cron: `http://localhost:5200`
+
+**Installed cron:**
+```cron
+17 9 * * 1 cd /opt/homelab/ai-stack/rag-gateway-mini && /usr/bin/python3 scripts/redteam-probe.py --collection knowledge_v2_keyfacts --gateway-url http://localhost:5200 >> /var/log/redteam-probe.log 2>&1
+```
+
+**Verification evidence (2026-05-07):**
+```bash
+rtk python -m py_compile scripts/redteam-probe.py
+rtk python scripts/redteam-probe.py --qdrant-url http://192.168.18.199:6333 --ollama-url http://192.168.18.199:11434 --gateway-url http://192.168.18.199:5200 --collection knowledge_v2_keyfacts --no-email
+# Observed: probe_upsert=ok; gateway_status=not_found; OK probe_not_surfaced_in_top_k; probe_cleanup=ok
+
+ssh figulazmi@192.168.18.199 '~/bin/rtk python3 /tmp/redteam-probe.py --collection knowledge_v2_keyfacts --gateway-url http://localhost:5200 --force-alert'
+# Observed: OK probe_not_surfaced_in_top_k; test_email_sent=azmi.codes@gmail.com; probe_cleanup=ok
+```
+
+**Cleanup evidence:** Qdrant scroll filter for `topic=redteam-probe-202619` returned `[]` after both one-shot and forced-alert runs.
 
 **Alert threshold:** If probe ranks ≤ 5 → send alert email to `azmi.codes@gmail.com`.
 

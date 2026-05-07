@@ -247,6 +247,56 @@ Folder ini di-gitignore — tidak akan ter-commit ke repo.
 
 ---
 
+## Script 3: redteam-probe.py
+
+Weekly security validation probe for `knowledge_v2_keyfacts`. The script inserts one temporary synthetic point, queries the live rag-gateway `/rag/search`, alerts by email if the probe appears in top-5, then deletes the probe before exit.
+
+### Usage
+
+```bash
+# Run on VM B1 or from a machine that can reach Qdrant + rag-gateway
+python3 scripts/redteam-probe.py --collection knowledge_v2_keyfacts --gateway-url http://localhost:5200
+
+# Test email path without requiring a real surfacing event
+python3 scripts/redteam-probe.py --collection knowledge_v2_keyfacts --gateway-url http://localhost:5200 --force-alert
+
+# Disable email and use stdout/exit code only
+python3 scripts/redteam-probe.py --collection knowledge_v2_keyfacts --gateway-url http://localhost:5200 --no-email
+```
+
+### Prerequisites
+
+- `QDRANT_API_KEY` available in env or `~/.config/qdrant-knowledge.env`
+- Ollama reachable at `http://localhost:11434` for `nomic-embed-text`
+- rag-gateway reachable at `http://localhost:5200`
+- For email alerts: `mail` command must work on VM B1 via the existing msmtp/mailutils setup
+
+### Exit codes
+
+| Code | Meaning |
+| ---- | ------- |
+| `0` | Probe did not surface in top-5 |
+| `1` | Probe surfaced in top-5 and alert path executed |
+| `2` | Probe run failed (Qdrant/Ollama/gateway/mail/cleanup error) |
+
+### Weekly cron (VM B1)
+
+```cron
+17 9 * * 1 cd /opt/homelab/ai-stack/rag-gateway-mini && /usr/bin/python3 scripts/redteam-probe.py --collection knowledge_v2_keyfacts --gateway-url http://localhost:5200 >> /var/log/redteam-probe.log 2>&1
+```
+
+### Verification checklist
+
+```bash
+python3 -m py_compile scripts/redteam-probe.py
+python3 scripts/redteam-probe.py --collection knowledge_v2_keyfacts --gateway-url http://localhost:5200 --no-email
+python3 scripts/redteam-probe.py --collection knowledge_v2_keyfacts --gateway-url http://localhost:5200 --force-alert
+```
+
+After each run, confirm no leftover point remains by filtering Qdrant on topic `redteam-probe-{YYYYWW}`.
+
+---
+
 ## Network Detection Logic
 
 Kedua script otomatis mendeteksi jaringan dengan prioritas:
