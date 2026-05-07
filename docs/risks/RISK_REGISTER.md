@@ -22,7 +22,7 @@ Risk level = impact x likelihood.
 
 | ID | Risk | Impact | Likelihood | Level | Mitigation | Owner | Review date | Related task |
 |---|---|---:|---:|---:|---|---|---|---|
-| RISK-1 | Documentation status drift causes wrong task selection | 2 | 1 | 2 | Keep status in canonical trackers only, use `TASKS.md` as index, and update TEST-1 verification commands before marking docs-driven work done | Figur Ulul Azmi | 2026-06-02 | TEST-1 |
+| RISK-1 | Documentation status drift causes wrong task selection | 2 | 1 | 2 | Keep status in canonical trackers only, use `TASKS.md` as index, and require the reusable `Docs-driven DONE gate` checklist in `testing/TEST_STRATEGY.md` before marking docs-driven work done | Figur Ulul Azmi | 2026-06-02 | TEST-2 |
 
 ---
 

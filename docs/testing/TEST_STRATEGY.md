@@ -128,13 +128,26 @@ Pass criteria: no literal Qdrant API key, bearer token, GitHub token, or private
 
 ### Docs-driven DONE gate
 
-Before marking any docs-owned task DONE:
+Use this checklist before marking any docs-owned task DONE. It is the mitigation checklist for [`RISK-1`](../risks/RISK_REGISTER.md).
 
-1. Update the owning canonical tracker row with evidence.
-2. Search for stale references to the task ID in indexes and related docs.
-3. Update `docs/TASKS.md` only as an index, not a second source of detailed status.
-4. Run the documentation-only diff check and the relevant command from this strategy.
-5. Leave the task `[~] IN PROGRESS` or `[!] BLOCKED` if any required evidence could not run.
+| Step | Check | Pass criteria |
+|---:|---|---|
+| 1 | Identify the owning canonical tracker | The task status is owned by exactly one document with a `## Canonical Task Tracker` section |
+| 2 | Update the canonical row first | Status, evidence, and next action are updated in the owning tracker before indexes are changed |
+| 3 | Search for stale task references | Search the task ID across `docs/` and update index rows or cross-references that still point to old status |
+| 4 | Keep `docs/TASKS.md` as an index | `TASKS.md` links to the owner and summarizes focus only; it does not duplicate detailed evidence |
+| 5 | Run relevant verification | Run the documentation-only diff check plus any command in this strategy that matches the changed area |
+| 6 | Choose the correct status | Use `[x] DONE` only when evidence exists; otherwise keep `[~] IN PROGRESS`, `[!] BLOCKED`, or `[ ] DEFERRED` |
+| 7 | Leave an audit trail | Evidence is concise, repeatable, and stored in the owning tracker row or section |
+
+Recommended stale-reference commands:
+
+```bash
+rtk git grep -n "TASK-ID" -- docs
+rtk git diff -- docs
+```
+
+Replace `TASK-ID` with the actual task ID, for example `TEST-2`, `RISK-1`, or `P2-2`.
 
 ---
 
@@ -143,6 +156,7 @@ Before marking any docs-owned task DONE:
 | Order | ID | Task | Status | Evidence | Next action |
 |---:|---|---|---|---|---|
 | 1 | TEST-1 | Define project-specific test commands | `[x] DONE (2026-05-07)` | `rtk dotnet build rag-gateway-mini.sln --configuration Release --warnaserror` passed with 0 errors and 0 warnings; exact documentation, .NET build, RAG eval, `/rag/search`, `/rag/answer`, VM redeploy, and secret-check commands are listed above | Keep commands current when tests or deployment topology change |
+| 2 | TEST-2 | Add a docs-driven verification closure checklist | `[x] DONE (2026-05-07)` | Reusable `Docs-driven DONE gate` checklist added to `TEST_STRATEGY.md`; `TASKS.md` now points Testing focus to completed closure guidance; `RISK_REGISTER.md` links RISK-1 mitigation to the checklist-backed TEST-2 control | Keep the checklist in sync when tracker ownership or docs verification rules change |
 
 ---
 
