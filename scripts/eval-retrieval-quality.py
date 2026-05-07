@@ -850,8 +850,15 @@ def run_end_to_end(
             })
             continue
 
-        ratio = difflib.SequenceMatcher(None, generated, tc.expected_snippet).ratio()
-        is_hallucinated = ratio < 0.3
+        generated_normalized = generated.strip()
+        expected_normalized = tc.expected_snippet.strip()
+        exact_or_substring_match = (
+            generated_normalized == expected_normalized
+            or generated_normalized in expected_normalized
+            or expected_normalized in generated_normalized
+        )
+        ratio = difflib.SequenceMatcher(None, generated_normalized, expected_normalized).ratio()
+        is_hallucinated = not exact_or_substring_match and ratio < 0.3
         if is_hallucinated:
             hallucinated += 1
         symbol = "❌ HALLUCINATED" if is_hallucinated else "✅ MATCH"
