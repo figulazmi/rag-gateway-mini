@@ -806,9 +806,13 @@ def run_end_to_end(
             for p in pts[:5]
         )
         prompt = (
-            f"Context (retrieved knowledge):\n{context}\n\n"
-            f"Task: {tc.query}\n\n"
-            "Generate ONLY the code. No explanation."
+            "You are checking whether retrieved RAG context contains the answer.\n"
+            "Answer using only an exact command, endpoint, identifier, or code fragment present in the context.\n"
+            "Do not invent code, wrappers, explanations, alternatives, or markdown fences.\n"
+            "If the answer is not present verbatim, output NOT FOUND IN RAG.\n\n"
+            f"Context:\n{context}\n\n"
+            f"Question: {tc.query}\n\n"
+            "Answer:"
         )
         payload = json.dumps({
             "model": code_model,
