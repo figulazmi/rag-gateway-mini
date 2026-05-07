@@ -213,7 +213,7 @@ def _post(url: str, body: dict, api_key: str) -> dict:
     return result
 
 
-def embed(text: str, ollama_url: str) -> list[float]:
+def embed(text: str, ollama_url: str, timeout_seconds: int) -> list[float]:
     body = {"model": EMBED_MODEL, "prompt": text}
     data = json.dumps(body).encode()
     req = urllib.request.Request(
@@ -222,7 +222,7 @@ def embed(text: str, ollama_url: str) -> list[float]:
         headers={"Content-Type": "application/json"},
         method="POST",
     )
-    with urllib.request.urlopen(req, timeout=30) as resp:
+    with urllib.request.urlopen(req, timeout=timeout_seconds) as resp:
         return json.loads(resp.read())["embedding"]
 
 
@@ -779,6 +779,7 @@ def run_end_to_end(
     hybrid_results_map: "dict[str, list[dict]]",
     ollama_url: str,
     code_model: str,
+    generate_timeout_seconds: int,
 ) -> dict:
     """For test cases with expected_snippet: retrieve → generate → diff."""
     import difflib
@@ -795,6 +796,7 @@ def run_end_to_end(
     print("=" * W)
 
     per_query = []
+    skipped = []
     hallucinated = 0
 
     for tc in tested:
@@ -812,6 +814,7 @@ def run_end_to_end(
             "model": code_model,
             "prompt": prompt,
             "stream": False,
+            "options": {"temperature": 0, "num_predict": 128},
         }).encode()
         try:
             req = urllib.request.Request(
@@ -819,16 +822,28 @@ def run_end_to_end(
                 data=payload,
                 headers={"Content-Type": "application/json"},
             )
-            with urllib.request.urlopen(req, timeout=120) as resp:
+            with urllib.request.urlopen(req, timeout=generate_timeout_seconds) as resp:
                 generated = json.loads(resp.read())["response"].strip()
         except urllib.error.HTTPError as exc:
             if exc.code == 404:
-                print(f"  [skip] {tc.description[:50]}: Ollama model not found ({code_model}) -- HTTP 404")
+                reason = f"Ollama model not found ({code_model}) -- HTTP 404"
             else:
-                print(f"  [skip] {tc.description[:50]}: Ollama HTTP error for {code_model} -- HTTP {exc.code}")
+                reason = f"Ollama HTTP error for {code_model} -- HTTP {exc.code}"
+            print(f"  [skip] {tc.description[:50]}: {reason}")
+            skipped.append({
+                "query": tc.query,
+                "description": tc.description,
+                "reason": reason,
+            })
             continue
         except Exception as exc:
-            print(f"  [skip] {tc.description[:50]}: Ollama generation skipped for {code_model} -- {exc}")
+            reason = f"Ollama generation skipped for {code_model} -- {exc}"
+            print(f"  [skip] {tc.description[:50]}: {reason}")
+            skipped.append({
+                "query": tc.query,
+                "description": tc.description,
+                "reason": reason,
+            })
             continue
 
         ratio = difflib.SequenceMatcher(None, generated, tc.expected_snippet).ratio()
@@ -849,11 +864,19 @@ def run_end_to_end(
             "generated_preview": generated[:200],
         })
 
-    rate = hallucinated / len(per_query) if per_query else 0.0
-    print(f"\n  Hallucination rate: {hallucinated}/{len(per_query)} = {rate:.1%}")
+    rate = hallucinated / len(per_query) if per_query else None
+    display_rate = f"{rate:.1%}" if rate is not None else "UNMEASURED"
+    print(f"\n  Hallucination rate: {hallucinated}/{len(per_query)} = {display_rate}")
     print("=" * W)
-    return {"tested": len(per_query), "hallucinated": hallucinated,
-            "hallucination_rate": round(rate, 3), "per_query": per_query}
+    return {
+        "eligible": len(tested),
+        "tested": len(per_query),
+        "skipped": len(skipped),
+        "hallucinated": hallucinated,
+        "hallucination_rate": round(rate, 3) if rate is not None else None,
+        "per_query": per_query,
+        "skipped_cases": skipped,
+    }
 
 
 # ─── P3.3 REVISION QUEUE ────────────────────────────────────────────────────
@@ -915,6 +938,8 @@ def run_evaluation(
     semantic_judge: bool = False,
     judge_model: str = "llama3.2:3b",
     case_limit: int = 0,
+    embed_timeout_seconds: int = 30,
+    generate_timeout_seconds: int = 120,
 ):
     from pathlib import Path
     _fixtures_dir = fixtures_dir or str(Path(__file__).parent / "eval-fixtures")
@@ -940,7 +965,7 @@ def run_evaluation(
 
         # Embed once, reuse for all strategies
         t0 = time.perf_counter()
-        dense_vec  = embed(tc.query, ollama_url)
+        dense_vec  = embed(tc.query, ollama_url, embed_timeout_seconds)
         sparse_vec = djb2_sparse(tc.query)
         embed_ms   = (time.perf_counter() - t0) * 1000
 
@@ -1029,7 +1054,7 @@ def run_evaluation(
 
     e2e_report = {}
     if end_to_end:
-        e2e_report = run_end_to_end(suite, hybrid_pts_map, ollama_url, code_model)
+        e2e_report = run_end_to_end(suite, hybrid_pts_map, ollama_url, code_model, generate_timeout_seconds)
 
     # P3.3 — write low-NDCG queries to revision queue
     _write_revision_queue(suite, hybrid_results, hybrid_pts_map)
@@ -1123,6 +1148,10 @@ Debug workflow for regression:
                         help="Ollama model used by --semantic-judge (default: llama3.2:3b)")
     parser.add_argument("--case-limit",     type=int, default=0,
                         help="Limit number of test cases after project filtering (for smoke tests)")
+    parser.add_argument("--embed-timeout",  type=int, default=30,
+                        help="Ollama embedding request timeout in seconds (default: 30)")
+    parser.add_argument("--generate-timeout", type=int, default=120,
+                        help="Ollama generation request timeout in seconds for --end-to-end (default: 120)")
     args = parser.parse_args()
 
     global _RERANK_NOTE
@@ -1152,6 +1181,8 @@ Debug workflow for regression:
         semantic_judge=args.semantic_judge,
         judge_model=args.judge_model,
         case_limit=args.case_limit,
+        embed_timeout_seconds=args.embed_timeout,
+        generate_timeout_seconds=args.generate_timeout,
     )
 
 
