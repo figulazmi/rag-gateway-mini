@@ -18,11 +18,11 @@ It is an index, not the source of truth. Each task status must be owned by the `
 ## Quick Status
 
 ```text
-Done: P1-3, P1-4, P1-5, and P2-1 completed in security tracker; see owning trackers for full history
+Done: P1-3, P1-4, P1-5, P2-1, P2-3, and P2-4 completed in security tracker; see owning tracker for full evidence
 Open: Security P2-2
 Blocked: none listed here
 Deferred: P2.2-B, OI-5
-Next: Security P2-2 or choose a deferred item with approval
+Next: Finish P2-2 verification and close the remaining citation-grounding gap
 ```
 
 ---
@@ -31,7 +31,7 @@ Next: Security P2-2 or choose a deferred item with approval
 
 | Area | Source of truth | Current focus | Next task ID | Notes |
 |---|---|---|---|---|
-| Security | [`security/RAG_SECURITY_POSTURE.md`](security/RAG_SECURITY_POSTURE.md) | Citation verification and generation grounding | P2-2 | Use security tracker for evidence and verification steps |
+| Security | [`security/RAG_SECURITY_POSTURE.md`](security/RAG_SECURITY_POSTURE.md) | Finish `/rag/answer` verification and close citation-grounding rollout | P2-2 | P2-3 and P2-4 are complete; use security tracker for remaining P2-2 evidence |
 | Quality | [`quality/RAG_EVAL_HARNESS.md`](quality/RAG_EVAL_HARNESS.md) | Broaden eval beyond retrieval-only metrics | See tracker | Keep metric history in quality docs |
 | Pipeline | [`pipeline/RAG_BOTTLENECK_FIXES.md`](pipeline/RAG_BOTTLENECK_FIXES.md) | Deferred sparse-text and IDF tuning | #2C | Revisit after corpus diversity improves |
 | Planning | [`planning/RAG_V2_ROADMAP.md`](planning/RAG_V2_ROADMAP.md) | Keyfacts production default maintenance | See tracker | Read before pipeline changes |
@@ -65,4 +65,4 @@ The linked tracker must contain exactly one `## Canonical Task Tracker` section.
 
 ---
 
-*Last updated: 2026-05-06 · Owner: Figur Ulul Azmi*
+*Last updated: 2026-05-07 · Owner: Figur Ulul Azmi*

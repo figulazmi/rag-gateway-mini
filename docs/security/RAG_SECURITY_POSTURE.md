@@ -22,12 +22,12 @@ Tracks hardening tasks across three phases. Update status as each item is implem
 
 | Entry Point | Severity | Current State |
 |---|---|---|
-| Qdrant API key in public git history | CRITICAL | Key `0aa9f…` — rotation status unconfirmed |
+| Qdrant API key in public git history | CRITICAL | Fixed 2026-04-30: key rotated and old key returns 401 |
 | n8n HTTP webhook — auth unknown | HIGH | Fixed 2026-04-30 on VM105: old public path returns 404; secret-bearing path accepts authenticated `push-to-qdrant.sh` payloads |
 | push-to-qdrant.sh — cosine gate is warning-only | HIGH | Fixed 2026-04-30: cosine gate now hard-aborts unless `COSINE_GATE_BYPASS=1` |
 | No audit log for upserts | MEDIUM | Fixed 2026-04-30: `~/.rag_audit.log` records host/user/doc/chunk/hash/file after successful upsert |
-| No content/schema validation at ingestion | MEDIUM | Any payload accepted |
-| No chunk provenance fields | MEDIUM | `ingested_by`, `payload_sha256` absent |
+| No content/schema validation at ingestion | MEDIUM | Fixed 2026-05-05: n8n `Validate & Clean` rejects malformed keyfacts payloads before Qdrant upsert |
+| No chunk provenance fields | MEDIUM | Fixed for new chunks 2026-05-06 and legacy chunks 2026-05-07 via P1-3 and P2-3 |
 
 ---
 
@@ -551,12 +551,14 @@ ssh figulazmi@192.168.18.199 '~/bin/rtk python3 /tmp/redteam-probe.py --collecti
 | Paraphrasing | 79–93% remain | NOT RECOMMENDED | Skipped |
 | Perplexity Detection | Too many false positives | NOT RECOMMENDED | Skipped |
 | Duplicate Filtering | No effect | PARTIAL (sparse threshold) | Already in place |
-| Knowledge Expansion | 41–43% remain | YES — implement | `[ ] OPEN` (P1-4) |
+| Knowledge Expansion | 41–43% remain | YES — implemented | `[x] DONE (2026-05-06)` (P1-4) |
 | Embedding Consistency Gate | N/A | YES — high value | `[x] DONE (2026-04-30)` (P0-3) |
-| Payload Schema Validation | N/A | YES — low effort | `[~] IN PROGRESS` (P1-2 local workflow patched, live import pending) |
-| LLM Citation Verification | N/A | YES — medium effort | `[ ] OPEN` (P2-2) |
+| Payload Schema Validation | N/A | YES — low effort | `[x] DONE (2026-05-05)` (P1-2) |
+| LLM Citation Verification | N/A | YES — medium effort | `[~] IN PROGRESS (2026-05-07)` (P2-2) |
+| Existing Chunk Provenance Backfill | N/A | YES — incident-response value | `[x] DONE (2026-05-07)` (P2-3) |
+| Automated Red Team Cron | N/A | YES — continuous validation | `[x] DONE (2026-05-07)` (P2-4) |
 
 ---
 
-*Last updated: 2026-05-02 · Author: Figur Ulul Azmi*  
+*Last updated: 2026-05-07 · Author: Figur Ulul Azmi*  
 *Cross-reference: [`RAG_EVAL_HARNESS.md`](../quality/RAG_EVAL_HARNESS.md) (retrieval quality) · [`RAG_BOTTLENECK_FIXES.md`](../pipeline/RAG_BOTTLENECK_FIXES.md) (pipeline fixes)*
