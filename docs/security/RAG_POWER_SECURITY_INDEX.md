@@ -44,7 +44,7 @@ Quick-access index for the RAG hardening + quality initiative (started 2026-04-2
 | # | Task | Doc | Status |
 |---|---|---|---|
 | P2-1 | Forensics snapshot vector | [Security](RAG_SECURITY_POSTURE.md#p2-1--forensics-snapshot-vector) | `[x] DONE (2026-05-06)` |
-| P2-2 | LLM citation verification | [Security](RAG_SECURITY_POSTURE.md#p2-2--llm-citation-verification) | `[~] IN PROGRESS (2026-05-07)` |
+| P2-2 | LLM citation verification | [Security](RAG_SECURITY_POSTURE.md#p2-2--llm-citation-verification) | `[x] DONE (2026-05-07)` |
 | P2-3 | Existing chunk provenance backfill | [Security](RAG_SECURITY_POSTURE.md#p2-3--existing-chunk-provenance-backfill) | `[x] DONE (2026-05-07)` |
 | P2-4 | Automated red team cron (weekly probe) | [Security](RAG_SECURITY_POSTURE.md#p2-4--automated-red-team-cron) | `[x] DONE (2026-05-07)` |
 

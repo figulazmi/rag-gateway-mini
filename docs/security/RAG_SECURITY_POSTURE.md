@@ -441,11 +441,11 @@ python3 ~/scripts/snapshot_tamper_check.py --collection knowledge_v2_keyfacts --
 
 ### P2-2 — LLM Citation Verification
 
-**Status:** `[~] IN PROGRESS (2026-05-07)`  
+**Status:** `[x] DONE (2026-05-07)`  
 **Effort:** ~6–10 hours  
 **Started on:** 2026-05-07  
-**Completed on:** —  
-**Verified by:** —
+**Completed on:** 2026-05-07  
+**Verified by:** Claude Code local build + VM B1 redeploy + live `/rag/answer` positive and negative smoke tests.
 
 **Problem:** llama3.2:3b (3B params) has low adversarial resistance and will follow retrieved context
 even if poisoned. No way to know post-generation which claims are grounded vs hallucinated.
@@ -455,7 +455,8 @@ with inline citation prompt (`[1]`, `[2]`...) → programmatic `CitationVerifier
 `[UNVERIFIED]`. Opt-in: `"citation_verify": true`. No second LLM pass — deterministic regex check.
 
 **Implementation approach (2026-05-07 local):**
-- Added `ILlmGenerationClient` + `OllamaGenerationClient` (`POST /api/generate`, stream=false, 60 s timeout)
+- Added `ILlmGenerationClient` + `OllamaGenerationClient` (`POST /api/generate`, stream=false)
+- Increased the generation HttpClient timeout in `Program.cs` from 60 seconds to 3 minutes after live VM B1 testing showed the positive `/rag/answer` path failing at the 60-second boundary while Ollama generation itself still returned `200`
 - Added `CitationVerifier` static class: splits answer into sentences, checks `[N]` refs against chunk count, tags uncited sentences
 - Added `RagAnswerRequest` / `RagAnswerResponse` DTOs; `RagAnswerSource` includes `doc_id` + `score`
 - Extended `IRagSearchService` with `AnswerAsync`; `RagSearchService.AnswerAsync` delegates to search then generation
@@ -463,11 +464,27 @@ with inline citation prompt (`[1]`, `[2]`...) → programmatic `CitationVerifier
 - Added `GenerationModel` to `RagGatewayOptions` (default `llama3.2:3b`) and both appsettings files
 - Registered `OllamaGenerationClient` as `ILlmGenerationClient` typed HttpClient in `Program.cs`
 
-**Tradeoff:** +1–5 s latency per `/rag/answer` call (Ollama generation warmth dependent).
-`citation_verify: false` (default) returns answer without citation markup. Existing `/rag/search` and
-`/rag/debug` endpoints are completely unchanged.
+**Tradeoff:** Positive `/rag/answer` requests can now wait longer for Ollama generation on cold or slower runs. `citation_verify: false` (default) returns answer without citation markup. Existing `/rag/search` and `/rag/debug` endpoints are completely unchanged.
 
-**Pending:** Local build verification + VM B1 smoke.
+**Live verification (VM B1, 2026-05-07):**
+```bash
+rtk dotnet build
+# Observed locally: 0 errors, 0 warnings
+
+rtk curl -s -o .claude/p22_answer_positive_after_fix.json -w "%{http_code}" \
+  -X POST http://192.168.18.199:5200/rag/answer \
+  -H "Content-Type: application/json" \
+  -d '{"query":"how to push knowledge chunk to Qdrant","project":"homelab","knowledge_expansion":true,"citation_verify":true}'
+# Observed: HTTP 200, status=found, generated answer returned with inline citation and `[UNVERIFIED]` tagging, sources populated
+
+rtk curl -s -o .claude/p22_answer_negative_final.json -w "%{http_code}" \
+  -X POST http://192.168.18.199:5200/rag/answer \
+  -H "Content-Type: application/json" \
+  -d '{"query":"What is the project-alpha Blazor login flow?","project":"homelab","knowledge_expansion":true,"citation_verify":true}'
+# Observed: HTTP 200, {"status":"not_found","message":"NOT FOUND IN RAG"}
+```
+
+**Outcome:** P2-2 is complete. The live gateway now serves `/rag/answer`, returns `not_found` for negative homelab queries, and tags unsupported generated sentences with `[UNVERIFIED]` plus `unverified_sentences` output.
 
 ---
 

@@ -181,7 +181,7 @@ docs/
 
 | Area | Highest open item | Doc |
 |---|---|---|
-| Security | P2-2: Finish `/rag/answer` verification and close citation-grounding rollout | [security/RAG_SECURITY_POSTURE.md](security/RAG_SECURITY_POSTURE.md#p2-2--llm-citation-verification) |
+| Security | RAG security posture tracker complete; choose the next security initiative | [security/RAG_SECURITY_POSTURE.md](security/RAG_SECURITY_POSTURE.md) |
 | Quality | Expand measured baseline beyond retrieval-only metrics (faithfulness, latency, relevance) | [quality/RAG_EVAL_HARNESS.md](quality/RAG_EVAL_HARNESS.md#5-baseline-vs-current-comparison) |
 | Pipeline | IDF weighting (Opsi C) — deferred (revisit after corpus diversity and post-baseline metrics) | [pipeline/RAG_BOTTLENECK_FIXES.md](pipeline/RAG_BOTTLENECK_FIXES.md#7--idf-weighting-mismatch-between-c-and-qdrant-bm25-) |
 | Reference | New device/server bootstrap checklist is available for future migration/rebuilds | [reference/RAG_BOOTSTRAP_NEW_DEVICE_AND_SERVER.md](reference/RAG_BOOTSTRAP_NEW_DEVICE_AND_SERVER.md) |
