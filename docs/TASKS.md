@@ -22,7 +22,7 @@ Done: P1-3, P1-4, P1-5, P2-1, P2-2, P2-3, and P2-4 completed in security tracker
 Open: no active Security item in RAG_SECURITY_POSTURE.md
 Blocked: none listed here
 Deferred: P2.2-B, OI-5
-Next: choose the next Security-area item outside the completed posture tracker
+Next: Quality remains active; no open Testing task is listed after TEST-1 completion
 ```
 
 ---
@@ -37,7 +37,7 @@ Next: choose the next Security-area item outside the completed posture tracker
 | Planning | [`planning/RAG_V2_ROADMAP.md`](planning/RAG_V2_ROADMAP.md) | Keyfacts production default maintenance | See tracker | Read before pipeline changes |
 | Coverage | [`quality/COVERAGE_KNOWLEDGE_TRACKER.md`](quality/COVERAGE_KNOWLEDGE_TRACKER.md) | Knowledge coverage improvement | OI-5 | Deferred until implementation-spec capture is active |
 | Reference | [`reference/RAG_BOOTSTRAP_NEW_DEVICE_AND_SERVER.md`](reference/RAG_BOOTSTRAP_NEW_DEVICE_AND_SERVER.md) | New device/server bootstrap | See tracker | Use only for migration or rebuild work |
-| Testing | [`testing/TEST_STRATEGY.md`](testing/TEST_STRATEGY.md) | Maintain exact repo verification commands | See tracker | Required before using this docs system as a strict DONE gate |
+| Testing | [`testing/TEST_STRATEGY.md`](testing/TEST_STRATEGY.md) | Verification command strategy is current | Complete | TEST-1 is done; keep commands current when tests or deployment topology change |
 | Configuration | [`config/CONFIGURATION.md`](config/CONFIGURATION.md) | Keep runtime settings and secret locations documented | See document | Do not store secrets in docs |
 | Risk | [`risks/RISK_REGISTER.md`](risks/RISK_REGISTER.md) | Review documentation drift and secret exposure risks | RISK-1 | Convert mitigation into tracker task if active work is needed |
 | Incidents | [`incidents/INCIDENT_LOG.md`](incidents/INCIDENT_LOG.md) | Record production-impacting failures only | None | Use changelog for normal completed changes |
