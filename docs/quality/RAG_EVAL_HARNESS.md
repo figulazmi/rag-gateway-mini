@@ -44,7 +44,7 @@ Baseline defined 2026-04-29. Re-run after any significant pipeline change.
 | **NDCG@10** | Graded relevance, top-10 | ≥ 0.75 | 0.9648 keyfacts NDCG@5 proxy final production validation (2026-05-02) | `[x] MET` |
 | **Faithfulness** | LLM output consistent with retrieved chunks | ≥ 0.85 | — | `[?] UNMEASURED` |
 | **Answer Relevance** | Output on-topic for the query | ≥ 0.80 | — | `[?] UNMEASURED` |
-| **Context Precision** | Fraction of retrieved chunks actually used | ≥ 0.60 | — | `[?] UNMEASURED` |
+| **Context Precision** | Fraction of retrieved chunks actually used | ≥ 0.60 | 0.3444 keyfacts hybrid 3-query smoke (2026-05-07) | `[ ] NOT MET` |
 | **Latency p50** | End-to-end query time, VM B1 CPU | ≤ 1.5s | — | `[?] UNMEASURED` |
 | **Latency p95** | End-to-end query time, VM B1 CPU | ≤ 4.0s | — | `[?] UNMEASURED` |
 | **Hallucination Rate** | Claims with zero chunk grounding | ≤ 5% | — | `[?] UNMEASURED` |
@@ -72,6 +72,8 @@ Run `eval-retrieval-quality.py` against VM B1, copy scores here, update Status.
 **Post-sync production parity (2026-05-05):** Direct Qdrant verification after legacy-to-keyfacts sync showed `knowledge_v2` 441 points and `knowledge_v2_keyfacts` 519 points. The sync copied 49 point IDs that existed only in legacy into keyfacts with payload and dense vector preserved. Missing legacy point IDs in keyfacts after sync: 0. Post-sync eval report `.claude/reports/post-sync-keyfacts-2026-05-05.json` on 47 queries: hybrid Hit@1 **0.9574**, Hit@3 **0.9574**, Hit@5 **0.9574**, MRR **0.9574**, NDCG@5 **0.9216**, avg latency **850.5ms**. Hybrid-RRF remained beneficial, with 4 aggregate metrics improved versus dense-only and 0 aggregate regressions. This makes `knowledge_v2_keyfacts` the complete production default while preserving legacy `knowledge_v2` as a fallback comparison collection.
 
 **Final P2.6 evidence pass (2026-05-06):** Same-date 47-query comparison kept semantic judge off and confirmed keyfacts still beats legacy: `knowledge_v2_keyfacts` Hit@1 **0.9574**, Hit@3 **0.9574**, Hit@5 **0.9574**, MRR **0.9574**, NDCG@5 **0.9276**, avg latency **757.9ms**, p50 **824.5ms**, p95 **1248.3ms**; legacy `knowledge_v2` Hit@1 **0.7021**, Hit@3 **0.9362**, Hit@5 **0.9574**, MRR **0.8199**, NDCG@5 **0.8449**, avg latency **751.9ms**, p50 **741.5ms**, p95 **1270.6ms**. Gateway `/scalar/`, `/openapi/v1.json`, positive `/rag/search`, and negative confidence-gate smoke passed. Live count drift was first explained as `knowledge_v2_keyfacts` 541 stable corpus points, then approved cleanup removed three non-durable artifacts (`p12-valid-001`, `unknown-chunk-1`, and the temporary P1-3 provenance smoke point), leaving a verified post-cleanup corpus of 539 points. A later homelab RAG summary merge auto-pushed 4 durable chunks for this work, bringing the current corpus to 543 points. `VM105 webhook auth smoke test` remains retained debug knowledge.
+
+**Context precision smoke (2026-05-07):** `scripts/eval-retrieval-quality.py` now reports `context_precision@5` per strategy and in aggregate JSON. Smoke report `.claude/reports/quality-context-precision-smoke-2026-05-07.json` on 3 homelab cases against `knowledge_v2_keyfacts` measured hybrid `context_precision@5` **0.3444**, below the 0.60 target, while Hit@1/3/5 and MRR stayed at 1.0000. This converts Context Precision from unmeasured to an active Quality gap.
 
 **Previous baseline (2026-04-30):** `python scripts/eval-retrieval-quality.py --project homelab --limit 5 --qdrant-url http://192.168.18.199:6333 --ollama-url http://192.168.18.199:11434 --output .claude/reports/eval-baseline-2026-04-30.json` completed successfully on 18 queries. Hybrid summary: Hit@1 0.7778, Hit@3 0.8333, Hit@5 0.8889, MRR 0.8167, NDCG@5 0.8658, avg latency 1067.5ms. Regression analysis identified sparse-noise on 3 queries; next improvement should test sparse text restricted to topic + Key Facts or query-type-aware sparse disabling.
 
@@ -272,5 +274,5 @@ Current expanded fixture: `scripts/eval-fixtures/homelab-expanded.json`.
 
 ---
 
-*Last updated: 2026-05-06 · Author: Figur Ulul Azmi*  
+*Last updated: 2026-05-07 · Author: Figur Ulul Azmi*  
 *Cross-reference: [`RAG_SECURITY_POSTURE.md`](../security/RAG_SECURITY_POSTURE.md) (hardening tasks) · [`RAG_BOTTLENECK_FIXES.md`](../pipeline/RAG_BOTTLENECK_FIXES.md) (pipeline history)*

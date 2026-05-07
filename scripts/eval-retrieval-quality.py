@@ -535,6 +535,13 @@ def ndcg_at_k(points: list[dict], tc: TestCase, k: int = 5) -> float:
     return dcg / idcg if idcg > 0 else 0.0
 
 
+def context_precision_at_k(points: list[dict], tc: TestCase, k: int = 5) -> float:
+    top_k = points[:k]
+    if not top_k:
+        return 0.0
+    return sum(relevance_score(p, tc) for p in top_k) / len(top_k)
+
+
 def score_distribution(points: list[dict]) -> dict:
     scores = sorted(p.get("score", 0.0) for p in points)
     if not scores:
@@ -562,6 +569,7 @@ class QueryResult:
     hit_at_5: float
     mrr: float
     ndcg5: float
+    context_precision_at_5: float
     score_dist: dict
     latency_ms: float
     raw_scores: list = field(default_factory=list)
@@ -576,17 +584,18 @@ def aggregate(results: list[QueryResult]) -> dict:
         return {}
     n = len(results)
     return {
-        "hit@1":          round(sum(r.hit_at_1 for r in results) / n, 4),
-        "hit@3":          round(sum(r.hit_at_3 for r in results) / n, 4),
-        "hit@5":          round(sum(r.hit_at_5 for r in results) / n, 4),
-        "mrr":            round(sum(r.mrr       for r in results) / n, 4),
-        "ndcg@5":         round(sum(r.ndcg5     for r in results) / n, 4),
-        "avg_latency_ms": round(sum(r.latency_ms for r in results) / n, 1),
+        "hit@1":              round(sum(r.hit_at_1 for r in results) / n, 4),
+        "hit@3":              round(sum(r.hit_at_3 for r in results) / n, 4),
+        "hit@5":              round(sum(r.hit_at_5 for r in results) / n, 4),
+        "mrr":                round(sum(r.mrr for r in results) / n, 4),
+        "ndcg@5":             round(sum(r.ndcg5 for r in results) / n, 4),
+        "context_precision@5": round(sum(r.context_precision_at_5 for r in results) / n, 4),
+        "avg_latency_ms":     round(sum(r.latency_ms for r in results) / n, 1),
     }
 
 
 def delta(a: dict, b: dict) -> dict:
-    keys = ["hit@1", "hit@3", "hit@5", "mrr", "ndcg@5"]
+    keys = ["hit@1", "hit@3", "hit@5", "mrr", "ndcg@5", "context_precision@5"]
     return {k: round(a.get(k, 0) - b.get(k, 0), 4) for k in keys}
 
 
@@ -625,11 +634,12 @@ def print_query_result(
     print(f"    {'-'*52}")
 
     metrics = [
-        ("Hit@1",  dense.hit_at_1, sparse.hit_at_1, hybrid.hit_at_1),
-        ("Hit@3",  dense.hit_at_3, sparse.hit_at_3, hybrid.hit_at_3),
-        ("Hit@5",  dense.hit_at_5, sparse.hit_at_5, hybrid.hit_at_5),
-        ("MRR",    dense.mrr,      sparse.mrr,      hybrid.mrr),
-        ("NDCG@5", dense.ndcg5,    sparse.ndcg5,    hybrid.ndcg5),
+        ("Hit@1",          dense.hit_at_1, sparse.hit_at_1, hybrid.hit_at_1),
+        ("Hit@3",          dense.hit_at_3, sparse.hit_at_3, hybrid.hit_at_3),
+        ("Hit@5",          dense.hit_at_5, sparse.hit_at_5, hybrid.hit_at_5),
+        ("MRR",            dense.mrr, sparse.mrr, hybrid.mrr),
+        ("NDCG@5",         dense.ndcg5, sparse.ndcg5, hybrid.ndcg5),
+        ("CtxPrec@5",      dense.context_precision_at_5, sparse.context_precision_at_5, hybrid.context_precision_at_5),
     ]
     for label, dv, sv, hv in metrics:
         d2h = hv - dv
@@ -722,7 +732,7 @@ def print_summary(
     print("=" * W)
     print(f"  {'Metric':<13} {'Dense':>10} {'Sparse':>10} {'Hybrid':>10}  {'D→H':>9}")
     print(f"  {'-'*56}")
-    for k in ["hit@1", "hit@3", "hit@5", "mrr", "ndcg@5"]:
+    for k in ["hit@1", "hit@3", "hit@5", "mrr", "ndcg@5", "context_precision@5"]:
         dv = dense_avg.get(k, 0)
         sv = sparse_avg.get(k, 0)
         hv = hybrid_avg.get(k, 0)
@@ -736,8 +746,9 @@ def print_summary(
 
     improved  = sum(1 for v in d_vs_dense.values() if v > 0.001)
     regressed = sum(1 for v in d_vs_dense.values() if v < -0.001)
+    total_metrics = len(d_vs_dense)
     print(f"  Hybrid vs Dense: {improved} improved / {regressed} regressed / "
-          f"{5 - improved - regressed} equal (out of 5 metrics)")
+          f"{total_metrics - improved - regressed} equal (out of {total_metrics} metrics)")
 
     print()
     print(f"  SYSTEM RECOMMENDATION (based on evidence):")
@@ -988,6 +999,7 @@ def run_evaluation(
                 hit_at_5=hit_at_k(pts, tc, 5),
                 mrr=reciprocal_rank(pts, tc),
                 ndcg5=ndcg_at_k(pts, tc, 5),
+                context_precision_at_5=context_precision_at_k(pts, tc, 5),
                 score_dist=score_distribution(pts),
                 latency_ms=round(embed_ms + search_ms, 1),
                 raw_scores=[p.get("score", 0) for p in pts],
