@@ -66,28 +66,32 @@ pada knowledge base proyek yang sudah kita isi sendiri — zero hallucination.
 
 ```bash
 # Di terminal project root
-dotnet run --project src
+rtk dotnet run --project src
 ```
 
-Gateway berjalan di `http://localhost:5200`. Cek dengan `http://localhost:5200/scalar/` atau `http://localhost:5200/openapi/v1.json`. Tidak ada endpoint `/health` di repo ini.
+Gateway berjalan di `http://localhost:5200` untuk local dev, `http://192.168.18.199:5200` di VM B1 LAN, atau `http://100.120.249.99:5200` lewat Tailscale. Cek dengan `/scalar/` atau `/openapi/v1.json`. Tidak ada endpoint `/health` di repo ini.
+
+Production VM B1 path:
+- Repo: `/opt/homelab/ai-stack/rag-gateway-mini`
+- Secrets: `/opt/homelab/ai-stack/rag-gateway-mini/appsettings.Production.json`
 
 ### 2. Pastikan `jq` sudah terinstall
 
 ```bash
-jq --version
+rtk jq --version
 ```
 
 Kalau belum ada:
 
 ```powershell
-winget install jqlang.jq
+rtk winget install jqlang.jq
 ```
 
 ### 3. Clone rag-tools dan jalankan setup otomatis
 
 ```bash
-git clone https://github.com/figulazmi/rag-tools.git ~/rag-tools
-bash ~/rag-tools/rag-capture-v2/rag-setup.sh
+rtk git clone https://github.com/figulazmi/rag-tools.git ~/rag-tools
+rtk bash ~/rag-tools/rag-capture-v2/rag-setup.sh
 ```
 
 Script akan otomatis:
@@ -99,15 +103,15 @@ Script akan otomatis:
 ### 4. Append RAG-first protocol ke Claude Code
 
 ```bash
-cat ~/rag-tools/rag-capture-v2/CLAUDE_snippet.md >> ~/.claude/CLAUDE.md
+rtk bash -lc 'cat ~/rag-tools/rag-capture-v2/CLAUDE_snippet.md >> ~/.claude/CLAUDE.md'
 # Restart Claude Code untuk aktifkan MCP server
 ```
 
 Verifikasi:
 
 ```bash
-rag --help
-rag status
+rtk rag --help
+rtk rag status
 ```
 
 ---
@@ -392,7 +396,9 @@ agar developer lain bisa manfaatkan hasil kerja kamu.
 
 ```bash
 # Step 1: Capture knowledge dengan rag add (Claude jalankan otomatis)
-cat <<'RAGBODY_EOF' | rag add -p PROJECT -t TYPE --topic "..." --tags "tag1,tag2"
+# rag adalah wrapper untuk rag_capture.py; kalau wrapper tidak tersedia, gunakan:
+# rtk python "C:/Users/Clandesitine/scripts/rag-capture-v2/rag_capture.py" add ...
+cat <<'RAGBODY_EOF' | rtk rag add -p PROJECT -t TYPE --topic "..." --tags "tag1,tag2"
 ### Context
 ...
 ### Solution
@@ -402,17 +408,15 @@ cat <<'RAGBODY_EOF' | rag add -p PROJECT -t TYPE --topic "..." --tags "tag1,tag2
 - fact 2
 RAGBODY_EOF
 
-# Step 2: Merge semua drafts → auto-push ke Qdrant
-rag merge --output YYYY-MM-DD-[topic].md
-# ↑ auto_push() berjalan otomatis setelah merge.
-# Jika network down → file di-queue ke ~/.rag_push_queue
+# Step 2: Merge semua drafts ke .claude/summaries dan ikuti push reminder dari CLI
+rtk rag merge --output YYYY-MM-DD-[topic].md
 
-# Step 3: Jika ada yang gagal push (network down tadi)
-rag push-pending
+# Step 3: Jika ada file yang masuk pending push queue
+rtk rag push-pending
 # ↑ drains ~/.rag_push_queue dengan exponential backoff (2s/4s/8s per file)
 
 # Step 4: Untuk token >= 85% — simpan checkpoint dulu sebelum /clear
-cat <<'RAGCHK' | rag checkpoint -p PROJECT --topic "..." \
+cat <<'RAGCHK' | rtk rag checkpoint -p PROJECT --topic "..." \
   --next-step "file.cs:line — action" --trigger "85%"
 ### Problem
 ...
@@ -421,7 +425,7 @@ cat <<'RAGCHK' | rag checkpoint -p PROJECT --topic "..." \
 ### Key Facts
 - fact 1
 RAGCHK
-bash ~/rag-tools/push-to-qdrant.sh .claude/checkpoints/YYYY-MM-DD-*.md
+rtk bash ~/rag-tools/push-to-qdrant.sh .claude/checkpoints/YYYY-MM-DD-*.md
 ```
 
 > **Kenapa ini penting?**
@@ -437,7 +441,7 @@ bash ~/rag-tools/push-to-qdrant.sh .claude/checkpoints/YYYY-MM-DD-*.md
 RAG Gateway belum jalan. Jalankan:
 
 ```bash
-dotnet run --project src
+rtk dotnet run --project src
 ```
 
 ---
@@ -445,7 +449,7 @@ dotnet run --project src
 ### ❌ `Error: jq is not installed`
 
 ```powershell
-winget install jqlang.jq
+rtk winget install jqlang.jq
 ```
 
 Lalu buka terminal baru (restart Git Bash).
@@ -457,14 +461,14 @@ Lalu buka terminal baru (restart Git Bash).
 Script belum ada di PATH. Cek:
 
 ```bash
-echo $PATH | tr ':' '\n' | grep scripts
+rtk bash -lc 'echo $PATH | tr '"'"':'"'"' '\''\n'\'' | grep scripts'
 ```
 
 Kalau tidak ada, tambahkan di `~/.bashrc`:
 
 ```bash
 export PATH="$PATH:$HOME/scripts"
-source ~/.bashrc
+rtk bash -lc 'source ~/.bashrc'
 ```
 
 ---
@@ -474,7 +478,7 @@ source ~/.bashrc
 Gunakan `--debug` untuk lihat detail:
 
 ```bash
-rag "query kamu" -p petrochina-eproc --debug
+rtk rag "query kamu" -p petrochina-eproc --debug
 ```
 
 Kalau hasil utama tidak memenuhi gate not-found (`topScore < 0.50`) atau score retrieval tetap rendah, knowledge base kemungkinan belum punya informasi ini.

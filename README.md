@@ -62,13 +62,13 @@ The repo also ships a **RAG CLI pipeline**: a set of Bash scripts that let any d
 
 ```bash
 # 1. Clone rag-tools (tooling repo, separate from this project)
-git clone https://github.com/figulazmi/rag-tools.git ~/rag-tools
-bash ~/rag-tools/rag-capture-v2/rag-setup.sh
+rtk git clone https://github.com/figulazmi/rag-tools.git ~/rag-tools
+rtk bash ~/rag-tools/rag-capture-v2/rag-setup.sh
 # Prompts: Qdrant URL, API key, author name, VM B1 LAN IP, Tailscale IP, SSH user
 # Installs: rag CLI wrapper, ~/.rag_config.json, MCP connect script, patches ~/.claude/settings.json
 
 # 2. Append RAG-first protocol to Claude Code global config
-cat ~/rag-tools/rag-capture-v2/CLAUDE_snippet.md >> ~/.claude/CLAUDE.md
+rtk bash -lc 'cat ~/rag-tools/rag-capture-v2/CLAUDE_snippet.md >> ~/.claude/CLAUDE.md'
 
 # 3. Restart Claude Code to activate MCP server
 ```
@@ -76,7 +76,7 @@ cat ~/rag-tools/rag-capture-v2/CLAUDE_snippet.md >> ~/.claude/CLAUDE.md
 ### Update (after changes to rag-tools)
 
 ```bash
-cd ~/rag-tools && git pull
+cd ~/rag-tools && rtk git pull
 # Wrapper points to repo clone — git pull takes effect immediately, no reinstall needed
 ```
 
@@ -88,7 +88,8 @@ Run this sequence at the beginning of every session:
 
 ```bash
 # 1. Resume checkpoint first
-rag resume
+rtk python "C:/Users/Clandesitine/scripts/rag-capture-v2/rag_capture.py" resume
+# If the rag wrapper is installed and known-good, `rtk rag resume` is equivalent.
 
 # 2. Load deferred schema
 ToolSearch select:mcp__qdrant-knowledge__search_knowledge
@@ -167,10 +168,10 @@ export RAG_BASE_URL=http://your-host:5200
 
 ## Capture Knowledge (Write Pipeline)
 
-After solving a problem or completing a feature, capture it to Qdrant so the team can retrieve it later.
+After solving a problem or completing a feature, capture it to Qdrant so the team can retrieve it later. The `rag` CLI is a wrapper around `rag_capture.py`; if the wrapper is unavailable or ambiguous, call `rtk python "C:/Users/Clandesitine/scripts/rag-capture-v2/rag_capture.py" ...` with the same flags.
 
 ```bash
-cat <<'EOF' | rag add -p homelab -t debug --topic "topic here" --tags "homelab,docker,qdrant"
+cat <<'EOF' | rtk rag add -p homelab -t debug --topic "topic here" --tags "homelab,docker,qdrant"
 ### Context
 [1-2 sentences. What system, goal, constraint.]
 ### Problem
@@ -183,8 +184,8 @@ cat <<'EOF' | rag add -p homelab -t debug --topic "topic here" --tags "homelab,d
 - fact 3
 EOF
 
-# Merge drafts and push to Qdrant:
-rag merge --output 2026-01-01-topic.md
+# Merge drafts and follow the push reminder printed by the CLI:
+rtk rag merge --output 2026-01-01-topic.md
 ```
 
 Chunk types: `debug` | `feature` | `runbook` | `pattern` | `decision` | `reference` | `implementation-spec`. Production retrieval uses `knowledge_v2_keyfacts`; keep implementation-spec capture aligned with `docs/planning/RAG_V2_ROADMAP.md` before changing pipeline behavior.
@@ -235,7 +236,7 @@ Operational deep-dive manual: `docs/reference/RAG_MANUAL_BOOK.md` (session-start
 To set up or re-run:
 
 ```bash
-bash ~/rag-tools/rag-capture-v2/rag-setup.sh
+rtk bash ~/rag-tools/rag-capture-v2/rag-setup.sh
 # Restart Claude Code after setup
 ```
 
@@ -255,8 +256,8 @@ The CLI tried localhost, LAN, and Tailscale — all failed.
 
 ```bash
 # Check which path is reachable:
-curl -s --connect-timeout 3 http://192.168.18.199:5200/scalar/
-curl -s --connect-timeout 3 http://100.120.249.99:5200/scalar/
+rtk curl -s --connect-timeout 3 http://192.168.18.199:5200/scalar/
+rtk curl -s --connect-timeout 3 http://100.120.249.99:5200/scalar/
 
 # Override manually:
 export RAG_BASE_URL=http://192.168.18.199:5200
@@ -266,26 +267,26 @@ export RAG_BASE_URL=http://192.168.18.199:5200
 
 ```bash
 # Windows
-winget install jqlang.jq
+rtk winget install jqlang.jq
 
 # Mac
-brew install jq
+rtk brew install jq
 
 # Linux
-sudo apt install jq
+rtk sudo apt install jq
 ```
 
 ### `rag: command not found`
 
 ```bash
-echo $PATH | tr ':' '\n' | grep scripts   # check if ~/scripts is in PATH
-source ~/.bashrc                          # reload
+rtk bash -lc 'echo $PATH | tr '"'"':'"'"' '\''\n'\'' | grep scripts'   # check if ~/scripts is in PATH
+rtk bash -lc 'source ~/.bashrc'                                        # reload
 ```
 
 ### RAG results not relevant (low scores)
 
 ```bash
-rag "your query" -p homelab --debug   # shows raw scores and threshold
+rtk rag "your query" -p homelab --debug   # shows raw scores and threshold
 # Distinguish thresholds:
 # - ScoreThreshold (default 0.35): per-result inclusion threshold
 # - NOT_FOUND gate (topScore < 0.50): return explicit NOT FOUND IN RAG
@@ -341,13 +342,13 @@ Returns all raw Qdrant results before threshold filtering. Use to tune `ScoreThr
 ### `GET /scalar/`
 
 ```bash
-curl http://localhost:5200/scalar/
+rtk curl http://localhost:5200/scalar/
 ```
 
 ### `GET /openapi/v1.json`
 
 ```bash
-curl http://localhost:5200/openapi/v1.json
+rtk curl http://localhost:5200/openapi/v1.json
 ```
 
 ---
@@ -386,16 +387,16 @@ Update both config files together to avoid drift:
 
 **Local:**
 ```bash
-dotnet run --project src
+rtk dotnet run --project src
 ```
 
 **Docker (VM B1):**
 ```bash
-git push origin main
-ssh figulazmi@192.168.18.199 \
-  'cd /opt/homelab/ai-stack/rag-gateway-mini && sudo git fetch origin && sudo git reset --hard origin/main && cd src && sudo docker compose up -d --build'
-curl http://192.168.18.199:5200/scalar/
-curl http://192.168.18.199:5200/openapi/v1.json
+rtk git push origin main
+rtk ssh figulazmi@192.168.18.199 \
+  'cd /opt/homelab/ai-stack/rag-gateway-mini && rtk sudo git fetch origin && rtk sudo git reset --hard origin/main && cd src && rtk sudo docker compose up -d --build'
+rtk curl http://192.168.18.199:5200/scalar/
+rtk curl http://192.168.18.199:5200/openapi/v1.json
 ```
 
 Interactive API docs (Scalar UI): `http://localhost:5200/scalar/`
