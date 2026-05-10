@@ -40,10 +40,10 @@ is useless. Fix the pipeline gaps before adding more knowledge.
 
 | #    | Task                                                                                                                                                                                            | File(s)                                                                                      | Status                  |
 | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ----------------------- |
-| P2-A | Grow eval set from 7 to 30 queries. At least 15 must be `implementation-spec` type. Cover .NET 9 and Python domains. Add harder negatives — queries where the wrong chunk is tempting.          | `scripts/eval-retrieval-quality.py`, `scripts/eval-fixtures/implementation-tests.json` (new) | `[x] DONE (2026-04-19)` |
-| P2-B | Add `--end-to-end` mode to eval: retrieve top-5 chunks → feed to `qwen2.5-coder` via Ollama → generate code → diff against expected snippet in fixture → report hallucination rate as a metric. | `scripts/eval-retrieval-quality.py`                                                          | `[x] DONE (2026-04-19)` |
+| P2-A | Grow eval set from 7 to 30 queries. At least 15 must be `implementation-spec` type. Cover .NET 9 and Python domains. Add harder negatives — queries where the wrong chunk is tempting.          | `~/scripts/rag-infra/eval-retrieval-quality.py`, `scripts/eval-fixtures/implementation-tests.json` (new) | `[x] DONE (2026-04-19)` |
+| P2-B | Add `--end-to-end` mode to eval: retrieve top-5 chunks → feed to `qwen2.5-coder` via Ollama → generate code → diff against expected snippet in fixture → report hallucination rate as a metric. | `~/scripts/rag-infra/eval-retrieval-quality.py`                                                          | `[x] DONE (2026-04-19)` |
 
-**Acceptance:** `python scripts/eval-retrieval-quality.py --project homelab --debug` runs 30 queries; `--end-to-end` flag generates code and reports hallucination % per query.
+**Acceptance:** `python ~/scripts/rag-infra/eval-retrieval-quality.py --project homelab --debug` runs 30 queries; `--end-to-end` flag generates code and reports hallucination % per query.
 
 ---
 
@@ -86,7 +86,7 @@ Systematic capture for daily .NET and Python work turns this into a real externa
 | P4-B | Deploy contextual retrieval prepend to n8n (P1.2 is shipped in code but not deployed). Import updated `ingest-knowledge-v2.json` into n8n UI at `http://192.168.18.199:5678`. Smoke test with one chunk. | `~/scripts/n8n-workflows/ingest-knowledge-v2.json` (rag-tools, imported via n8n UI) | `[x] DONE (2026-04-19)` — embed_content verified in workflow vm7AIcsMvjzstjkb; snap Ollama disabled, Docker Ollama recreated via docker-compose.stage2.yml; pipeline verified 200→201 Qdrant points |
 | P4-C | Re-embed existing corpus after n8n deploy: loop over `.claude/summaries/*.md` and re-push all files (upsert is idempotent by deterministic ID). Run eval before/after to confirm NDCG@5 improvement.     | `bash ~/scripts/push-to-qdrant.sh`                        | `[x] DONE (2026-05-02) — re-pushed 36 homelab summaries and added Python argparse/dataclass pattern chunks; final eval shows dense-only improved to Hit@1 0.8333, MRR 0.9028, NDCG@5 0.9108; hybrid recall recovered but top-rank remains limited by sparse/RRF noise` |
 
-**Acceptance (P4-B/C):** `python scripts/eval-retrieval-quality.py` must improve quality without hiding top-rank regressions. Final 2026-05-02 result: dense-only improved beyond baseline, while hybrid still has sparse/RRF rank noise. Next acceptance should compare live dense-only vs hybrid before more reranker work.
+**Acceptance (P4-B/C):** `python ~/scripts/rag-infra/eval-retrieval-quality.py` must improve quality without hiding top-rank regressions. Final 2026-05-02 result: dense-only improved beyond baseline, while hybrid still has sparse/RRF rank noise. Next acceptance should compare live dense-only vs hybrid before more reranker work.
 
 **P4-C re-embed command (run when summaries exist):**
 
@@ -108,7 +108,7 @@ done
 | ---- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | ----------------------------------- |
 | P5-A | Deploy BGE-reranker-v2-m3 via TEI container on VM B1. Add to `docker-compose.yml` on VM B1 (not in this repo).                  | VM B1 infra                                            | `[ ] DEFERRED — first fix sparse/RRF noise and test dense-only` |
 | P5-B | Replace `rerankWithLLM` in MCP server with `rerankWithTEI` hitting TEI's `/rerank` endpoint. Set `RERANK_ENABLED=true` env var. | `~/scripts/qdrant-mcp-server-v2/qdrant-mcp-server-v2.js` (rag-tools) | `[ ] DEFERRED — needs P5-A plus evidence of reranker gap` |
-| P5-C | Benchmark: rerun eval with `--rerank` flag; confirm NDCG@5 improves and latency stays under 2s budget.                          | `scripts/eval-retrieval-quality.py`                    | `[ ] DEFERRED — after dense-only and sparse redesign baselines` |
+| P5-C | Benchmark: rerun eval with `--rerank` flag; confirm NDCG@5 improves and latency stays under 2s budget.                          | `~/scripts/rag-infra/eval-retrieval-quality.py`                    | `[ ] DEFERRED — after dense-only and sparse redesign baselines` |
 
 ---
 

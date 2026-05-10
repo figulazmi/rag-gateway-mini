@@ -347,7 +347,7 @@ curl -s -X POST http://192.168.18.199:5200/rag/search -H "Content-Type: applicat
 but belong to a different project or chunk_type — hijacking the retrieval neighborhood.
 
 **Implemented fix:**
-- Added repo script `scripts/anomaly_check.py` and deployed it to VM B1 at `~/scripts/anomaly_check.py`
+- Added repo script `~/scripts/rag-infra/anomaly_check.py` and deployed it to VM B1 at `~/~/scripts/rag-infra/anomaly_check.py`
 - Detector loads `QDRANT_API_KEY` from environment or `~/.config/qdrant-knowledge.env`
 - Default collection is `knowledge_v2_keyfacts`; collection, threshold, limit, Qdrant URL, and audit log path are CLI-configurable
 - Detector loads the new point's dense vector and payload, queries nearest dense neighbors, skips self-hit, and emits `ANOMALY` lines when score is above threshold and `project` or type family (`chunk_type`/`session_type`) mismatches
@@ -357,14 +357,14 @@ but belong to a different project or chunk_type — hijacking the retrieval neig
 **Verification:**
 ```bash
 # Local syntax check
-python -m py_compile scripts/anomaly_check.py
+python -m py_compile ~/scripts/rag-infra/anomaly_check.py
 
 # VM syntax check
-python3 -m py_compile ~/scripts/anomaly_check.py
+python3 -m py_compile ~/~/scripts/rag-infra/anomaly_check.py
 bash -n ~/scripts/push-to-qdrant.sh
 
 # Direct detector smoke on existing point
-python3 ~/scripts/anomaly_check.py --point-id 3843143 --collection knowledge_v2_keyfacts
+python3 ~/~/scripts/rag-infra/anomaly_check.py --point-id 3843143 --collection knowledge_v2_keyfacts
 # Observed: OK: no anomalies for point_id=3843143 threshold=0.97
 
 # Live push-hook smoke
@@ -390,8 +390,8 @@ bash ~/scripts/push-to-qdrant.sh /tmp/p15-anomaly-smoke.md
 there is currently no way to detect it.
 
 **Implemented fix:**
-- Added `scripts/add-snapshot-vector-migration.py` for guarded Qdrant migration to named vectors `dense` and `snapshot` plus sparse vector `sparse`
-- Added `scripts/snapshot_tamper_check.py` to compare `dense` vs `snapshot` cosine and append `TAMPER` lines to `~/.rag_audit.log` when cosine falls below `0.99`
+- Added `scripts/archive/migrations/add-snapshot-vector-migration.py` for guarded Qdrant migration to named vectors `dense` and `snapshot` plus sparse vector `sparse`
+- Added `~/scripts/rag-infra/snapshot_tamper_check.py` to compare `dense` vs `snapshot` cosine and append `TAMPER` lines to `~/.rag_audit.log` when cosine falls below `0.99`
 - Migrated live `knowledge_v2_keyfacts` via staging collection `knowledge_v2_keyfacts_snapshot_stage`
 - Created retained backup collection `knowledge_v2_keyfacts_backup_20260506145220`
 - Live `knowledge_v2_keyfacts` now has named vectors `dense` and `snapshot` and sparse vector `sparse`
@@ -401,23 +401,23 @@ there is currently no way to detect it.
 **Verification:**
 ```bash
 # Local/VM syntax checks
-python -m py_compile scripts/add-snapshot-vector-migration.py scripts/snapshot_tamper_check.py
-python3 -m py_compile ~/scripts/add-snapshot-vector-migration.py ~/scripts/snapshot_tamper_check.py
+python -m py_compile scripts/archive/migrations/add-snapshot-vector-migration.py ~/scripts/rag-infra/snapshot_tamper_check.py
+python3 -m py_compile ~/scripts/archive/migrations/add-snapshot-vector-migration.py ~/~/scripts/rag-infra/snapshot_tamper_check.py
 
 # Preflight before migration
-python3 ~/scripts/add-snapshot-vector-migration.py --collection knowledge_v2_keyfacts
+python3 ~/scripts/archive/migrations/add-snapshot-vector-migration.py --collection knowledge_v2_keyfacts
 # Observed before: points_count=545, has_snapshot=False
 
 # Staging migration
-python3 ~/scripts/add-snapshot-vector-migration.py --collection knowledge_v2_keyfacts --prepare-stage --force
+python3 ~/scripts/archive/migrations/add-snapshot-vector-migration.py --collection knowledge_v2_keyfacts --prepare-stage --force
 # Observed: copied 545 points, stage_ready=knowledge_v2_keyfacts_snapshot_stage points=545
 
 # Staging tamper sample
-python3 ~/scripts/snapshot_tamper_check.py --collection knowledge_v2_keyfacts_snapshot_stage --sample 5
+python3 ~/~/scripts/rag-infra/snapshot_tamper_check.py --collection knowledge_v2_keyfacts_snapshot_stage --sample 5
 # Observed: 5/5 points OK with cos=1.000000
 
 # Production promotion
-python3 ~/scripts/add-snapshot-vector-migration.py --collection knowledge_v2_keyfacts --promote
+python3 ~/scripts/archive/migrations/add-snapshot-vector-migration.py --collection knowledge_v2_keyfacts --promote
 # Observed: promoted=knowledge_v2_keyfacts points=545 backup=knowledge_v2_keyfacts_backup_20260506145220
 
 # Live ingest smoke after n8n workflow publish
@@ -431,7 +431,7 @@ curl http://192.168.18.199:5200/scalar/
 # Negative homelab cross-project query returned status=not_found
 
 # Final tamper sample
-python3 ~/scripts/snapshot_tamper_check.py --collection knowledge_v2_keyfacts --sample 10
+python3 ~/~/scripts/rag-infra/snapshot_tamper_check.py --collection knowledge_v2_keyfacts --sample 10
 # Observed: 10/10 points OK with cos=1.000000, exit 0
 ```
 
@@ -499,7 +499,7 @@ rtk curl -s -o .claude/p22_answer_negative_final.json -w "%{http_code}" \
 **Problem:** Legacy points in the active Qdrant collection lacked provenance fields, so historical chunks could not be traced to a backfill source or method during incident response.
 
 **Implemented fix:**
-- Added `scripts/backfill-provenance.py` using the existing stdlib Qdrant script pattern (`urllib`, `api-key` header, `~/.config/qdrant-knowledge.env` fallback)
+- Added `scripts/archive/migrations/backfill-provenance.py` using the existing stdlib Qdrant script pattern (`urllib`, `api-key` header, `~/.config/qdrant-knowledge.env` fallback)
 - Script supports `--dry-run` preflight and `--apply` write mode
 - Uses `POST /collections/{collection}/points/payload?wait=true` with `filter.must[].is_empty.key` for idempotent field-level backfill
 - Backfilled only missing fields: `ingested_by`, `push_method`, `backfilled_at`, `backfill_id`
@@ -508,14 +508,14 @@ rtk curl -s -o .claude/p22_answer_negative_final.json -w "%{http_code}" \
 
 **Live verification (VM B1 Qdrant, 2026-05-07):**
 ```bash
-rtk python -m py_compile scripts/backfill-provenance.py
-rtk python scripts/backfill-provenance.py --qdrant-url http://192.168.18.199:6333 --collection knowledge_v2_keyfacts --dry-run
+rtk python -m py_compile scripts/archive/migrations/backfill-provenance.py
+rtk python scripts/archive/migrations/backfill-provenance.py --qdrant-url http://192.168.18.199:6333 --collection knowledge_v2_keyfacts --dry-run
 # Observed: total_points=560; ingested_by missing=419; push_method missing=419; backfill_id missing=560; backfilled_at missing=560
 
-rtk python scripts/backfill-provenance.py --qdrant-url http://192.168.18.199:6333 --collection knowledge_v2_keyfacts --apply
+rtk python scripts/archive/migrations/backfill-provenance.py --qdrant-url http://192.168.18.199:6333 --collection knowledge_v2_keyfacts --apply
 # Observed: all four fields applied; post-apply result=all_provenance_fields_present
 
-rtk python scripts/backfill-provenance.py --qdrant-url http://192.168.18.199:6333 --collection knowledge_v2_keyfacts --dry-run
+rtk python scripts/archive/migrations/backfill-provenance.py --qdrant-url http://192.168.18.199:6333 --collection knowledge_v2_keyfacts --dry-run
 # Observed: total_points=560; missing=0 for ingested_by, push_method, backfill_id, backfilled_at
 ```
 
@@ -534,7 +534,7 @@ rtk python scripts/backfill-provenance.py --qdrant-url http://192.168.18.199:633
 **Problem:** No continuous validation that the poisoning defenses are working.
 
 **Implemented fix:**
-- Added `scripts/redteam-probe.py` for weekly RAG poisoning-defense validation
+- Added `scripts/archive/migrations/redteam-probe.py` for weekly RAG poisoning-defense validation
 - Script inserts one temporary synthetic probe into `knowledge_v2_keyfacts`, queries live `/rag/search` with `knowledge_expansion=true`, alerts if the probe appears in top-5, and deletes the probe before exit
 - Uses existing script conventions: stdlib `urllib`, `QDRANT_API_KEY` from environment or `~/.config/qdrant-knowledge.env`, direct Qdrant `api-key` header
 - Alert path is VM B1 `mail` command backed by existing homelab msmtp/mailutils pattern, sent to `azmi.codes@gmail.com`
@@ -542,13 +542,13 @@ rtk python scripts/backfill-provenance.py --qdrant-url http://192.168.18.199:633
 
 **Installed cron:**
 ```cron
-17 9 * * 1 cd /opt/homelab/ai-stack/rag-gateway-mini && /usr/bin/python3 scripts/redteam-probe.py --collection knowledge_v2_keyfacts --gateway-url http://localhost:5200 >> /var/log/redteam-probe.log 2>&1
+17 9 * * 1 cd /opt/homelab/ai-stack/rag-gateway-mini && /usr/bin/python3 scripts/archive/migrations/redteam-probe.py --collection knowledge_v2_keyfacts --gateway-url http://localhost:5200 >> /var/log/redteam-probe.log 2>&1
 ```
 
 **Verification evidence (2026-05-07):**
 ```bash
-rtk python -m py_compile scripts/redteam-probe.py
-rtk python scripts/redteam-probe.py --qdrant-url http://192.168.18.199:6333 --ollama-url http://192.168.18.199:11434 --gateway-url http://192.168.18.199:5200 --collection knowledge_v2_keyfacts --no-email
+rtk python -m py_compile scripts/archive/migrations/redteam-probe.py
+rtk python scripts/archive/migrations/redteam-probe.py --qdrant-url http://192.168.18.199:6333 --ollama-url http://192.168.18.199:11434 --gateway-url http://192.168.18.199:5200 --collection knowledge_v2_keyfacts --no-email
 # Observed: probe_upsert=ok; gateway_status=not_found; OK probe_not_surfaced_in_top_k; probe_cleanup=ok
 
 ssh figulazmi@192.168.18.199 '~/bin/rtk python3 /tmp/redteam-probe.py --collection knowledge_v2_keyfacts --gateway-url http://localhost:5200 --force-alert'

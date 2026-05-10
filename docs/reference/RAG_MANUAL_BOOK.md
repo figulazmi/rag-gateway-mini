@@ -986,7 +986,7 @@ Kalau masih terjadi: pastikan `rag_capture.py` di `~/.local/bin/rag` sudah di-sy
 
 ## 8. Eval Framework
 
-Script: `scripts/eval-retrieval-quality.py`
+Script: `~/scripts/rag-infra/eval-retrieval-quality.py`
 
 ### Metrics
 
@@ -1010,10 +1010,10 @@ Script: `scripts/eval-retrieval-quality.py`
 
 ```bash
 # Basic eval (30 queries)
-python scripts/eval-retrieval-quality.py --project homelab --debug
+python ~/scripts/rag-infra/eval-retrieval-quality.py --project homelab --debug
 
 # End-to-end mode: retrieve → qwen2.5-coder → check hallucination
-python scripts/eval-retrieval-quality.py --project homelab --end-to-end
+python ~/scripts/rag-infra/eval-retrieval-quality.py --project homelab --end-to-end
 ```
 
 ### Baseline Saat Ini (Post P1.2)
@@ -1054,7 +1054,7 @@ Kalau eval menunjukkan sparse false positive (dense dan sparse keduanya "benar" 
 | Checkpoints | `.claude/checkpoints/YYYY-MM-DD-*-001.md` | In-progress checkpoints |
 | Push queue | `~/.rag_push_queue` | Failed push retry list |
 | API key | `~/.config/qdrant-knowledge.env` (chmod 600) | Qdrant API key, outside repo |
-| Eval script | `scripts/eval-retrieval-quality.py` | Retrieval quality measurement |
+| Eval script | `~/scripts/rag-infra/eval-retrieval-quality.py` | Retrieval quality measurement |
 | Eval fixtures | `scripts/eval-fixtures/implementation-tests.json` | 30 test queries |
 | n8n workflow | rag-tools source `~/scripts/n8n-workflows/ingest-knowledge-v2.json` | Workflow source |
 | Skills | `.claude/skills/rag-knowledge-capture-cli/SKILL.md` | Override global command |

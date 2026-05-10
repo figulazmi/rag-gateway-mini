@@ -18,11 +18,11 @@ It is an index, not the source of truth. Each task status must be owned by the `
 ## Quick Status
 
 ```text
-Done: Security posture tracker complete through P2-4; Quality threshold table complete; Testing closure checklist complete; Risk review complete; P3.2 implementation-correctness smoke complete; /rag/answer spec captured and smoke retry passed after configurable Ollama timeout
+Done: Security posture tracker complete through P2-4; Quality threshold table complete; Testing closure checklist complete; Risk review complete; P3.2 implementation-correctness smoke complete; /rag/answer spec captured and smoke retry passed after configurable Ollama timeout; OI-5 coverage improvement complete (7 implementation-spec chunks captured, corpus 602 → 604)
 Open: no active Security, Quality threshold, Testing, or Risk item
 Blocked: none listed here
-Deferred: P2.2-B, OI-5, Pipeline #2C
-Next: Expand knowledge coverage (OI-5)
+Deferred: P2.2-B, Pipeline #2C
+Next: P4 pre-commit hook or next roadmap item
 ```
 
 ---
@@ -32,10 +32,10 @@ Next: Expand knowledge coverage (OI-5)
 | Area | Source of truth | Current focus | Next task ID | Notes |
 |---|---|---|---|---|
 | Security | [`security/RAG_SECURITY_POSTURE.md`](security/RAG_SECURITY_POSTURE.md) | Security posture tracker complete | Complete | P0 through P2-4 are done in the canonical security tracker |
-| Quality | [`quality/RAG_EVAL_HARNESS.md`](quality/RAG_EVAL_HARNESS.md) | Gap-fill follow-up eval complete; corpus at 597 points; hybrid Hit@1 0.9574 MRR 0.9574 NDCG@5 0.9186 | Complete | Keep metric history in quality docs |
+| Quality | [`quality/RAG_EVAL_HARNESS.md`](quality/RAG_EVAL_HARNESS.md) | Gap-fill follow-up eval complete; corpus at 604 points; hybrid Hit@1 0.9574 MRR 0.9574 NDCG@5 0.9186 | Complete | Keep metric history in quality docs; re-run eval if fixture regressions appear |
 | Pipeline | [`pipeline/RAG_BOTTLENECK_FIXES.md`](pipeline/RAG_BOTTLENECK_FIXES.md) | Deferred sparse-text and IDF tuning | #2C | Revisit only if corpus diversity grows and eval shows persistent sparse false positives |
-| Planning | [`planning/RAG_V2_ROADMAP.md`](planning/RAG_V2_ROADMAP.md) | /rag/search and /rag/answer implementation-spec captured; /rag/answer smoke passed (HTTP 200 found) after GenerationTimeoutSeconds made configurable; harness at scripts/smoke-p32-implementation-correctness.py | OI-5 | Next: open OI-5 coverage work |
-| Coverage | [`quality/COVERAGE_KNOWLEDGE_TRACKER.md`](quality/COVERAGE_KNOWLEDGE_TRACKER.md) | Knowledge coverage improvement | OI-5 | Ready to open: implementation-spec capture is now active (P3.2 DONE) |
+| Planning | [`planning/RAG_V2_ROADMAP.md`](planning/RAG_V2_ROADMAP.md) | /rag/search and /rag/answer implementation-spec captured; /rag/answer smoke passed (HTTP 200 found) after GenerationTimeoutSeconds made configurable; harness at scripts/smoke-p32-implementation-correctness.py | P4 | All P3 items complete |
+| Coverage | [`quality/COVERAGE_KNOWLEDGE_TRACKER.md`](quality/COVERAGE_KNOWLEDGE_TRACKER.md) | OI-5 complete: 7 implementation-spec chunks captured (2026-05-10); corpus 602 → 604 | Complete | implementation-spec bootstrapped; update tracker doc with OI-5 session log |
 | Reference | [`reference/RAG_BOOTSTRAP_NEW_DEVICE_AND_SERVER.md`](reference/RAG_BOOTSTRAP_NEW_DEVICE_AND_SERVER.md) | New device/server bootstrap | See tracker | Use only for migration or rebuild work |
 | Testing | [`testing/TEST_STRATEGY.md`](testing/TEST_STRATEGY.md) | Docs-driven DONE gate checklist is now reusable guidance | Complete | Mitigates RISK-1 documentation drift with a canonical closure checklist |
 | Configuration | [`config/CONFIGURATION.md`](config/CONFIGURATION.md) | Keep runtime settings and secret locations documented | See document | Do not store secrets in docs |
@@ -65,4 +65,4 @@ The linked tracker must contain exactly one `## Canonical Task Tracker` section.
 
 ---
 
-*Last updated: 2026-05-08 · Owner: Figur Ulul Azmi*
+*Last updated: 2026-05-10 · Owner: Figur Ulul Azmi*

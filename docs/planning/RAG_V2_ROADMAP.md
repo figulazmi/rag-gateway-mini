@@ -18,7 +18,7 @@ Claude AI is used as a **reasoning + capture specialist only** for `knowledge_v2
 - Query expansion for short queries (<8 words) — `qdrant-mcp-server-v2.js:20`
 - Retry with rewrite when `avgScore < 0.6` — `qdrant-mcp-server-v2.js:227`
 - Structured query logs (`rag_search`, `rag_retry`, `rag_not_found`) to stderr
-- Eval framework with Hit@1/3/5, MRR, NDCG@5, 3 strategies, 7 test cases, regression detection — `scripts/eval-retrieval-quality.py`
+- Eval framework with Hit@1/3/5, MRR, NDCG@5, 3 strategies, 7 test cases, regression detection — `~/scripts/rag-infra/eval-retrieval-quality.py`
 - Warn-only validation (word count, em dash, Indonesian detection, Key Facts presence) — `~/scripts/rag-capture-v2/rag_capture.py:181` (rag-tools)
 - Frontmatter validation at n8n ingest node
 - Status filtering (`implemented` default, `include_planned` toggle)
@@ -96,7 +96,7 @@ Upserts are idempotent by deterministic ID (`{DOC_ID}-chunk-{N}`), so this is sa
 
 **Verification after deployment:**
 
-- Run `python scripts/eval-retrieval-quality.py --project homelab --debug` before and after re-ingest
+- Run `python ~/scripts/rag-infra/eval-retrieval-quality.py --project homelab --debug` before and after re-ingest
 - NDCG@5 should improve; Anthropic benchmark predicts 35-49% retrieval failure reduction
 - Check MCP server stderr: `avg_score` on typical queries should rise
 
@@ -144,10 +144,10 @@ Decision: keep reranker scaffolding disabled. Do not deploy TEI/BGE just to mask
 **Files changed (scaffolding):**
 
 - `~/scripts/qdrant-mcp-server-v2/qdrant-mcp-server-v2.js` (rag-tools) — `rerankWithLLM` helper, wired into both primary and retry search paths; gated on `RERANK_ENABLED` env var; emits `rag_rerank` and `rag_rerank_parse_error` stderr events.
-- `scripts/eval-retrieval-quality.py` — `rerank_with_llm` helper, `--rerank / --rerank-model / --rerank-candidates` CLI flags.
+- `~/scripts/rag-infra/eval-retrieval-quality.py` — `rerank_with_llm` helper, `--rerank / --rerank-model / --rerank-candidates` CLI flags.
 
 **Next retrieval fix before P2.2-B:**
-Promote the successful sparse text redesign. `scripts/build-sparse-keyfacts-experiment-rest.py` created `knowledge_v2_keyfacts` from `knowledge_v2` with point parity 373 -> 373 and 345 points carrying Key Facts sparse text. Next step is to production-harden the separate keyfacts path, prove it stays better than legacy under soak, then choose an explicit cutover path after user approval.
+Promote the successful sparse text redesign. `scripts/archive/migrations/build-sparse-keyfacts-experiment-rest.py` created `knowledge_v2_keyfacts` from `knowledge_v2` with point parity 373 -> 373 and 345 points carrying Key Facts sparse text. Next step is to production-harden the separate keyfacts path, prove it stays better than legacy under soak, then choose an explicit cutover path after user approval.
 
 **P2.5. Keyfacts production criteria and history**
 
@@ -250,7 +250,7 @@ Expanded retrieval fixtures now live at `scripts/eval-fixtures/homelab-expanded.
 **P3.3. Feedback loop: eval → chunk revision queue**
 When eval flags NDCG < 0.6 for query X, append the chunk_id that should have ranked 1 to `~/scripts/.rag_revision_queue.md`. Surface the backlog in `rag status`.
 
-**Files:** `scripts/eval-retrieval-quality.py`, `~/scripts/rag-capture-v2/rag_capture.py:438` (rag-tools) `cmd_status`.
+**Files:** `~/scripts/rag-infra/eval-retrieval-quality.py`, `~/scripts/rag-capture-v2/rag_capture.py:438` (rag-tools) `cmd_status`.
 
 ### P4 — Nice to have (skip until P1-P3 are done)
 
@@ -284,14 +284,14 @@ When eval flags NDCG < 0.6 for query X, append the chunk_id that should have ran
 | `~/scripts/rag-capture-v2/rag_capture.py` (rag-tools)  | Markdown drafting CLI: schema, validation, frontmatter   |
 | `~/scripts/push-to-qdrant.sh` (rag-tools)              | Ingestion: embedding, upsert, supersede logic            |
 | `~/scripts/qdrant-mcp-server-v2/qdrant-mcp-server-v2.js` (rag-tools) | Retrieval: hybrid search, reranker stage                 |
-| `scripts/eval-retrieval-quality.py`                    | Eval framework; end-to-end hallucination test lives here |
+| `~/scripts/rag-infra/eval-retrieval-quality.py`                    | Eval framework; end-to-end hallucination test lives here |
 | `.claude/skills/rag-knowledge-capture-cli/SKILL.md`    | Chunk body templates Claude uses when capturing          |
 | `CLAUDE.md`                                            | Field and content rules visible to every session         |
 
 ## Verification Steps (run after each priority ships)
 
 1. `rag add` a sample `implementation-spec` chunk → must pass validation, or reject with a clear reason
-2. `python scripts/eval-retrieval-quality.py --project homelab --debug` → compare NDCG@5 before vs after
+2. `python ~/scripts/rag-infra/eval-retrieval-quality.py --project homelab --debug` → compare NDCG@5 before vs after
 3. End-to-end strategy: query via MCP `search_knowledge` or `/rag/search`, feed the result through the 9routers-managed AI assistant workflow, verify generated code compiles and matches the chunk spec
 4. Optional benchmark: run Ollama end-to-end only after a code model such as `qwen2.5-coder:7b` is installed
 5. Watch MCP server stderr for `avg_score` improvement after contextual retrieval lands
