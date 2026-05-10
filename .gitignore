@@ -12,3 +12,4 @@ appsettings.Production.json
 .claude/summaries/
 .claude/worktrees/
 .claude/checkpoints/
+.worktrees/
