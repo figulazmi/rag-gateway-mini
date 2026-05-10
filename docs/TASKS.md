@@ -18,11 +18,11 @@ It is an index, not the source of truth. Each task status must be owned by the `
 ## Quick Status
 
 ```text
-Done: Security posture tracker complete through P2-4; Quality threshold table complete; Testing closure checklist complete; Risk review complete
+Done: Security posture tracker complete through P2-4; Quality threshold table complete; Testing closure checklist complete; Risk review complete; P3.2 implementation-correctness smoke complete
 Open: no active Security, Quality threshold, Testing, or Risk item
 Blocked: none listed here
 Deferred: P2.2-B, OI-5, Pipeline #2C
-Next: Run the P3.2 implementation-correctness smoke via 9routers workflow against a pushed implementation-spec chunk before any new pipeline optimization
+Next: Capture /rag/answer implementation-spec chunk and expand knowledge coverage (OI-5)
 ```
 
 ---
@@ -34,8 +34,8 @@ Next: Run the P3.2 implementation-correctness smoke via 9routers workflow agains
 | Security | [`security/RAG_SECURITY_POSTURE.md`](security/RAG_SECURITY_POSTURE.md) | Security posture tracker complete | Complete | P0 through P2-4 are done in the canonical security tracker |
 | Quality | [`quality/RAG_EVAL_HARNESS.md`](quality/RAG_EVAL_HARNESS.md) | Gap-fill follow-up eval complete; corpus at 577 points; hybrid Hit@1 0.9574 MRR 0.9574 NDCG@5 0.9186 | Complete | Keep metric history in quality docs |
 | Pipeline | [`pipeline/RAG_BOTTLENECK_FIXES.md`](pipeline/RAG_BOTTLENECK_FIXES.md) | Deferred sparse-text and IDF tuning | #2C | Revisit only if corpus diversity grows and eval shows persistent sparse false positives |
-| Planning | [`planning/RAG_V2_ROADMAP.md`](planning/RAG_V2_ROADMAP.md) | Implementation-correctness smoke strategy and retrieval pre-smoke are documented; next is the 9routers-routed implementation-correctness run | P3.2 smoke | Retrieved spec is fed to the AI assistant through 9routers; no manual model selection |
-| Coverage | [`quality/COVERAGE_KNOWLEDGE_TRACKER.md`](quality/COVERAGE_KNOWLEDGE_TRACKER.md) | Knowledge coverage improvement | OI-5 | Deferred until implementation-spec capture is active |
+| Planning | [`planning/RAG_V2_ROADMAP.md`](planning/RAG_V2_ROADMAP.md) | P3.2 smoke complete; /rag/search implementation-spec captured and pushed; harness at scripts/smoke-p32-implementation-correctness.py | OI-5 / /rag/answer spec | Next: capture /rag/answer spec, then open OI-5 coverage work |
+| Coverage | [`quality/COVERAGE_KNOWLEDGE_TRACKER.md`](quality/COVERAGE_KNOWLEDGE_TRACKER.md) | Knowledge coverage improvement | OI-5 | Ready to open: implementation-spec capture is now active (P3.2 DONE) |
 | Reference | [`reference/RAG_BOOTSTRAP_NEW_DEVICE_AND_SERVER.md`](reference/RAG_BOOTSTRAP_NEW_DEVICE_AND_SERVER.md) | New device/server bootstrap | See tracker | Use only for migration or rebuild work |
 | Testing | [`testing/TEST_STRATEGY.md`](testing/TEST_STRATEGY.md) | Docs-driven DONE gate checklist is now reusable guidance | Complete | Mitigates RISK-1 documentation drift with a canonical closure checklist |
 | Configuration | [`config/CONFIGURATION.md`](config/CONFIGURATION.md) | Keep runtime settings and secret locations documented | See document | Do not store secrets in docs |
