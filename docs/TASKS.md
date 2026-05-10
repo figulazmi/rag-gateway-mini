@@ -18,11 +18,11 @@ It is an index, not the source of truth. Each task status must be owned by the `
 ## Quick Status
 
 ```text
-Done: Security posture tracker complete through P2-4; Quality threshold table complete; Testing closure checklist complete; Risk review complete; P3.2 implementation-correctness smoke complete; /rag/answer spec captured and smoke retry passed after configurable Ollama timeout; OI-5 coverage improvement complete (7 implementation-spec chunks captured, corpus 602 → 604)
-Open: no active Security, Quality threshold, Testing, or Risk item
-Blocked: none listed here
-Deferred: P2.2-B, Pipeline #2C
-Next: P4 pre-commit hook or next roadmap item
+Done: All P1-P4 roadmap items complete. P4: reusable RAG scripts moved to rag-tools repo, 6 migration scripts archived, pre-commit frontmatter hook implemented + installed. OI-5: 7 implementation-spec chunks pushed, corpus 602→604, coverage 8.0/10.
+Open: none — roadmap P1 through P4 is fully closed
+Blocked: none
+Deferred: P2.2-B (reranker — needs TEI+BGE on VM B1), Pipeline #2C (sparse IDF tuning)
+Next: Steady-state maintenance — capture new chunks as features ship; revisit P2.2-B when TEI infra is ready
 ```
 
 ---
@@ -34,8 +34,8 @@ Next: P4 pre-commit hook or next roadmap item
 | Security | [`security/RAG_SECURITY_POSTURE.md`](security/RAG_SECURITY_POSTURE.md) | Security posture tracker complete | Complete | P0 through P2-4 are done in the canonical security tracker |
 | Quality | [`quality/RAG_EVAL_HARNESS.md`](quality/RAG_EVAL_HARNESS.md) | Gap-fill follow-up eval complete; corpus at 604 points; hybrid Hit@1 0.9574 MRR 0.9574 NDCG@5 0.9186 | Complete | Keep metric history in quality docs; re-run eval if fixture regressions appear |
 | Pipeline | [`pipeline/RAG_BOTTLENECK_FIXES.md`](pipeline/RAG_BOTTLENECK_FIXES.md) | Deferred sparse-text and IDF tuning | #2C | Revisit only if corpus diversity grows and eval shows persistent sparse false positives |
-| Planning | [`planning/RAG_V2_ROADMAP.md`](planning/RAG_V2_ROADMAP.md) | /rag/search and /rag/answer implementation-spec captured; /rag/answer smoke passed (HTTP 200 found) after GenerationTimeoutSeconds made configurable; harness at scripts/smoke-p32-implementation-correctness.py | P4 | All P3 items complete |
-| Coverage | [`quality/COVERAGE_KNOWLEDGE_TRACKER.md`](quality/COVERAGE_KNOWLEDGE_TRACKER.md) | OI-5 complete: 7 implementation-spec chunks captured (2026-05-10); corpus 602 → 604 | Complete | implementation-spec bootstrapped; update tracker doc with OI-5 session log |
+| Planning | [`planning/RAG_V2_ROADMAP.md`](planning/RAG_V2_ROADMAP.md) | P1-P4 complete; reusable scripts moved to rag-tools; frontmatter hook implemented and installed | Complete | No active roadmap item; only deferred infra-dependent work remains |
+| Coverage | [`quality/COVERAGE_KNOWLEDGE_TRACKER.md`](quality/COVERAGE_KNOWLEDGE_TRACKER.md) | OI-5 complete: 7 implementation-spec chunks captured (2026-05-10); corpus 602 → 604; score 8.0/10 | Complete | Maintain capture discipline for new work |
 | Reference | [`reference/RAG_BOOTSTRAP_NEW_DEVICE_AND_SERVER.md`](reference/RAG_BOOTSTRAP_NEW_DEVICE_AND_SERVER.md) | New device/server bootstrap | See tracker | Use only for migration or rebuild work |
 | Testing | [`testing/TEST_STRATEGY.md`](testing/TEST_STRATEGY.md) | Docs-driven DONE gate checklist is now reusable guidance | Complete | Mitigates RISK-1 documentation drift with a canonical closure checklist |
 | Configuration | [`config/CONFIGURATION.md`](config/CONFIGURATION.md) | Keep runtime settings and secret locations documented | See document | Do not store secrets in docs |
