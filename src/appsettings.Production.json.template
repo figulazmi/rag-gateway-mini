@@ -4,6 +4,7 @@
     "QdrantBaseUrl": "http://192.168.18.199:6333",
     "OllamaModel": "nomic-embed-text",
     "GenerationModel": "llama3.2:3b",
+    "GenerationTimeoutSeconds": 600,
     "QdrantCollection": "knowledge_v2",
     "QdrantApiKey": "FILL_WITH_REAL_KEY",
     "ScoreThreshold": 0.35,

@@ -30,7 +30,7 @@ builder.Services.AddHttpClient<ILlmGenerationClient, OllamaGenerationClient>((sp
 {
     var opts = sp.GetRequiredService<IOptions<RagGatewayOptions>>().Value;
     client.BaseAddress = new Uri(opts.OllamaBaseUrl);
-    client.Timeout = TimeSpan.FromMinutes(3);
+    client.Timeout = TimeSpan.FromSeconds(opts.GenerationTimeoutSeconds);
 });
 
 // Infrastructure — Qdrant
