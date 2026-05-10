@@ -342,6 +342,10 @@ def main():
         "--retrieve-timeout", type=int, default=30,
         help="Gateway HTTP retrieval timeout in seconds (default: 30)",
     )
+    parser.add_argument(
+        "--smoke-timeout", type=int, default=30,
+        help="API smoke HTTP timeout in seconds (default: 30)",
+    )
     args = parser.parse_args()
 
     ts = datetime.now()
@@ -465,7 +469,7 @@ def main():
         print(f"\n  [smoke] POST {args.smoke_endpoint} @ {args.gateway_url} ...")
         smoke_result = run_api_smoke(
             args.gateway_url, args.smoke_endpoint,
-            args.smoke_query, args.project, 30,
+            args.smoke_query, args.project, args.smoke_timeout,
         )
         smoke_symbol = "ok" if smoke_result["http_status"] == 200 else "FAIL"
         print(f"  [{smoke_symbol}] HTTP {smoke_result['http_status']}  "
