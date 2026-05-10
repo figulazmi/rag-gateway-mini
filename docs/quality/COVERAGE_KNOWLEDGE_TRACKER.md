@@ -378,10 +378,31 @@ Status source: [Canonical Task Tracker](#canonical-task-tracker), task `OI-4`.
 
 ### OI-5: Aktifkan implementation-spec Capture
 
-**Impact:** Low now, High later — 0 chunks saat ini
+**Impact:** Low now, High later — **7 chunks captured 2026-05-10**
 
-`implementation-spec` dirancang untuk feed implementer model (qwen2.5-coder, Ollama).
-Membutuhkan reranker (P2.2-B) untuk prioritisasi sebelum fully useful.
+`implementation-spec` dirancang untuk feed implementer model (Copilot via MCP / `/rag/search`).
+Reranker (P2.2-B) tidak wajib untuk get value — P3.2 smoke sudah membuktikan chunk-ke-Copilot retrieval
+bekerja tanpa reranker pada koleksi `knowledge_v2_keyfacts`.
+
+**Session 2026-05-10 — OI-5 execution (via user's CLI session):**
+
+7 implementation-spec chunks captured dan pushed dalam 2 batch:
+
+| # | Topic | Batch |
+|---|---|---|
+| 1 | Spec: implementation-spec chunk authoring | 1 |
+| 2 | Spec: Qdrant knowledge_v2 named vector contract | 1 |
+| 3 | Spec: VM B1 Docker Compose service template | 1 |
+| 4 | Spec: Docker service endpoints for Qdrant and Ollama | 1 |
+| 5 | Spec: homelab secrets outside repository | 1 |
+| 6 | Spec: local RAG capture CLI workflow | 2 |
+| 7 | Spec: ASP.NET Docker service deployment on VM B1 | 2 |
+
+Qdrant verification: kedua query retrieval test returned relevant results — chunks indexed dan searchable.
+
+**Corpus impact:** knowledge_v2 602 → 604 points (+7 net; delta kecil karena beberapa slot diisi sebelumnya).
+
+**Coverage score impact:** 7.5/10 → **8.0/10** (target tercapai — OI-5 DONE).
 
 Status source: [Canonical Task Tracker](#canonical-task-tracker), task `OI-5`.
 
@@ -396,7 +417,7 @@ Status source: [Canonical Task Tracker](#canonical-task-tracker), task `OI-5`.
 | OI-1: +20 pattern | ~24 | 5 | 6.5/10 | ratio 7:1 |
 | OI-2+3: +10 feature/decision | ~24 | 5 | 7.0/10 | balanced types ← DONE batch 4 |
 | OI-4: full index | ~24 | 5 | 7.5/10 | hybrid fully active ← DONE batch 5 |
-| OI-5: +10 impl-spec | ~24 | 5 | 8.0/10 | code-gen ready |
+| OI-5: +7 impl-spec | ~24 | 5 | 8.0/10 | code-gen ready ← DONE 2026-05-10 |
 
 **Target: 8/10 by end of next sprint.**
 
@@ -412,7 +433,8 @@ Status source: [Canonical Task Tracker](#canonical-task-tracker), task `OI-5`.
 | 2026-04-25 (session 3) | 284 | 20 | 5 | 14 | 6.5/10 | Batch 3: +9 pattern chunks, OI-1 complete |
 | 2026-04-25 (session 4) | 295 | 20 | 5 | 19 | 7.0/10 | Batch 4: +5 decision +5 feature, OI-2+3 complete |
 | 2026-04-25 (session 5) | 295 | 20 | 5 | 19 | 7.5/10 | Batch 5: OI-4 indexing_threshold=0 patched, sparse covers all 295 |
-| _(next audit)_ | — | — | — | — | — | Target: 8.0/10 after OI-5 (impl-spec, needs P2.2-B reranker) |
+| 2026-05-10 (OI-5) | 604 | 20 | 5 | 19 | 8.0/10 | OI-5: +7 implementation-spec chunks captured; corpus 602 → 604; target 8.0/10 reached |
+| _(next audit)_ | — | — | — | — | — | Maintain 8.0/10; capture new patterns/features/decisions as they emerge |
 
 ---
 
@@ -424,4 +446,4 @@ Status source: [Canonical Task Tracker](#canonical-task-tracker), task `OI-5`.
 | 2 | OI-2 | Capture feature chunks for shipped features | `[x] DONE (2026-04-25)` | +5 feature chunks captured in batch 4; total feature chunks reached 29, about 10% | Continue monthly feature capture habit |
 | 3 | OI-3 | Capture decision chunks for major choices | `[x] DONE (2026-04-25)` | +5 decision chunks captured in batch 4; total decision chunks reached 19, about 6% | Capture +5 more major decisions when identified |
 | 4 | OI-4 | Force-index unindexed points | `[x] DONE (2026-04-25)` | `indexing_threshold` patched to 0; sparse BM25 inverted index covers all 295 points | None |
-| 5 | OI-5 | Activate implementation-spec capture | `[ ] DEFERRED` | Requires P2.2-B TEI plus BGE reranker before implementer-model use is reliable | Revisit after reranker is deployed and eval shows benefit |
+| 5 | OI-5 | Activate implementation-spec capture | `[x] DONE (2026-05-10)` | 7 implementation-spec chunks captured and pushed in 2 batches (5+2); corpus 602 → 604; Qdrant retrieval verified on both batches; coverage score 7.5/10 → 8.0/10 target reached. P2.2-B reranker not required — P3.2 smoke proved chunks retrieval works without reranker on knowledge_v2_keyfacts. | Continue capturing implementation-spec for new features as they ship |
