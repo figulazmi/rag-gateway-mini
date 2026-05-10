@@ -212,7 +212,7 @@ tail -5 ~/.rag_audit.log
 **Completed on:** 2026-05-05  
 **Verified by:** Claude Code + local `rtk python` accepted/rejected source-path verification + `py_compile` syntax check
 
-**Evidence:** Active tool file `C:\Users\Clandesitine\scripts\rag-capture-v2\rag_capture.py` now defines `ALLOWED_SOURCES`, validates source values through `validate_source()`, exposes `--source` on `rag add`, and writes frontmatter `source` from validated input instead of a hardcoded value. Accepted-path smoke succeeded with `--source claude-code-cli`; invalid source was rejected before draft save via CLI choice enforcement. `rtk python -m py_compile` passed after the change.
+**Evidence:** Active tool file `~/scripts/rag-capture-v2/rag_capture.py` now defines `ALLOWED_SOURCES`, validates source values through `validate_source()`, exposes `--source` on `rag add`, and writes frontmatter `source` from validated input instead of a hardcoded value. Accepted-path smoke succeeded with `--source claude-code-cli`; invalid source was rejected before draft save via CLI choice enforcement. `rtk python -m py_compile` passed after the change.
 
 **Problem:** The `source` field in chunk metadata is a free-form string. An attacker or
 misconfigured script can set any value, making audit logs unreliable.
@@ -260,7 +260,7 @@ and pushed to Qdrant, creating incomplete records that degrade retrieval and are
 
 **Status:** `[x] DONE (2026-05-06)`
 **Started on:** 2026-05-02
-**Evidence:** Published patched live n8n workflow `knowledge_v2_keyfacts` (`id=keyfacts63ce76d761`) from local export `C:\Users\Clandesitine\scripts\n8n-workflows\ingest-knowledge-v2-keyfacts.json` using n8n API `PUT /api/v1/workflows/{id}` plus activate. Post-publish controlled smoke write `p1-3-provenance-smoke-live-after-publish-2026-05-06` returned webhook `status=ok` with `qdrant_id=227909133`; Qdrant read-back for that point confirmed `chunk_source`, `session_type`, `environment`, `git_branch`, `git_commit`, `captured_at`, and `related` persisted end-to-end in `knowledge_v2_keyfacts`.
+**Evidence:** Published patched live n8n workflow `knowledge_v2_keyfacts` (`id=keyfacts63ce76d761`) from local export `~/scripts/n8n-workflows/ingest-knowledge-v2-keyfacts.json` using n8n API `PUT /api/v1/workflows/{id}` plus activate. Post-publish controlled smoke write `p1-3-provenance-smoke-live-after-publish-2026-05-06` returned webhook `status=ok` with `qdrant_id=227909133`; Qdrant read-back for that point confirmed `chunk_source`, `session_type`, `environment`, `git_branch`, `git_commit`, `captured_at`, and `related` persisted end-to-end in `knowledge_v2_keyfacts`.
 **Effort:** ~2–3 hours  
 **Completed on:** 2026-05-06  
 **Verified by:** Claude Code live n8n API publish + single webhook smoke write + Qdrant payload read-back with `api-key` header.
@@ -395,7 +395,7 @@ there is currently no way to detect it.
 - Migrated live `knowledge_v2_keyfacts` via staging collection `knowledge_v2_keyfacts_snapshot_stage`
 - Created retained backup collection `knowledge_v2_keyfacts_backup_20260506145220`
 - Live `knowledge_v2_keyfacts` now has named vectors `dense` and `snapshot` and sparse vector `sparse`
-- Patched local n8n workflow export `C:\Users\Clandesitine\scripts\n8n-workflows\ingest-knowledge-v2-keyfacts.json` so new upserts write `snapshot: embedding` alongside `dense: embedding`
+- Patched local n8n workflow export `~/scripts/n8n-workflows/ingest-knowledge-v2-keyfacts.json` so new upserts write `snapshot: embedding` alongside `dense: embedding`
 - Published the patched workflow to live n8n via `n8n import:workflow`, `n8n publish:workflow`, then restarted the `n8n` container
 
 **Verification:**

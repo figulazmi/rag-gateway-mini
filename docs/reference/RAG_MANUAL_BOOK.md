@@ -1045,9 +1045,9 @@ Kalau eval menunjukkan sparse false positive (dense dan sparse keduanya "benar" 
 
 | File | Lokasi | Role |
 |---|---|---|
-| `rag_capture.py` | rag-tools source installed at `~/scripts/rag-capture-v2/rag_capture.py` / `C:\Users\Clandesitine\scripts\rag-capture-v2\rag_capture.py` | CLI source |
+| `rag_capture.py` | rag-tools source installed at `~/scripts/rag-capture-v2/rag_capture.py` | CLI source |
 | `rag` (installed) | `~/.local/bin/rag` (Windows) | Wrapper that execs `~/scripts/rag-capture-v2/rag_capture.py` |
-| `push-to-qdrant.sh` | rag-tools source installed at `~/scripts/push-to-qdrant.sh` / `C:\Users\Clandesitine\scripts\push-to-qdrant.sh` | Ingest pipeline |
+| `push-to-qdrant.sh` | rag-tools source installed at `~/scripts/push-to-qdrant.sh` | Ingest pipeline |
 | `qdrant-mcp-server-v2.js` | rag-tools source `~/scripts/qdrant-mcp-server-v2/qdrant-mcp-server-v2.js`; deployed on VM B1 at `/opt/mcp-servers/qdrant-knowledge/` | MCP server v2 |
 | Draft files | `~/.rag_drafts/{project}/chunk_NNN.md` | Temporary drafts |
 | Summaries | `.claude/summaries/YYYY-MM-DD-*.md` | Final merged files |
@@ -1056,7 +1056,7 @@ Kalau eval menunjukkan sparse false positive (dense dan sparse keduanya "benar" 
 | API key | `~/.config/qdrant-knowledge.env` (chmod 600) | Qdrant API key, outside repo |
 | Eval script | `scripts/eval-retrieval-quality.py` | Retrieval quality measurement |
 | Eval fixtures | `scripts/eval-fixtures/implementation-tests.json` | 30 test queries |
-| n8n workflow | rag-tools source `~/scripts/n8n-workflows/ingest-knowledge-v2.json` / `C:\Users\Clandesitine\scripts\n8n-workflows\ingest-knowledge-v2.json` | Workflow source |
+| n8n workflow | rag-tools source `~/scripts/n8n-workflows/ingest-knowledge-v2.json` | Workflow source |
 | Skills | `.claude/skills/rag-knowledge-capture-cli/SKILL.md` | Override global command |
 | Global command | `~/.claude/commands/rag-knowledge-capture-cli.md` | Fallback -- sync with SKILL.md |
 

@@ -53,7 +53,7 @@ Use the script below from the `rag-gateway-mini` repository to initialize anothe
 
 ```bash
 rtk python scripts/init-docs-template.py \
-  --target C:/Users/Clandesitine/source/repos/my-new-project \
+  --target ~/source/repos/my-new-project \
   --project-name "My New Project" \
   --owner "Figur Ulul Azmi" \
   --stack dotnet \

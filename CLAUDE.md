@@ -256,10 +256,10 @@ bash ~/scripts/push-to-qdrant.sh .claude/summaries/YYYY-MM-DD-[slug]-promoted.md
    
   For all RAG knowledge capture, checkpoint, resume, promote, merge, and push workflows, use the canonical local implementation:                                             
                                                                
-  `C:/Users/Clandesitine/scripts/rag-capture-v2/rag_capture.py`
+  `~/scripts/rag-capture-v2/rag_capture.py`
 
   The `rag` command is acceptable only as a CLI wrapper if it resolves to the same implementation. Prefer explicit `python
-  "C:/Users/Clandesitine/scripts/rag-capture-v2/rag_capture.py" ...` when there is any ambiguity.
+  "~/scripts/rag-capture-v2/rag_capture.py" ...` when there is any ambiguity.
 
   Do not treat `rag-knowledge-capture-cli` as the storage engine. It is only a Claude Code skill/instruction wrapper that describes the workflow. The actual execution must
   be done through `rag_capture.py` or the `rag` CLI.
@@ -270,18 +270,18 @@ bash ~/scripts/push-to-qdrant.sh .claude/summaries/YYYY-MM-DD-[slug]-promoted.md
   1. Create chunk content internally.
   2. Run:
      ```bash
-     rtk python "C:/Users/Clandesitine/scripts/rag-capture-v2/rag_capture.py" add        -p PROJECT        -t TYPE        --topic "TOPIC"        --tags "tag1,tag2,tag3"        --environment homelab        --status implemented        --content "$CONTENT"
+     rtk python "~/scripts/rag-capture-v2/rag_capture.py" add        -p PROJECT        -t TYPE        --topic "TOPIC"        --tags "tag1,tag2,tag3"        --environment homelab        --status implemented        --content "$CONTENT"
   3. Run:
-  rtk python "C:/Users/Clandesitine/scripts/rag-capture-v2/rag_capture.py" merge     -p PROJECT     --output YYYY-MM-DD-topic.md
+  rtk python "~/scripts/rag-capture-v2/rag_capture.py" merge     -p PROJECT     --output YYYY-MM-DD-topic.md
 
   For resume:
-  rtk python "C:/Users/Clandesitine/scripts/rag-capture-v2/rag_capture.py" resume
+  rtk python "~/scripts/rag-capture-v2/rag_capture.py" resume
 
   For checkpoint:
-  rtk python "C:/Users/Clandesitine/scripts/rag-capture-v2/rag_capture.py" checkpoint ...
+  rtk python "~/scripts/rag-capture-v2/rag_capture.py" checkpoint ...
 
   For promote:
-  rtk python "C:/Users/Clandesitine/scripts/rag-capture-v2/rag_capture.py" promote ...
+  rtk python "~/scripts/rag-capture-v2/rag_capture.py" promote ...
 
   Rules
 
@@ -297,8 +297,8 @@ bash ~/scripts/push-to-qdrant.sh .claude/summaries/YYYY-MM-DD-[slug]-promoted.md
   Versi super pendek kalau mau dimasukkan ke memory:
 
   ```markdown
-  Always use `C:/Users/Clandesitine/scripts/rag-capture-v2/rag_capture.py` or its `rag` CLI wrapper for RAG capture/resume/checkpoint/merge/promote. Do not invoke
+  Always use `~/scripts/rag-capture-v2/rag_capture.py` or its `rag` CLI wrapper for RAG capture/resume/checkpoint/merge/promote. Do not invoke
   `rag-knowledge-capture-cli` as the capture engine; it is only an instruction wrapper. Prefer explicit `rtk python
-  "C:/Users/Clandesitine/scripts/rag-capture-v2/rag_capture.py" ...` when ambiguity exists.
+  "~/scripts/rag-capture-v2/rag_capture.py" ...` when ambiguity exists.
   ```
 

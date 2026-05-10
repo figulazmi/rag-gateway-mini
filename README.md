@@ -84,7 +84,7 @@ Run this sequence at the beginning of every session:
 
 ```bash
 # 1. Resume checkpoint first
-rtk python "C:/Users/Clandesitine/scripts/rag-capture-v2/rag_capture.py" resume
+rtk python "~/scripts/rag-capture-v2/rag_capture.py" resume
 # If the rag wrapper is installed and known-good, `rtk rag resume` is equivalent.
 
 # 2. Load deferred schema
@@ -164,7 +164,7 @@ export RAG_BASE_URL=http://your-host:5200
 
 ## Capture Knowledge (Write Pipeline)
 
-After solving a problem or completing a feature, capture it to Qdrant so the team can retrieve it later. The `rag` CLI is a wrapper around `rag_capture.py`; if the wrapper is unavailable or ambiguous, call `rtk python "C:/Users/Clandesitine/scripts/rag-capture-v2/rag_capture.py" ...` with the same flags.
+After solving a problem or completing a feature, capture it to Qdrant so the team can retrieve it later. The `rag` CLI is a wrapper around `rag_capture.py`; if the wrapper is unavailable or ambiguous, call `rtk python "~/scripts/rag-capture-v2/rag_capture.py" ...` with the same flags.
 
 ```bash
 cat <<'EOF' | rtk rag add -p homelab -t debug --topic "topic here" --tags "homelab,docker,qdrant"

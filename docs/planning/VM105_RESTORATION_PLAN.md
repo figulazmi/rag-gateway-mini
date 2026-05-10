@@ -23,7 +23,7 @@
 |---|---|---|---|
 | Qdrant collection | `knowledge_v2` with named dense+sparse vectors and IDF sparse modifier | Live Qdrant: `points_count=368`, dense=`dense`, sparse=`sparse`, `sparse.modifier=idf` | None if restoring onto this VM; if rebuilding from Apr 13 backup, recreate collection before re-push |
 | MCP server | v2 server deployed and used by Claude Code | `/opt/mcp-servers/qdrant-knowledge/qdrant-mcp-server-v2.js` exists; `~/.qdrant-mcp.env` exists | Ensure PS1/startup command points to v2, not v1 |
-| Ingest scripts | April 27 `push-to-qdrant.sh` and `rag_capture.py` | `~/scripts/push-to-qdrant.sh` and `~/scripts/rag-capture-v2/rag_capture.py` exist on VM; source of truth is rag-tools installed per device under `~/scripts` / `C:\Users\Clandesitine\scripts` | Copy from rag-tools/current laptop `~/scripts/...` to VM105 when rebuilding |
+| Ingest scripts | April 27 `push-to-qdrant.sh` and `rag_capture.py` | `~/scripts/push-to-qdrant.sh` and `~/scripts/rag-capture-v2/rag_capture.py` exist on VM; source of truth is rag-tools installed per device under `~/scripts` | Copy from rag-tools/current laptop `~/scripts/...` to VM105 when rebuilding |
 | n8n workflow source | `knowledge_v2` workflow with contextual `embed_content` and protected ingest endpoint | `~/scripts/n8n-workflows/ingest-knowledge-v2.json` exists; source of truth is rag-tools/local scripts, not this repo. Live 2026-04-30: old public path returns 404; secret-path smoke push returns `status: ok` | Import workflow from rag-tools/current laptop, generate the VM-specific secret path, set `N8N_BLOCK_ENV_ACCESS_IN_NODE=false`, and activate after restore |
 | Eval and verifier scripts | Eval harness plus cosine verifier available | `~/scripts/eval-retrieval-quality.py` and `~/scripts/verify_embed_cosine.py` exist on VM | Copy scripts, then rerun eval and cosine checks after restore |
 | Corpus re-ingest | 120 summary files re-pushed after Apr 13 backup restore | Historical restore pushed 120 summaries; live count is now 368 | For a fresh VM105 rebuild, repeat steps 5b-5d and verify live count after push |
@@ -245,7 +245,7 @@ Restart Claude Code required after any PS1 or MCP binary change (process spawned
 
 ### Step 0a — qdrant-mcp-server-v2.js fixes applied
 
-**File:** `C:\Users\Clandesitine\scripts\qdrant-mcp-server-v2\qdrant-mcp-server-v2.js`
+**File:** `~/scripts/qdrant-mcp-server-v2/qdrant-mcp-server-v2.js`
 
 > ⚠️ Nilai di bawah adalah **final state** setelah step 0a + 7b + 7c. Step 0a = fix awal (0.35/0.50/project-aware); Step 7b = intent-aware buildRetryExpansion + HYBRID_PREFETCH_MULT=8; Step 7c = RETRY 0.50→0.55, NOT_FOUND 0.50→0.35.
 
@@ -278,7 +278,7 @@ function buildRetryExpansion(query, project) {
 
 ### Step 0b — push-to-qdrant.sh collection override fix applied
 
-**File:** `C:\Users\Clandesitine\scripts\push-to-qdrant.sh`
+**File:** `~/scripts/push-to-qdrant.sh`
 
 ```bash
 # Before (line ~176):
@@ -317,12 +317,12 @@ fi
 ```bash
 # Push repo-based summaries (62 files, format baru)
 for f in \
-  /c/Users/Clandesitine/source/repos/homelab-hardening/.claude/summaries/*.md \
-  /c/Users/Clandesitine/source/repos/ai-agent-stack/.claude/summaries/*.md \
-  /c/Users/Clandesitine/source/repos/openclaw-setup/.claude/summaries/*.md \
-  /c/Users/Clandesitine/source/repos/project-alpha/.claude/summaries/*.md \
-  /c/Users/Clandesitine/source/repos/rag-gateway-mini/.claude/summaries/*.md \
-  /c/Users/Clandesitine/source/repos/token-monitor/.claude/summaries/*.md; do
+  ~/source/repos/homelab-hardening/.claude/summaries/*.md \
+  ~/source/repos/ai-agent-stack/.claude/summaries/*.md \
+  ~/source/repos/openclaw-setup/.claude/summaries/*.md \
+  ~/source/repos/project-alpha/.claude/summaries/*.md \
+  ~/source/repos/rag-gateway-mini/.claude/summaries/*.md \
+  ~/source/repos/token-monitor/.claude/summaries/*.md; do
   bash ~/scripts/push-to-qdrant.sh "$f"
   sleep 1
 done
