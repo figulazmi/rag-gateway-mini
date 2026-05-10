@@ -571,7 +571,7 @@ ssh figulazmi@192.168.18.199 '~/bin/rtk python3 /tmp/redteam-probe.py --collecti
 | Knowledge Expansion | 41–43% remain | YES — implemented | `[x] DONE (2026-05-06)` (P1-4) |
 | Embedding Consistency Gate | N/A | YES — high value | `[x] DONE (2026-04-30)` (P0-3) |
 | Payload Schema Validation | N/A | YES — low effort | `[x] DONE (2026-05-05)` (P1-2) |
-| LLM Citation Verification | N/A | YES — medium effort | `[~] IN PROGRESS (2026-05-07)` (P2-2) |
+| LLM Citation Verification | N/A | YES — medium effort | `[x] DONE (2026-05-07)` (P2-2) |
 | Existing Chunk Provenance Backfill | N/A | YES — incident-response value | `[x] DONE (2026-05-07)` (P2-3) |
 | Automated Red Team Cron | N/A | YES — continuous validation | `[x] DONE (2026-05-07)` (P2-4) |
 

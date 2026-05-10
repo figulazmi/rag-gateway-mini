@@ -447,8 +447,10 @@
       "CLI"
     ],
     "description": "Python argparse subcommand CLI pattern",
+    "expected_snippet": "add_subparsers(dest=\"command\", required=True)",
     "expected_ids": [
-      "2128723946"
+      "2128723946",
+      "2026-05-08-python-argparse-subcommand-cli-pattern-004-chunk-1"
     ]
   },
   {

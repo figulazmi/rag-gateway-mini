@@ -117,6 +117,36 @@ rtk curl -s -o /tmp/rag_openapi.json -w "%{http_code}" http://192.168.18.199:520
 
 Pass criteria: container rebuild succeeds and endpoint smokes pass. Do not modify production secrets during redeploy. Use `~/bin/rtk` inside VM B1 SSH command bodies because non-interactive SSH may not load the user PATH. There is no `/health` endpoint; use `/scalar/`, `/openapi/v1.json`, `/rag/search`, or `/rag/answer` for liveness and behavior.
 
+### Implementation-correctness smoke
+
+Use this when validating the implementer workflow described in `docs/planning/RAG_V2_ROADMAP.md` P3.2. Routing to the AI assistant downstream is managed by 9routers.
+
+1. Retrieve one `implementation-spec` chunk via MCP `search_knowledge` or `/rag/search`.
+2. Feed only the retrieved chunk body to the AI assistant via the 9routers-managed workflow with a bounded instruction to implement exactly that contract.
+3. Compare the AI assistant output against `### Target Files`, `### Interfaces`, `### Dependencies`, `### Contract`, and `### Anti-Patterns` from the chunk.
+
+Recommended first smoke topics:
+- `Spec: rag gateway retrieval service contract`
+- `Spec: rag gateway knowledge expansion retrieval`
+- Grounded answer and citation contract spec after it is captured and pushed
+
+Minimum verification after the AI assistant produces code:
+
+```bash
+rtk dotnet build rag-gateway-mini.sln --configuration Release --warnaserror
+rtk curl -s -o /tmp/rag_scalar.out -w "%{http_code}" http://localhost:5200/scalar/
+rtk curl -s -o /tmp/rag_openapi.json -w "%{http_code}" http://localhost:5200/openapi/v1.json
+```
+
+Pass criteria:
+- The AI assistant edits only files named in `### Target Files`
+- Method names, request/response DTOs, and config keys match the retrieved spec
+- No new routes, payload fields, or configuration knobs are invented outside the spec
+- Build passes with zero warnings
+- Relevant local or VM smoke for the touched endpoint passes
+
+Record the result as `pass`, `partial`, or `fail` together with the chunk topic, touched files, and first compile or smoke error when it fails.
+
 ### Security and secret checks
 
 ```bash

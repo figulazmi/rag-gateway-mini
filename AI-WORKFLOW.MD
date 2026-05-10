@@ -1,6 +1,6 @@
 # 🤖 AI Workflow
 
-Panduan ini menjelaskan cara kerja tim dalam menggunakan AI (Claude + GitHub Copilot)
+Panduan ini menjelaskan cara kerja tim dalam menggunakan AI dengan context RAG
 secara efisien, hemat token, dan minim hallucination.
 
 Dibuat untuk semua developer, termasuk yang baru mengenal AI coding assistant.
@@ -18,7 +18,7 @@ Kamu tanya → AI nebak → Hasil bisa salah → Kamu koreksi → Buang waktu & 
 Dengan sistem ini:
 
 ```
-Qdrant (knowledge base) → RAG Gateway → rag CLI → Claude / Copilot → Hasil akurat
+Qdrant (knowledge base) → RAG Gateway → rag CLI → 9routers → AI assistant → Hasil akurat
 ```
 
 **Intinya:** AI tidak lagi mengandalkan ingatan sendiri. Semua jawaban didasarkan
@@ -39,14 +39,11 @@ pada knowledge base proyek yang sudah kita isi sendiri — zero hallucination.
                        │
           ┌────────────▼─────────────┐
           │       rag CLI Tool       │  ← tool utama yang kamu pakai sehari-hari
-          └──────────┬───────────────┘
-                     │
-           ┌─────────┴──────────┐
-           │                    │
-  ┌────────▼────────┐  ┌────────▼────────┐
-  │  GitHub Copilot  │  │     Claude      │
-  │  (task ringan)   │  │  (task besar)   │
-  └──────────────────┘  └─────────────────┘
+          └────────────┬─────────────┘
+                       │
+          ┌────────────▼─────────────┐
+          │ 9routers → AI assistant  │  ← routing downstream dikelola server
+          └──────────────────────────┘
 ```
 
 | Komponen           | Peran                                                            |
@@ -55,8 +52,7 @@ pada knowledge base proyek yang sudah kita isi sendiri — zero hallucination.
 | **RAG Gateway**    | API layer — diakses oleh `rag` CLI                               |
 | **rag CLI**        | Tool yang kamu pakai di terminal                                 |
 | **rag-tools**      | Repo tooling terpisah — rag CLI, push script, MCP server, n8n workflow |
-| **GitHub Copilot** | Generator kode cepat untuk task ringan                           |
-| **Claude**         | Reasoning engine untuk task besar & kompleks                     |
+| **9routers**       | Routing server-side ke AI assistant downstream                   |
 
 ---
 
@@ -116,46 +112,53 @@ rtk rag status
 
 ---
 
-## 🎯 Kapan Pakai Copilot vs Claude?
+## 🎯 Output Modes `rag` (routing dikelola 9routers)
 
-Ini panduan paling penting. Salah pilih = boros token + hasil kurang optimal.
+Yang kamu pilih di CLI adalah **format output context**, bukan model tujuan. Setelah context keluar dari `rag`, 9routers yang menangani routing ke AI assistant downstream.
 
-### ⚡ Gunakan Copilot — task ringan & eksekusi
+### ⚡ Default mode — `// RAG_CONTEXT:` block
 
-Cocok untuk:
-
-- Buat method CRUD biasa
-- Refactor ringan (rename, extract method)
-- Generate boilerplate (DTO, mapper, constructor)
-- Lanjutkan kode yang sudah jelas arahnya
-- Fix bug sederhana
+Cocok untuk saat kamu butuh grounded context yang ringkas untuk coding atau editing.
 
 **Flow:**
 
 ```
-rag "query" → copy // RAG_CONTEXT: → paste ke .cs → Copilot generate
+rag "query" → copy // RAG_CONTEXT: → feed ke AI assistant melalui workflow 9routers
 ```
 
 ---
 
-### 🧠 Gunakan Claude — task besar & reasoning
+### 🧠 Structured prompt mode — `--claude`
 
-Cocok untuk:
-
-- Desain fitur baru (auth, notification, sync system)
-- Keputusan arsitektur (Clean Architecture, CQRS, dll)
-- Debug kompleks yang butuh analisis mendalam
-- Menulis plan implementasi sebelum coding
-- Review code yang menyangkut banyak layer
+Gunakan saat kamu butuh prompt reasoning yang lebih terstruktur, misalnya untuk design, plan, atau analisis perubahan lintas file.
 
 **Flow:**
 
 ```
-rag "query" --claude "task kamu" → copy → paste ke Claude → reasoning → implement
+rag "query" --claude "task kamu" → copy → feed ke AI assistant melalui workflow 9routers
 ```
+
+`--strict` tetap dipakai untuk kasus kritis agar output wajib cite sumber dan tidak mengarang.
 
 ---
 
+### 🧩 Prinsip pemilihan mode
+
+- Pilih **default output** saat butuh context block yang ringkas.
+- Pilih **`--claude` output** saat butuh prompt reasoning terstruktur.
+- Routing model tidak dipilih manual di sini; 9routers yang menentukannya.
+
+---
+
+## 🛠️ Cara Pakai `rag` CLI
+
+### Sintaks dasar
+
+```bash
+rag "query kamu di sini"
+rag "query" -p petrochina-eproc
+rag "query" --claude "task yang mau dikerjakan"
+```
 ## 🛠️ Cara Pakai `rag` CLI
 
 ### Sintaks dasar
@@ -171,8 +174,8 @@ rag "query" --claude "task yang mau dikerjakan"
 | Flag              | Kegunaan                                                                  |
 | ----------------- | ------------------------------------------------------------------------- |
 | `-p`, `--project` | Filter knowledge per proyek (`petrochina-eproc` atau `homelab`)           |
-| `--claude [task]` | Output sebagai prompt Claude (mode reasoning)                             |
-| `--strict`        | Tambah enforcement ketat: Claude WAJIB cite sumber, tidak boleh mengarang |
+| `--claude [task]` | Output sebagai prompt reasoning terstruktur                               |
+| `--strict`        | Tambah enforcement ketat: assistant WAJIB cite sumber, tidak boleh mengarang |
 | `--show-scores`   | Tampilkan skor relevansi tiap hasil (berguna untuk evaluasi)              |
 | `--raw`           | Output teks biasa tanpa formatting (untuk diolah sendiri)                 |
 | `--debug`         | Tampilkan detail teknis RAG: threshold, jumlah hasil, dll                 |
@@ -180,9 +183,9 @@ rag "query" --claude "task yang mau dikerjakan"
 
 ---
 
-## 📋 Workflow Berdasarkan Ukuran Task
+## 📋 Workflow Berdasarkan Output Mode
 
-### 🔹 Task Kecil — langsung Copilot
+### 🔹 Default context block
 
 **Contoh:** Tambah method `GetByVendorId` di repository.
 
@@ -190,52 +193,46 @@ rag "query" --claude "task yang mau dikerjakan"
 # Step 1: ambil context dari knowledge base
 rag "vendor repository pattern EF Core" -p petrochina-eproc --copy
 
-# Step 2: buka file yang mau diedit di VS Code
-# Step 3: paste // RAG_CONTEXT: di atas method yang mau dibuat
-# Step 4: mulai ketik signature method → Copilot generate otomatis
+# Step 2: feed // RAG_CONTEXT: ke AI assistant melalui workflow 9routers
+# Step 3: review hasil terhadap context yang diberikan
 ```
 
 ---
 
-### 🔹 Task Medium — plan dulu di Claude, implement pakai Copilot
+### 🔹 Structured reasoning prompt
 
 **Contoh:** Tambah fitur notifikasi email saat PO disetujui.
 
 ```bash
-# Step 1: cari context
+# Step 1: cari context dalam format prompt terstruktur
 rag "email notification purchase order approval" -p petrochina-eproc \
   --claude "design the notification flow and list the files that need to be changed" \
   --copy
 
-# Step 2: paste ke Claude → Claude akan buat plan + list file yang perlu diubah
-# Step 3: untuk setiap file, pakai Copilot mode:
-rag "email notification handler MediatR" -p petrochina-eproc --copy
-# paste ke file .cs → Copilot generate implementasi
+# Step 2: feed prompt ke AI assistant melalui workflow 9routers
+# Step 3: gunakan output plan untuk implementasi bertahap
 ```
 
 ---
 
-### 🔹 Task Besar — full Claude mode dengan strict
+### 🔹 Strict grounding
 
 **Contoh:** Desain sistem Single Device Login.
 
 ```bash
-# Step 1: cari semua context yang relevan
+# Step 1: cari semua context relevan dengan enforcement ketat
 rag "single device login session management refresh token" -p petrochina-eproc \
   --claude "design the full Single Device Login system: handler, DTOs, middleware, and database changes" \
   --strict \
   --copy
 
-# Step 2: paste ke Claude
-# Claude akan:
+# Step 2: feed prompt ke AI assistant melalui workflow 9routers
+# Assistant harus:
 # - reasoning berdasarkan knowledge base
-# - buat arsitektur
-# - list semua perubahan yang dibutuhkan
 # - cite sumber (SOURCE N) untuk setiap keputusan
 # - output NOT FOUND IN RAG kalau ada yang tidak ada di knowledge base
 
-# Step 3: review hasil Claude → breakdown jadi sub-task kecil
-# Step 4: setiap sub-task → Copilot mode
+# Step 3: review hasil terhadap sumber dan breakdown jadi sub-task kecil
 ```
 
 ---
@@ -251,22 +248,22 @@ design, architecture, implement, system, flow, strategy, explain,
 how does, why does, compare, decide, evaluate, plan, structure
 ```
 
-Maka otomatis masuk **Claude mode** — tidak perlu tambah flag `--claude`.
+Maka otomatis menggunakan **structured prompt output** — tidak perlu tambah flag `--claude`. Routing model ke AI assistant tetap dikelola oleh 9routers.
 
 **Contoh:**
 
 ```bash
-# Ini otomatis Claude mode (ada kata "design")
+# Otomatis structured prompt (ada kata "design")
 rag "design single device login" -p petrochina-eproc
 
-# Ini Copilot mode (tidak ada trigger word)
+# Default context block (tidak ada trigger word)
 rag "SDL session kicked detection" -p petrochina-eproc
 ```
 
 Output terminal akan tampilkan:
 
 ```
-[rag] Intent detected: routing to Claude mode
+[rag] Intent detected: routing to structured prompt mode
 ```
 
 ---
@@ -308,7 +305,7 @@ rag "how SDL session kicked detection works in Blazor SignalR" -p petrochina-epr
 rag "SDL" -p petrochina-eproc
 ```
 
-**2. Selalu gunakan `--copy` saat mau paste ke editor/Claude**
+**2. Selalu gunakan `--copy` saat mau feed ke AI assistant**
 
 ```bash
 rag "vendor registration flow" -p petrochina-eproc --copy
@@ -335,18 +332,18 @@ rag "query kamu" -p petrochina-eproc --debug
 
 ### ❌ DON'T — Hindari ini
 
-**1. Jangan langsung tanya Claude tanpa context RAG terlebih dahulu**
+**1. Jangan langsung tanya AI assistant tanpa context RAG terlebih dahulu**
 
 ```
-❌ Claude: "Buat sistem single device login untuk project kita"
-✅ rag "single device login" --claude "buat systemnya" → paste ke Claude
+❌ "Buat sistem single device login untuk project kita"
+✅ rag "single device login" --claude "buat systemnya" → feed ke AI assistant
 ```
 
-**2. Jangan gunakan Claude untuk task yang bisa dikerjakan Copilot**
+**2. Jangan memilih model secara manual dari dokumen ini**
 
 ```
-❌ Claude: "Tambahkan property Email ke VendorDto"
-✅ rag "VendorDto structure" --copy → paste ke file → Copilot generate
+❌ "Ini task kecil jadi harus Copilot"
+✅ Pilih output mode `rag` yang sesuai; routing model dikelola 9routers
 ```
 
 **3. Jangan skip project filter**
@@ -377,9 +374,10 @@ rag "query kamu" -p petrochina-eproc --debug
    └── TIDAK → kerjakan berdasarkan konvensi proyek,
                dokumentasikan hasil di akhir sesi
        ↓
-4. Task besar/kompleks?
-   ├── YA → rag "..." --claude "task" --strict --copy → paste ke Claude
-   └── TIDAK → rag "..." --copy → paste ke .cs → Copilot generate
+4. Pilih output mode sesuai kebutuhan:
+   ├── Structured prompt → rag "..." --claude "task" --copy
+   └── Default context  → rag "..." --copy
+   (routing ke AI assistant dilakukan oleh 9routers)
        ↓
 5. Review hasil
        ↓
@@ -486,7 +484,7 @@ Kerjakan dulu, lalu simpan ke Qdrant lewat Session End Protocol.
 
 ---
 
-### ❌ Claude tetap hallucinate walaupun pakai --claude
+### ❌ AI assistant tetap hallucinate walaupun pakai `--claude`
 
 Tambahkan `--strict`:
 
@@ -494,7 +492,7 @@ Tambahkan `--strict`:
 rag "query" -p petrochina-eproc --claude "task" --strict --copy
 ```
 
-Mode strict memaksa Claude untuk cite sumber dan output `NOT FOUND IN RAG`
+Mode strict memaksa assistant untuk cite sumber dan output `NOT FOUND IN RAG`
 kalau ada yang tidak ada di knowledge base.
 
 ---
@@ -502,13 +500,13 @@ kalau ada yang tidak ada di knowledge base.
 ## 🗂️ Referensi Cepat
 
 ```bash
-# Copilot mode (default) — untuk task kecil
+# Default context block output
 rag "query" -p petrochina-eproc --copy
 
-# Claude mode — untuk task besar
+# Structured reasoning prompt output
 rag "design query" -p petrochina-eproc --claude "task detail" --copy
 
-# Claude mode + strict — untuk keputusan kritis
+# Strict grounded output — untuk keputusan kritis
 rag "query" -p petrochina-eproc --claude "task" --strict --copy
 
 # Debug — kalau hasil tidak relevan

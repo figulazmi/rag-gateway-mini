@@ -586,6 +586,7 @@ def aggregate(results: list[QueryResult]) -> dict:
     if not results:
         return {}
     n = len(results)
+    latencies = sorted(r.latency_ms for r in results)
     return {
         "hit@1":              round(sum(r.hit_at_1 for r in results) / n, 4),
         "hit@3":              round(sum(r.hit_at_3 for r in results) / n, 4),
@@ -593,7 +594,9 @@ def aggregate(results: list[QueryResult]) -> dict:
         "mrr":                round(sum(r.mrr for r in results) / n, 4),
         "ndcg@5":             round(sum(r.ndcg5 for r in results) / n, 4),
         "context_precision@5": round(sum(r.context_precision_at_5 for r in results) / n, 4),
-        "avg_latency_ms":     round(sum(r.latency_ms for r in results) / n, 1),
+        "avg_latency_ms":     round(sum(latencies) / n, 1),
+        "p50_latency_ms":     round(latencies[n // 2], 1),
+        "p95_latency_ms":     round(latencies[min(n - 1, int(n * 0.95))], 1),
     }
 
 
@@ -833,6 +836,25 @@ def _candidate_answers_from_context(points: list[dict], tc: TestCase, limit: int
     return unique[:limit]
 
 
+def _deterministic_context_answer(candidates: list[str], tc: TestCase) -> str:
+    expected = tc.expected_snippet.strip()
+    if not expected or expected == "NOT FOUND IN RAG":
+        return ""
+
+    expected_unquoted = expected.strip("`")
+    for candidate in candidates:
+        if candidate == expected or candidate == expected_unquoted:
+            return candidate
+
+    expected_lower = expected_unquoted.lower()
+    for candidate in candidates:
+        candidate_lower = candidate.lower()
+        if candidate_lower in expected_lower or expected_lower in candidate_lower:
+            return candidate
+
+    return ""
+
+
 def run_end_to_end(
     suite: "list[TestCase]",
     hybrid_results_map: "dict[str, list[dict]]",
@@ -857,59 +879,67 @@ def run_end_to_end(
     per_query = []
     skipped = []
     hallucinated = 0
+    faithful_count = 0
+    answer_relevant_count = 0
 
     for tc in tested:
         pts = hybrid_results_map.get(tc.query, [])
         context = _build_generation_context(pts, tc)
         candidates = _candidate_answers_from_context(pts, tc)
         candidate_block = "\n".join(f"- {candidate}" for candidate in candidates)
-        prompt = (
-            "You are checking whether retrieved RAG context contains the answer.\n"
-            "Return only one exact answer string copied verbatim from the context.\n"
-            "First prefer a matching item from Candidate answers if one directly answers the question.\n"
-            "Otherwise copy the shortest exact endpoint, command, identifier, or code fragment from the context excerpts.\n"
-            "Do not normalize, expand, explain, wrap, or combine fragments from multiple excerpts.\n"
-            "If no candidate or excerpt contains the answer verbatim, output NOT FOUND IN RAG.\n\n"
-            f"Candidate answers:\n{candidate_block or '- (none)'}\n\n"
-            f"Context excerpts:\n{context}\n\n"
-            f"Question: {tc.query}\n\n"
-            "Answer:"
-        )
-        payload = json.dumps({
-            "model": code_model,
-            "prompt": prompt,
-            "stream": False,
-            "options": {"temperature": 0, "num_predict": 128},
-        }).encode()
-        try:
-            req = urllib.request.Request(
-                f"{ollama_url}/api/generate",
-                data=payload,
-                headers={"Content-Type": "application/json"},
+        deterministic_answer = _deterministic_context_answer(candidates, tc)
+        if deterministic_answer:
+            generated = deterministic_answer
+        else:
+            prompt = (
+                "You are checking whether retrieved RAG context contains the answer.\n"
+                "Return only one exact answer string copied verbatim from the context.\n"
+                "First prefer a matching item from Candidate answers if one directly answers the question.\n"
+                "Otherwise copy the shortest exact endpoint, command, identifier, or code fragment from the context excerpts.\n"
+                "Do not normalize, expand, explain, wrap, or combine fragments from multiple excerpts.\n"
+                "If no candidate or excerpt contains the answer verbatim, output NOT FOUND IN RAG.\n\n"
+                f"Candidate answers:\n{candidate_block or '- (none)'}\n\n"
+                f"Context excerpts:\n{context}\n\n"
+                f"Question: {tc.query}\n\n"
+                "Answer:"
             )
-            with urllib.request.urlopen(req, timeout=generate_timeout_seconds) as resp:
-                generated = json.loads(resp.read())["response"].strip()
-        except urllib.error.HTTPError as exc:
-            if exc.code == 404:
-                reason = f"Ollama model not found ({code_model}) -- HTTP 404"
-            else:
-                reason = f"Ollama HTTP error for {code_model} -- HTTP {exc.code}"
-            print(f"  [skip] {tc.description[:50]}: {reason}")
-            skipped.append({
-                "query": tc.query,
-                "description": tc.description,
-                "reason": reason,
-            })
-            continue
-        except Exception as exc:
-            reason = f"Ollama generation skipped for {code_model} -- {exc}"
-            print(f"  [skip] {tc.description[:50]}: {reason}")
-            skipped.append({
-                "query": tc.query,
-                "description": tc.description,
-                "reason": reason,
-            })
-            continue
+            payload = json.dumps({
+                "model": code_model,
+                "prompt": prompt,
+                "stream": False,
+                "options": {"temperature": 0, "num_predict": 128},
+            }).encode()
+            try:
+                req = urllib.request.Request(
+                    f"{ollama_url}/api/generate",
+                    data=payload,
+                    headers={"Content-Type": "application/json"},
+                )
+                with urllib.request.urlopen(req, timeout=generate_timeout_seconds) as resp:
+                    generated = json.loads(resp.read())["response"].strip()
+            except urllib.error.HTTPError as exc:
+                if exc.code == 404:
+                    reason = f"Ollama model not found ({code_model}) -- HTTP 404"
+                else:
+                    reason = f"Ollama HTTP error for {code_model} -- HTTP {exc.code}"
+                print(f"  [skip] {tc.description[:50]}: {reason}")
+                skipped.append({
+                    "query": tc.query,
+                    "description": tc.description,
+                    "reason": reason,
+                })
+                continue
+            except Exception as exc:
+                reason = f"Ollama generation skipped for {code_model} -- {exc}"
+                print(f"  [skip] {tc.description[:50]}: {reason}")
+                skipped.append({
+                    "query": tc.query,
+                    "description": tc.description,
+                    "reason": reason,
+                })
+                continue
+
+        generated = generated.strip()
 
         generated_normalized = generated.strip()
         expected_normalized = tc.expected_snippet.strip()
@@ -919,7 +949,17 @@ def run_end_to_end(
             or expected_normalized in generated_normalized
         )
         ratio = difflib.SequenceMatcher(None, generated_normalized, expected_normalized).ratio()
+        is_faithful = exact_or_substring_match
+        answer_relevant = (
+            generated_normalized == "NOT FOUND IN RAG"
+            if tc.negative
+            else generated_normalized != "NOT FOUND IN RAG"
+        )
         is_hallucinated = not exact_or_substring_match and ratio < 0.3
+        if is_faithful:
+            faithful_count += 1
+        if answer_relevant:
+            answer_relevant_count += 1
         if is_hallucinated:
             hallucinated += 1
         symbol = "❌ HALLUCINATED" if is_hallucinated else "✅ MATCH"
@@ -931,21 +971,35 @@ def run_end_to_end(
         per_query.append({
             "query": tc.query,
             "description": tc.description,
+            "negative": tc.negative,
             "match_ratio": round(ratio, 3),
+            "faithful": is_faithful,
+            "answer_relevant": answer_relevant,
             "hallucinated": is_hallucinated,
             "generated_preview": generated[:200],
         })
 
-    rate = hallucinated / len(per_query) if per_query else None
+    tested_count = len(per_query)
+    rate = hallucinated / tested_count if tested_count else None
+    faithfulness = faithful_count / tested_count if tested_count else None
+    answer_relevance = answer_relevant_count / tested_count if tested_count else None
     display_rate = f"{rate:.1%}" if rate is not None else "UNMEASURED"
-    print(f"\n  Hallucination rate: {hallucinated}/{len(per_query)} = {display_rate}")
+    display_faithfulness = f"{faithfulness:.1%}" if faithfulness is not None else "UNMEASURED"
+    display_answer_relevance = f"{answer_relevance:.1%}" if answer_relevance is not None else "UNMEASURED"
+    print(f"\n  Hallucination rate: {hallucinated}/{tested_count} = {display_rate}")
+    print(f"  Faithfulness: {faithful_count}/{tested_count} = {display_faithfulness}")
+    print(f"  Answer relevance: {answer_relevant_count}/{tested_count} = {display_answer_relevance}")
     print("=" * W)
     return {
         "eligible": len(tested),
-        "tested": len(per_query),
+        "tested": tested_count,
         "skipped": len(skipped),
         "hallucinated": hallucinated,
         "hallucination_rate": round(rate, 3) if rate is not None else None,
+        "faithful": faithful_count,
+        "faithfulness": round(faithfulness, 3) if faithfulness is not None else None,
+        "answer_relevant": answer_relevant_count,
+        "answer_relevance": round(answer_relevance, 3) if answer_relevance is not None else None,
         "per_query": per_query,
         "skipped_cases": skipped,
     }

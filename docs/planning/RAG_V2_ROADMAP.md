@@ -5,9 +5,9 @@
 
 ## Strategic Goal
 
-Claude AI is used as a **reasoning + capture specialist only** for `knowledge_v2`. Code implementation is delegated primarily to GitHub Copilot, which consumes chunks from `knowledge_v2` via MCP wiring or manual `/rag/search` context. Local models such as `qwen2.5-coder` are optional benchmark targets only, not the production implementer path.
+Claude AI is used as a **reasoning + capture specialist only** for `knowledge_v2`. Code implementation is routed by 9routers to the appropriate AI assistant, which consumes chunks from `knowledge_v2` via MCP wiring or `/rag/search` context. Local models such as `qwen2.5-coder` are optional benchmark targets only, not the production implementer path.
 
-**Success criterion:** chunks must be rich and precise enough that Copilot or another implementer model does not hallucinate when writing code from them.
+**Success criterion:** chunks must be rich and precise enough that the downstream AI assistant does not hallucinate when writing code from them.
 
 **Implication:** the bottleneck is **chunk content quality** and **retrieval precision**, not retrieval recall. The right chunk must reach the implementer's context window, and its content must be an executable specification, not prose.
 
@@ -217,11 +217,35 @@ Add frontmatter fields `supersedes: <old_chunk_id>` and `superseded_by`. When `p
 
 **P3.2. Expand eval set + implementation correctness test** — **REFRESHED**
 
-Expanded retrieval fixtures now live at `scripts/eval-fixtures/homelab-expanded.json`, with reports under `.claude/reports/p32-expanded-*.json`. End-to-end mode exists but is not currently usable with Ollama on VM B1 because `qwen2.5-coder:7b` is not installed. Treat qwen2.5-coder as an optional benchmark model; the recommended production smoke is Copilot consuming `/rag/search` context and generating a small implementation from an `implementation-spec` chunk.
+Expanded retrieval fixtures now live at `scripts/eval-fixtures/homelab-expanded.json`, with reports under `.claude/reports/p32-expanded-*.json`. End-to-end mode exists but is not currently usable with Ollama on VM B1 because `qwen2.5-coder:7b` is not installed. Treat qwen2.5-coder as an optional benchmark model; the recommended production smoke is a 9routers-routed AI assistant consuming `/rag/search` context and generating a small implementation from an `implementation-spec` chunk.
 
 **P3.2 fixture cleanup (2026-05-04):** 5 cleanup actions applied after regression analysis. (1) Negative query fixtures marked `negative: true`; scored via confidence-gate outcome not top-doc relevance. (2) `expected_ids` added to 9 ambiguous fixtures; `relevance_score()` short-circuits to 1.0 on exact ID or snippet match, eliminating rank-swap false positives. (3) 3 missing-corpus fixtures removed (Python argparse, Python dataclass default_factory, eval fixture loader); restore when chunks are captured. (4) Overloaded CSharp threshold query split into 2 focused fixtures. (5) Generic single-token gold keywords tightened to multi-word phrases.
 
-**Next actions:** define a Copilot smoke strategy, run next eval against cleaned fixtures to confirm aggregate improvement, decide whether sparse Key Facts should become the default ingestion strategy, and revisit TEI/BGE reranking later only if needed.
+**Implementation-correctness smoke strategy (2026-05-08):** Treat 9routers as the production routing layer for downstream AI assistants. The smoke is not another retrieval-only score; it is a reproducible implementation-correctness exercise using retrieved `implementation-spec` context.
+
+1. Retrieve one implemented homelab spec with `/rag/search` or MCP `search_knowledge`, preferring a query that should return a single unambiguous implementation contract.
+2. Feed only the retrieved chunk content into the 9routers-managed AI assistant workflow with a bounded instruction such as: "Implement exactly this contract in the specified files. Do not invent new endpoints or config keys."
+3. Verify the generated code against the chunk contract, not prose similarity alone.
+4. Record outcome as `pass`, `partial`, or `fail` with the retrieved chunk topic, target files, and the first compile or smoke error if it failed.
+
+**Recommended first smoke cases:**
+- `Spec: rag gateway retrieval service contract` -> verify `/rag/search` contract and thresholds
+- `Spec: rag gateway knowledge expansion retrieval` -> verify variant generation and aggregation rules
+- Grounded answer path spec once captured -> verify `/rag/answer` plus citation tagging contract
+
+**Pass criteria:**
+- The AI assistant edits only the files named in `### Target Files`
+- Produced method and DTO names match `### Interfaces`
+- No new config keys, routes, or payload fields appear outside `### Dependencies` and `### Contract`
+- `rtk dotnet build rag-gateway-mini.sln --configuration Release --warnaserror` passes
+- Relevant API smoke from `docs/testing/TEST_STRATEGY.md` passes for the touched endpoint
+
+**Fail criteria:**
+- The AI assistant invents extra files, routes, config keys, or DTO fields
+- Generated code violates an Anti-Pattern named by the chunk
+- Build fails, endpoint contract differs, or smoke returns the wrong status
+
+**Next actions:** capture and push implementation-spec chunks for the gateway search/answer flow, run one documented implementation-correctness smoke against the first retrieved spec, then run the next eval against cleaned fixtures to confirm retrieval still supports the implementer workflow. Revisit TEI/BGE reranking later only if needed.
 
 **P3.3. Feedback loop: eval → chunk revision queue**
 When eval flags NDCG < 0.6 for query X, append the chunk_id that should have ranked 1 to `~/scripts/.rag_revision_queue.md`. Surface the backlog in `rag status`.
@@ -242,7 +266,7 @@ When eval flags NDCG < 0.6 for query X, append the chunk_id that should have ran
 | 2 | P2.1 | Add hard-reject validation | Includes CLI hard rejects for low-quality chunks; excludes n8n runtime validation changes | `[x] DONE (2026-04-19)` | CLI negative tests rejected short content, feature without `### Target Files`, and implementation-spec missing `### Contract`; no drafts were saved | None |
 | 3 | P1.2 | Deploy contextual retrieval prepend | Includes n8n embed-content prepend; excludes full keyfacts cutover | `[x] DONE (2026-04-19)` | `~/scripts/n8n-workflows/ingest-knowledge-v2.json` (rag-tools) stores `content` unchanged and sends `embed_content` to Ollama; Hit@1 improved from 0.60 to 1.00 after deployment | None |
 | 4 | P2.2 | Scaffold LLM-as-reranker | Includes disabled scaffolding only; excludes TEI/BGE production deployment | `[ ] DEFERRED` | Scaffolding exists, but reranker remains blocked on infra and disabled by default | Revisit after TEI plus BGE reranker is available |
-| 5 | P3.2 | Expand eval set and implementation correctness test | Includes retrieval eval expansion and end-to-end strategy; excludes future semantic judge replacement | `[x] DONE (2026-05-04)` | Added `scripts/eval-fixtures/homelab-expanded.json`; 28 → 26 fixture entries after cleanup (3 missing-corpus entries removed, 1 overloaded query split into 2). 9 fixtures now carry `expected_ids` for exact-hit scoring; 2 negative fixtures marked `negative: true` with `expected_snippet: "NOT FOUND IN RAG"`. `TestCase` dataclass extended with `expected_ids` and `negative` fields; `relevance_score()` short-circuits to 1.0 on exact ID or snippet match. Reports: `.claude/reports/p32-expanded-keyfacts-2026-05-04.json`, `.claude/reports/p32-expanded-legacy-2026-05-04.json`, `.claude/reports/p32-expanded-keyfacts-e2e-2026-05-04.json`. Ollama end-to-end is blocked because `qwen2.5-coder:7b` is not installed on VM B1. | Define Copilot smoke as the primary implementation-correctness check; keep qwen2.5-coder optional for benchmark runs |
+| 5 | P3.2 | Expand eval set and implementation correctness test | Includes retrieval eval expansion and end-to-end strategy; excludes future semantic judge replacement | `[x] DONE (2026-05-04)` | Added `scripts/eval-fixtures/homelab-expanded.json`; 28 → 26 fixture entries after cleanup (3 missing-corpus entries removed, 1 overloaded query split into 2). 9 fixtures now carry `expected_ids` for exact-hit scoring; 2 negative fixtures marked `negative: true` with `expected_snippet: "NOT FOUND IN RAG"`. `TestCase` dataclass extended with `expected_ids` and `negative` fields; `relevance_score()` short-circuits to 1.0 on exact ID or snippet match. Reports: `.claude/reports/p32-expanded-keyfacts-2026-05-04.json`, `.claude/reports/p32-expanded-legacy-2026-05-04.json`, `.claude/reports/p32-expanded-keyfacts-e2e-2026-05-04.json`. Ollama end-to-end is blocked because `qwen2.5-coder:7b` is not installed on VM B1. | Define the 9routers-routed implementation-correctness smoke as the primary implementation-correctness check; keep qwen2.5-coder optional for benchmark runs |
 | 6 | P3.1 | Add supersede and deprecate semantics | Includes frontmatter and push-time deprecation; excludes TTL auto-deprecate | `[x] DONE (2026-04-19)` | `rag_capture.py` writes supersede frontmatter and `push-to-qdrant.sh` patches superseded chunks to `status: deprecated` | None |
 | 7 | P2.2-B | Deploy TEI plus BGE reranker | Includes reranker infra only after sparse noise is solved; excludes masking current sparse/RRF issue | `[ ] DEFERRED` | Final 2026-05-02 eval shows dense-only beats hybrid on Hit@1/MRR/NDCG@5; problem is sparse/RRF noise, not reranker absence | First A/B dense-only and redesign sparse text; revisit reranker only if top-K has correct chunks but ordering remains poor |
 | 8 | P3.3 | Add eval to chunk revision queue feedback loop | Includes low-NDCG queueing and `rag status` count; excludes automatic chunk rewriting | `[x] DONE (2026-05-02)` | `eval-retrieval-quality.py` appends low-NDCG queries to `~/scripts/.rag_revision_queue.md`; `rag status` reports open item count; Python argparse/dataclass coverage was fixed with new pattern chunks | None |
@@ -268,7 +292,7 @@ When eval flags NDCG < 0.6 for query X, append the chunk_id that should have ran
 
 1. `rag add` a sample `implementation-spec` chunk → must pass validation, or reject with a clear reason
 2. `python scripts/eval-retrieval-quality.py --project homelab --debug` → compare NDCG@5 before vs after
-3. End-to-end strategy: query via MCP `search_knowledge` or `/rag/search`, feed the result to Copilot, verify generated code compiles and matches the chunk spec
+3. End-to-end strategy: query via MCP `search_knowledge` or `/rag/search`, feed the result through the 9routers-managed AI assistant workflow, verify generated code compiles and matches the chunk spec
 4. Optional benchmark: run Ollama end-to-end only after a code model such as `qwen2.5-coder:7b` is installed
 5. Watch MCP server stderr for `avg_score` improvement after contextual retrieval lands
 

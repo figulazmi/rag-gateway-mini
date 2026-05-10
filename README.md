@@ -7,7 +7,7 @@ Terminology:
 - **Deterministic retrieval core**: gateway search engine that returns retrieved chunks only (no text generation).
 - **Adapter outputs**: CLI/MCP output modes (`RAG_CONTEXT`, `--claude`, `--strict`, `--raw`) that package retrieval results for downstream tools.
 
-The repo also ships a **RAG CLI pipeline**: a set of Bash scripts that let any developer on any device capture knowledge, search it, and feed it into Claude or GitHub Copilot — with zero hallucination.
+The repo also ships a **RAG CLI pipeline**: a set of Bash scripts that let any developer on any device capture knowledge, search it, and feed grounded context into downstream AI assistants through the 9routers-managed workflow.
 
 ---
 
@@ -24,14 +24,11 @@ The repo also ships a **RAG CLI pipeline**: a set of Bash scripts that let any d
                        │
           ┌────────────▼─────────────┐
           │     ~/scripts/rag        │  <- CLI you use every day
-          └──────────┬───────────────┘
-                     │
-           ┌─────────┴──────────┐
-           │                    │
-  ┌────────▼────────┐  ┌────────▼────────┐
-  │  GitHub Copilot  │  │     Claude      │
-  │  (light tasks)   │  │  (heavy tasks)  │
-  └──────────────────┘  └─────────────────┘
+          └────────────┬─────────────┘
+                       │
+          ┌────────────▼─────────────┐
+          │ AI assistant via 9routers│  <- server-side routing downstream
+          └──────────────────────────┘
 ```
 
 | Component | Role |
@@ -40,8 +37,7 @@ The repo also ships a **RAG CLI pipeline**: a set of Bash scripts that let any d
 | **RAG Gateway** | API layer — called by `rag` CLI and MCP server |
 | **rag CLI** | Your daily terminal tool for search and capture |
 | **rag-tools** | Separate repo — rag CLI, push-to-qdrant.sh, MCP server, n8n workflow |
-| **GitHub Copilot** | Fast code generation for small tasks |
-| **Claude** | Reasoning engine for complex tasks and architecture |
+| **9routers** | Server-side routing — decides which AI assistant receives the retrieval context |
 
 ---
 
@@ -116,22 +112,22 @@ rag "query keywords here" -p petrochina-eproc
 
 | Command | Output | Use for |
 |---|---|---|
-| `rag "query" -p <project>` | `// RAG_CONTEXT:` comment block | Paste into `.cs` file → Copilot generates |
-| `rag "query" --claude "task"` | Structured Claude prompt | Paste into Claude chat |
-| `rag "query" --strict` | Claude prompt + zero-hallucination enforcement | Critical decisions, auth, financial logic |
+| `rag "query" -p <project>` | `// RAG_CONTEXT:` comment block | Default grounded context block for downstream AI tools |
+| `rag "query" --claude "task"` | Structured Claude prompt | Structured reasoning prompt format |
+| `rag "query" --strict` | Strict prompt + zero-hallucination enforcement | Critical decisions, auth, financial logic |
 | `rag "query" --raw` | Plain text | Custom processing |
 | `rag "query" --debug` | Raw scores + threshold info | Diagnose low-relevance results |
 | `rag "query" --copy` | Same output + copies to clipboard | Skip manual select + copy |
 
 ### Intent auto-detection
 
-Queries containing `design`, `architecture`, `implement`, `system`, `flow`, `explain`, `how does`, `why does`, `compare`, `plan` are automatically routed to Claude mode. No flag needed.
+Queries containing `design`, `architecture`, `implement`, `system`, `flow`, `explain`, `how does`, `why does`, `compare`, `plan` automatically use the structured prompt output mode. Downstream model selection remains server-side in 9routers.
 
 ```bash
-# Auto Claude mode (contains "design"):
+# Structured prompt output (contains "design"):
 rag "design single device login" -p petrochina-eproc
 
-# Copilot mode (no trigger word):
+# Default context block output:
 rag "SDL session kicked detection" -p petrochina-eproc
 ```
 
@@ -194,31 +190,31 @@ Chunk types: `debug` | `feature` | `runbook` | `pattern` | `decision` | `referen
 
 ## Typical Workflows
 
-### Small task — Copilot
+9routers handles which AI assistant receives the retrieved context. The `rag` CLI controls the **output format** only.
+
+### Code generation with RAG context
 
 ```bash
-# 1. Get context
+# 1. Get context (default // RAG_CONTEXT: block)
 rag "vendor repository EF Core pattern" -p petrochina-eproc --copy
 
-# 2. Open file in VS Code
-# 3. Paste // RAG_CONTEXT: above the method
-# 4. Type signature -> Copilot generates
+# 2. Feed into your AI assistant — 9routers routes from here
 ```
 
-### Medium task — plan in Claude, implement with Copilot
+### Design + implement with RAG context
 
 ```bash
 rag "email notification purchase order approval" -p petrochina-eproc \
   --claude "design the notification flow and list files to change" --copy
-# Paste into Claude -> get plan -> use Copilot per file
+# Structured reasoning prompt output — 9routers routes to appropriate assistant
 ```
 
-### Large task — full Claude with strict mode
+### Complex task with strict grounding
 
 ```bash
 rag "single device login session management refresh token" -p petrochina-eproc \
   --claude "design the full SDL system" --strict --copy
-# Claude cites every claim to a SOURCE, outputs NOT FOUND IN RAG for unknowns
+# Strict mode: assistant must cite every claim to a SOURCE, outputs NOT FOUND IN RAG for unknowns
 ```
 
 ---

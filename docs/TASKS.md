@@ -18,11 +18,11 @@ It is an index, not the source of truth. Each task status must be owned by the `
 ## Quick Status
 
 ```text
-Done: P1-3, P1-4, P1-5, P2-1, P2-2, P2-3, and P2-4 completed in security tracker; see owning tracker for full evidence
-Open: no active Security item in RAG_SECURITY_POSTURE.md
+Done: Security posture tracker complete through P2-4; Quality threshold table complete; Testing closure checklist complete; Risk review complete
+Open: no active Security, Quality threshold, Testing, or Risk item
 Blocked: none listed here
-Deferred: P2.2-B, OI-5
-Next: Quality remains the main active area; Testing closure checklist is complete
+Deferred: P2.2-B, OI-5, Pipeline #2C
+Next: Run the P3.2 implementation-correctness smoke via 9routers workflow against a pushed implementation-spec chunk before any new pipeline optimization
 ```
 
 ---
@@ -31,15 +31,15 @@ Next: Quality remains the main active area; Testing closure checklist is complet
 
 | Area | Source of truth | Current focus | Next task ID | Notes |
 |---|---|---|---|---|
-| Security | [`security/RAG_SECURITY_POSTURE.md`](security/RAG_SECURITY_POSTURE.md) | Security posture tracker complete; pick the next Security-area initiative | Complete | P0 through P2-4 are done in the canonical security tracker |
-| Quality | [`quality/RAG_EVAL_HARNESS.md`](quality/RAG_EVAL_HARNESS.md) | Broaden eval beyond retrieval-only metrics | See tracker | Keep metric history in quality docs |
-| Pipeline | [`pipeline/RAG_BOTTLENECK_FIXES.md`](pipeline/RAG_BOTTLENECK_FIXES.md) | Deferred sparse-text and IDF tuning | #2C | Revisit after corpus diversity improves |
-| Planning | [`planning/RAG_V2_ROADMAP.md`](planning/RAG_V2_ROADMAP.md) | Keyfacts production default maintenance | See tracker | Read before pipeline changes |
+| Security | [`security/RAG_SECURITY_POSTURE.md`](security/RAG_SECURITY_POSTURE.md) | Security posture tracker complete | Complete | P0 through P2-4 are done in the canonical security tracker |
+| Quality | [`quality/RAG_EVAL_HARNESS.md`](quality/RAG_EVAL_HARNESS.md) | Gap-fill follow-up eval complete; corpus at 577 points; hybrid Hit@1 0.9574 MRR 0.9574 NDCG@5 0.9186 | Complete | Keep metric history in quality docs |
+| Pipeline | [`pipeline/RAG_BOTTLENECK_FIXES.md`](pipeline/RAG_BOTTLENECK_FIXES.md) | Deferred sparse-text and IDF tuning | #2C | Revisit only if corpus diversity grows and eval shows persistent sparse false positives |
+| Planning | [`planning/RAG_V2_ROADMAP.md`](planning/RAG_V2_ROADMAP.md) | Implementation-correctness smoke strategy and retrieval pre-smoke are documented; next is the 9routers-routed implementation-correctness run | P3.2 smoke | Retrieved spec is fed to the AI assistant through 9routers; no manual model selection |
 | Coverage | [`quality/COVERAGE_KNOWLEDGE_TRACKER.md`](quality/COVERAGE_KNOWLEDGE_TRACKER.md) | Knowledge coverage improvement | OI-5 | Deferred until implementation-spec capture is active |
 | Reference | [`reference/RAG_BOOTSTRAP_NEW_DEVICE_AND_SERVER.md`](reference/RAG_BOOTSTRAP_NEW_DEVICE_AND_SERVER.md) | New device/server bootstrap | See tracker | Use only for migration or rebuild work |
 | Testing | [`testing/TEST_STRATEGY.md`](testing/TEST_STRATEGY.md) | Docs-driven DONE gate checklist is now reusable guidance | Complete | Mitigates RISK-1 documentation drift with a canonical closure checklist |
 | Configuration | [`config/CONFIGURATION.md`](config/CONFIGURATION.md) | Keep runtime settings and secret locations documented | See document | Do not store secrets in docs |
-| Risk | [`risks/RISK_REGISTER.md`](risks/RISK_REGISTER.md) | Review documentation drift and secret exposure risks | RISK-1 | Convert mitigation into tracker task if active work is needed |
+| Risk | [`risks/RISK_REGISTER.md`](risks/RISK_REGISTER.md) | Risk review complete | Complete | Convert new risks into tracker tasks only when active mitigation work is needed |
 | Incidents | [`incidents/INCIDENT_LOG.md`](incidents/INCIDENT_LOG.md) | Record production-impacting failures only | None | Use changelog for normal completed changes |
 
 ---
@@ -65,4 +65,4 @@ The linked tracker must contain exactly one `## Canonical Task Tracker` section.
 
 ---
 
-*Last updated: 2026-05-07 · Owner: Figur Ulul Azmi*
+*Last updated: 2026-05-08 · Owner: Figur Ulul Azmi*
