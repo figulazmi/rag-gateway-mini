@@ -1,3 +1,5 @@
+> **[HISTORICAL]** Paths below reflect pre-restructure layout. Current canonical MCP server path: `~/scripts/mcp-server/qdrant-mcp-server-v2.js` (local) and `/opt/rag-tools/mcp-server/qdrant-mcp-server-v2.js` (VM B1).
+
 # [VM 105] Plan: Restoration — Scripts + Full knowledge_v2 Re-ingest
 
 **Created:** 2026-04-28

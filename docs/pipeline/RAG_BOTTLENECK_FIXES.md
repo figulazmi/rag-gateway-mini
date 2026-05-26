@@ -1,3 +1,5 @@
+> **[HISTORICAL]** Collection references below are from pre-migration audit. Current active collection: `knowledge_v2_keyfacts`. Current MCP server: `/opt/rag-tools/mcp-server/qdrant-mcp-server-v2.js`.
+
 # RAG Pipeline Bottleneck Fixes
 
 Analysis of Pipeline A (Write/Ingest) and Pipeline B (Read/Retrieve) bottlenecks.
