@@ -107,7 +107,7 @@ done
 | #    | Task                                                                                                                            | File(s)                                                | Status                              |
 | ---- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | ----------------------------------- |
 | P5-A | Deploy BGE-reranker-v2-m3 via TEI container on VM B1. Add to `docker-compose.yml` on VM B1 (not in this repo).                  | VM B1 infra                                            | `[ ] DEFERRED — first fix sparse/RRF noise and test dense-only` |
-| P5-B | Replace `rerankWithLLM` in MCP server with `rerankWithTEI` hitting TEI's `/rerank` endpoint. Set `RERANK_ENABLED=true` env var. | `~/scripts/qdrant-mcp-server-v2/qdrant-mcp-server-v2.js` (rag-tools) | `[ ] DEFERRED — needs P5-A plus evidence of reranker gap` |
+| P5-B | Replace `rerankWithLLM` in MCP server with `rerankWithTEI` hitting TEI's `/rerank` endpoint. Set `RERANK_ENABLED=true` env var. | `~/scripts/mcp-server/qdrant-mcp-server-v2.js` (rag-tools) | `[ ] DEFERRED — needs P5-A plus evidence of reranker gap` |
 | P5-C | Benchmark: rerun eval with `--rerank` flag; confirm NDCG@5 improves and latency stays under 2s budget.                          | `~/scripts/rag-infra/eval-retrieval-quality.py`                    | `[ ] DEFERRED — after dense-only and sparse redesign baselines` |
 
 ---

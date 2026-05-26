@@ -76,7 +76,7 @@ BM25 sparse catches exact-match queries yang missed oleh cosine. RRF fusion meng
 | n8n workflow `knowledge_v2` | VM B1 port 5678 | Validate, embed_content prepend, Ollama embed, Qdrant upsert |
 | Ollama `nomic-embed-text` | VM B1 port 11434 | Dense embedding model (768 dimensions) |
 | Qdrant `knowledge_v2` | VM B1 port 6333 | Vector store: dense (768d) + sparse (djb2 BM25) |
-| `qdrant-mcp-server.js` | VM B1 `/opt/mcp-servers/qdrant-knowledge/` | MCP server untuk Claude Code sessions |
+| `qdrant-mcp-server.js` | VM B1 `/opt/rag-tools/mcp-server/` | MCP server untuk Claude Code sessions |
 | `rag-gateway-mini` | VM B1 port 5200 | ASP.NET Core 9 REST API; `/rag/search` + `/rag/debug` |
 
 ### 2A -- Ingest Flow
@@ -889,14 +889,14 @@ ToolSearch select:mcp__qdrant-knowledge__search_knowledge
 
 ### T-08: `sudo: a terminal is required` saat deploy MCP server
 
-**Gejala:** Deploy file baru ke `/opt/mcp-servers/qdrant-knowledge/` via SSH gagal dengan error sudo.
+**Gejala:** Deploy file baru ke `/opt/rag-tools/mcp-server/` via SSH gagal dengan error sudo.
 
-**Root cause:** Directory `/opt/mcp-servers/qdrant-knowledge/` owned by `root`. Cannot `sudo` di non-interactive SSH session.
+**Root cause:** Directory `/opt/rag-tools/mcp-server/` owned by `root`. Cannot `sudo` di non-interactive SSH session.
 
 **Fix:** File `qdrant-mcp-server.js` sendiri owned by `figulazmi` (mode 0664). SCP ke `/tmp/` dulu, lalu `cp` langsung:
 ```bash
 scp "updated-file.js" figulazmi@192.168.18.199:/tmp/qdrant-mcp-server-new.js
-ssh figulazmi@192.168.18.199 "cp /tmp/qdrant-mcp-server-new.js /opt/mcp-servers/qdrant-knowledge/qdrant-mcp-server.js"
+ssh figulazmi@192.168.18.199 "cp /tmp/qdrant-mcp-server-new.js /opt/rag-tools/mcp-server/qdrant-mcp-server.js"
 ```
 
 ---
@@ -1048,7 +1048,7 @@ Kalau eval menunjukkan sparse false positive (dense dan sparse keduanya "benar" 
 | `rag_capture.py` | rag-tools source installed at `~/scripts/rag-capture-v2/rag_capture.py` | CLI source |
 | `rag` (installed) | `~/.local/bin/rag` (Windows) | Wrapper that execs `~/scripts/rag-capture-v2/rag_capture.py` |
 | `push-to-qdrant.sh` | rag-tools source installed at `~/scripts/push-to-qdrant.sh` | Ingest pipeline |
-| `qdrant-mcp-server-v2.js` | rag-tools source `~/scripts/qdrant-mcp-server-v2/qdrant-mcp-server-v2.js`; deployed on VM B1 at `/opt/mcp-servers/qdrant-knowledge/` | MCP server v2 |
+| `qdrant-mcp-server-v2.js` | rag-tools source `~/scripts/mcp-server/qdrant-mcp-server-v2.js`; deployed on VM B1 at `/opt/rag-tools/mcp-server/` | MCP server v2 |
 | Draft files | `~/.rag_drafts/{project}/chunk_NNN.md` | Temporary drafts |
 | Summaries | `.claude/summaries/YYYY-MM-DD-*.md` | Final merged files |
 | Checkpoints | `.claude/checkpoints/YYYY-MM-DD-*-001.md` | In-progress checkpoints |

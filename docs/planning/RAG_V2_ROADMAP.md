@@ -14,7 +14,7 @@ Claude AI is used as a **reasoning + capture specialist only** for `knowledge_v2
 ## Current State (do not rebuild)
 
 - Deterministic chunk ID (`{DOC_ID}-chunk-{N}`) → upsert-idempotent — `~/scripts/push-to-qdrant.sh:285` (rag-tools)
-- Hybrid search: dense (nomic-embed-text 768d COSINE) + sparse (djb2 BM25) + RRF fusion — `~/scripts/qdrant-mcp-server-v2/qdrant-mcp-server-v2.js:99` (rag-tools)
+- Hybrid search: dense (nomic-embed-text 768d COSINE) + sparse (djb2 BM25) + RRF fusion — `~/scripts/mcp-server/qdrant-mcp-server-v2.js:99` (rag-tools)
 - Query expansion for short queries (<8 words) — `qdrant-mcp-server-v2.js:20`
 - Retry with rewrite when `avgScore < 0.6` — `qdrant-mcp-server-v2.js:227`
 - Structured query logs (`rag_search`, `rag_retry`, `rag_not_found`) to stderr
@@ -143,7 +143,7 @@ Decision: keep reranker scaffolding disabled. Do not deploy TEI/BGE just to mask
 
 **Files changed (scaffolding):**
 
-- `~/scripts/qdrant-mcp-server-v2/qdrant-mcp-server-v2.js` (rag-tools) — `rerankWithLLM` helper, wired into both primary and retry search paths; gated on `RERANK_ENABLED` env var; emits `rag_rerank` and `rag_rerank_parse_error` stderr events.
+- `~/scripts/mcp-server/qdrant-mcp-server-v2.js` (rag-tools) — `rerankWithLLM` helper, wired into both primary and retry search paths; gated on `RERANK_ENABLED` env var; emits `rag_rerank` and `rag_rerank_parse_error` stderr events.
 - `~/scripts/rag-infra/eval-retrieval-quality.py` — `rerank_with_llm` helper, `--rerank / --rerank-model / --rerank-candidates` CLI flags.
 
 **Next retrieval fix before P2.2-B:**
@@ -283,7 +283,7 @@ When eval flags NDCG < 0.6 for query X, append the chunk_id that should have ran
 | ------------------------------------------------------ | -------------------------------------------------------- |
 | `~/scripts/rag-capture-v2/rag_capture.py` (rag-tools)  | Markdown drafting CLI: schema, validation, frontmatter   |
 | `~/scripts/push-to-qdrant.sh` (rag-tools)              | Ingestion: embedding, upsert, supersede logic            |
-| `~/scripts/qdrant-mcp-server-v2/qdrant-mcp-server-v2.js` (rag-tools) | Retrieval: hybrid search, reranker stage                 |
+| `~/scripts/mcp-server/qdrant-mcp-server-v2.js` (rag-tools) | Retrieval: hybrid search, reranker stage                 |
 | `~/scripts/rag-infra/eval-retrieval-quality.py`                    | Eval framework; end-to-end hallucination test lives here |
 | `.claude/skills/rag-knowledge-capture-cli/SKILL.md`    | Chunk body templates Claude uses when capturing          |
 | `CLAUDE.md`                                            | Field and content rules visible to every session         |
